@@ -150,6 +150,7 @@ body {
     margin-bottom: 2px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
 }
 
@@ -165,10 +166,51 @@ body {
     width: 16px;
     height: 16px;
     cursor: pointer;
+    margin-left: 8px;
 }
 
 .location-icon:hover {
     opacity: 0.7;
+}
+
+.document-icon {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    position: relative;
+    margin-left: 8px; /* Space between multiple document icons */
+}
+
+.document-icon:hover {
+    opacity: 0.7;
+}
+
+.document-icon:hover .document-tooltip {
+    display: block;
+}
+
+.document-tooltip {
+    display: none;
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.document-tooltip a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.document-tooltip a:hover {
+    text-decoration: underline;
 }
 
 .event-item:hover {
@@ -176,7 +218,7 @@ body {
 }
 
 .numbered-marker {
-    background-color: #0000ff; /* Blue instead of orange */
+    background-color: #0000ff;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -201,4 +243,29 @@ body {
 
 #map {
     flex: 1;
+}
+
+.leaflet-popup-content-wrapper {
+    font-size: 14px;
+}
+
+.document-link {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.document-link img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.document-link a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.document-link a:hover {
+    text-decoration: underline;
 }
