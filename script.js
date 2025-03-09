@@ -287,7 +287,7 @@ function buildSidebar(events) {
                 const iconsContainer = document.createElement('div');
                 iconsContainer.className = 'icons-container';
 
-                if (event.documentNames.length > 0 && event.documentLinks.length > 0) { // Fixed: Changed 'documentLinks' to 'event.documentLinks'
+                if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
                     const docContainer = document.createElement('div');
@@ -391,12 +391,12 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const endYear = Math.max(...years);
 
     // Calculate the old width and cursor position ratio
-    const oldZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 4); // Tripled scale for Layer 2 from 6 to 18
+    const oldZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 180); // Increased scale for Layer 3 to 180
     const oldWidth = (endYear - startYear + 1) * 50 * oldZoomScale;
     const cursorRatio = cursorPosition / oldWidth;
 
     // Calculate new width after zoom
-    const newZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 4); // Tripled scale for Layer 2 from 6 to 18
+    const newZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 180); // Increased scale for Layer 3 to 180
     const newWidth = (endYear - startYear + 1) * 50 * newZoomScale;
 
     // Rebuild the timeline
@@ -466,7 +466,8 @@ function populateTimelineWithCursor(events, cursorPosition) {
                 // Approximate number of days in a month (average 30.44 days)
                 const daysInMonth = 30.44;
                 for (let day = 1; day <= daysInMonth; day++) {
-                    const dayPosition = monthPosition + ((day - 0.5) / daysInMonth) * (100 / (12 * (endYear - startYear + 1)));
+                    const dayFraction = (day - 0.5) / daysInMonth; // Center the day marker
+                    const dayPosition = monthPosition + (dayFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180); // Adjust for new scale
                     const dayMarker = document.createElement('div');
                     dayMarker.className = 'year-marker small-marker';
                     dayMarker.style.left = `${dayPosition}%`;
@@ -514,7 +515,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
             const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
             const monthFraction = (month - 0.5) / 12;
             const dayFraction = (day - 0.5) / 30.44; // Average days per month
-            positionPercent = yearPosition + monthFraction * (100 / (12 * (endYear - startYear + 1))) + dayFraction * (100 / (12 * 30.44 * (endYear - startYear + 1)));
+            positionPercent = yearPosition + (monthFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180) + (dayFraction * (100 / (12 * 30.44 * (endYear - startYear + 1))) * newZoomScale / 180); // Adjusted for new scale
         }
 
         // Event bubble
