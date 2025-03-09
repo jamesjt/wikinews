@@ -156,6 +156,12 @@ body {
     overflow: visible;
 }
 
+.icons-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Small gap between document and location icons */
+}
+
 .event-summary {
     cursor: pointer;
 }
@@ -177,7 +183,6 @@ body {
 .document-wrapper {
     position: relative;
     display: inline-block;
-    margin-right: 16px;
 }
 
 .document-icon {
@@ -192,7 +197,7 @@ body {
 }
 
 .document-wrapper:hover .document-tooltip {
-    display: block; /* Show as block to stack items vertically */
+    display: block;
 }
 
 .document-tooltip {
@@ -210,13 +215,13 @@ body {
 }
 
 .document-tooltip .doc-entry {
-    display: flex; /* Each entry mimics .document-link */
+    display: flex;
     align-items: center;
-    margin-bottom: 4px; /* Space between entries, like map popup */
+    margin-bottom: 4px;
 }
 
 .document-tooltip .doc-entry:last-child {
-    margin-bottom: 0; /* No margin on last entry */
+    margin-bottom: 0;
 }
 
 .document-tooltip img {
