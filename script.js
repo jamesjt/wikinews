@@ -400,12 +400,11 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const newZoomScale = zoomScales[zoomLevel - 1];
     const newWidth = yearRange * 50 * newZoomScale;
 
-    // Rebuild the timeline
+    // Rebuild the timeline (removed timeline-indicator)
     timelineBar.innerHTML = `
         <div class="main-line"></div>
         <div class="left-bar"></div>
         <div class="right-bar"></div>
-        <span class="timeline-indicator" style="left: 50%"></span>
     `;
     timelineBar.style.width = `${newWidth}px`;
 
@@ -422,12 +421,20 @@ function populateTimelineWithCursor(events, cursorPosition) {
         }
     });
 
-    // Add year markers along the main line
+    // Add year markers, starting with 1990 just right of the left bar
+    const leftBarPositionPx = 20; // Left bar is at 20px (relative to timeline-bar)
+    const year1990Px = leftBarPositionPx + 10; // 1990 marker is 10px to the right of the left bar
+    const yearMarkerWidthPx = 50; // Approximate width per year (adjusted for zoom)
+
     for (let year = startYear; year <= endYear; year++) {
-        const position = ((year - startYear) / yearRange) * 100;
+        // Calculate the position in pixels relative to the timeline width
+        const yearOffset = year - 1990; // Years relative to 1990
+        const yearPositionPx = year1990Px + (yearOffset * yearMarkerWidthPx * newZoomScale);
+        const yearPositionPercent = (yearPositionPx / newWidth) * 100;
+
         const yearMarker = document.createElement('div');
         yearMarker.className = 'year-marker';
-        yearMarker.style.left = `${position}%`;
+        yearMarker.style.left = `${yearPositionPercent}%`;
         yearMarker.textContent = year;
         timelineBar.appendChild(yearMarker);
     }
@@ -435,40 +442,57 @@ function populateTimelineWithCursor(events, cursorPosition) {
     // Add decade labels
     Object.keys(groupedByDecade).sort((a, b) => a - b).forEach(decade => {
         const decadeStart = parseInt(decade);
-        const position = ((decadeStart - startYear) / yearRange) * 100;
+        const decadeOffset = decadeStart - 1990;
+        const decadePositionPx = year1990Px + (decadeOffset * yearMarkerWidthPx * newZoomScale);
+        const decadePositionPercent = (decadePositionPx / newWidth) * 100;
 
         const decadeLabel = document.createElement('div');
         decadeLabel.className = 'decade-label';
-        decadeLabel.style.left = `${position}%`;
+        decadeLabel.style.left = `${decadePositionPercent}%`;
         decadeLabel.textContent = `${decade}s`;
         timelineBar.appendChild(decadeLabel);
     });
 
-    // Show bubbles relative to date at all zoom levels
+    // Show bubbles with events starting 2px to the right of each year marker
     events.forEach((event, index) => {
         const dateStr = event.date;
         const yearMatch = dateStr.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
         if (!year) return;
 
-        // Parse date for precise positioning
-        let position;
+        // Calculate the base position for the start of the year
+        const yearOffset = year - 1990;
+        const yearPositionPx = year1990Px + (yearOffset * yearMarkerWidthPx * newZoomScale);
+        const yearPositionPercent = (yearPositionPx / newWidth) * 100;
+
+        // Calculate the event's position within the year
+        let positionPercent;
         if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             const date = new Date(yearStr, month - 1, day);
-            const startDate = new Date(startYear, 0, 1);
-            const endDate = new Date(endYear + 1, 0, 1);
-            const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
-            const daysFromStart = (date - startDate) / (1000 * 60 * 60 * 24);
-            position = (daysFromStart / totalDays) * 100;
+            const startOfYear = new Date(year, 0, 1);
+            const daysInYear = (new Date(year, 11, 31) - startOfYear) / (1000 * 60 * 60 * 24);
+            const daysFromStart = (date - startOfYear) / (1000 * 60 * 60 * 24);
+            const yearFraction = daysFromStart / daysInYear; // Fraction of the year
+
+            // Convert the year fraction to a percentage of the year's width
+            const yearWidthPx = yearMarkerWidthPx * newZoomScale; // Width of one year in pixels
+            const offsetWithinYearPx = yearFraction * yearWidthPx;
+            const offsetWithinYearPercent = (offsetWithinYearPx / newWidth) * 100;
+
+            // Add 2px offset to the right of the year marker
+            const twoPxOffsetPercent = (2 / newWidth) * 100;
+            positionPercent = yearPositionPercent + twoPxOffsetPercent + offsetWithinYearPercent;
         } else {
-            position = ((year - startYear) / yearRange) * 100;
+            // For non-M/D/Y format dates, position at the start of the year + 2px
+            const twoPxOffsetPercent = (2 / newWidth) * 100;
+            positionPercent = yearPositionPercent + twoPxOffsetPercent;
         }
 
         // Event bubble
         const bubble = document.createElement('div');
         bubble.className = 'event-bubble';
-        bubble.style.left = `${position}%`;
+        bubble.style.left = `${positionPercent}%`;
         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.title = `${event.date}: ${event.shortSummary}`;
         if (event.location) {
@@ -513,7 +537,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
             const [month, day] = dateStr.split('/').map(part => parseInt(part, 10));
             const dateLabel = document.createElement('div');
             dateLabel.className = 'event-date-label';
-            dateLabel.style.left = `${position}%`;
+            dateLabel.style.left = `${positionPercent}%`; // Use the adjusted position
             dateLabel.textContent = `${month}/${day}`; // Numeric format (e.g., "12/15")
 
             // Position halfway between main line (50%) and bubble
