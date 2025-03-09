@@ -287,7 +287,7 @@ function buildSidebar(events) {
                 const iconsContainer = document.createElement('div');
                 iconsContainer.className = 'icons-container';
 
-                if (event.documentNames.length > 0 && documentLinks.length > 0) {
+                if (event.documentNames.length > 0 && event.documentLinks.length > 0) { // Fixed: Changed 'documentLinks' to 'event.documentLinks'
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
                     const docContainer = document.createElement('div');
