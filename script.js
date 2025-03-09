@@ -108,7 +108,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             });
                             markers.push(marker);
                         } else {
-                            console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
+                            console.warn('Invalid coordinates in Location: ${locationStr}, no marker will be placed', row);
                         }
                     } else {
                         console.warn('Missing Location data, no marker will be placed:', row);
@@ -142,18 +142,18 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.appendChild(zoomInBtn);
                 timeline.appendChild(zoomOutBtn);
 
-                zoomInBtn.addEventListener('click', () => {
-                    const currentScrollLeft = timeline.scrollLeft;
-                    const viewportWidth = timeline.clientWidth;
-                    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
+                zoomInBtn.addEventListener('click', (e) => {
+                    const rect = timeline.getBoundingClientRect();
+                    const cursorX = e.clientX - rect.left; // Cursor position relative to timeline viewport
+                    const cursorPosition = timeline.scrollLeft + cursorX; // Absolute position in timeline
                     zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
                     populateTimelineWithCursor(events, cursorPosition);
                 });
 
-                zoomOutBtn.addEventListener('click', () => {
-                    const currentScrollLeft = timeline.scrollLeft;
-                    const viewportWidth = timeline.clientWidth;
-                    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
+                zoomOutBtn.addEventListener('click', (e) => {
+                    const rect = timeline.getBoundingClientRect();
+                    const cursorX = e.clientX - rect.left; // Cursor position relative to timeline viewport
+                    const cursorPosition = timeline.scrollLeft + cursorX; // Absolute position in timeline
                     zoomLevel = Math.max(zoomLevel - 1, 1);
                     populateTimelineWithCursor(events, cursorPosition);
                 });
@@ -391,11 +391,10 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const endYear = Math.max(...years);
     const yearRange = endYear - startYear + 1;
 
-    // Get the current width and calculate the old zoom scale
-    const oldWidth = parseFloat(timelineBar.style.width) || (yearRange * 50 * zoomScales[0]);
-    const oldZoomScale = oldWidth / (yearRange * 50);
-    const absoluteCursorPosition = cursorPosition; // Cursor position in timeline coordinates
-    const cursorRatio = absoluteCursorPosition / oldWidth;
+    // Calculate the old width and cursor position ratio
+    const oldZoomScale = zoomScales[Math.max(0, zoomLevel - 2)]; // Previous zoom level
+    const oldWidth = yearRange * 50 * oldZoomScale;
+    const cursorRatio = cursorPosition / oldWidth;
 
     // Calculate new width after zoom
     const newZoomScale = zoomScales[zoomLevel - 1];
@@ -527,27 +526,27 @@ function populateTimelineWithCursor(events, cursorPosition) {
     });
 
     // Adjust scroll position to keep the cursor over the same point
-    const newAbsolutePosition = cursorRatio * newWidth;
-    const newScrollLeft = newAbsolutePosition - cursorPosition;
+    const newPosition = cursorRatio * newWidth; // The new absolute position of the cursor in the zoomed timeline
+    const viewportWidth = timeline.clientWidth;
+    const newScrollLeft = newPosition - (cursorPosition - timeline.scrollLeft); // Adjust scroll to keep cursor over the same point
 
     // Ensure scroll position is within bounds
-    const maxScrollLeft = newWidth - timeline.clientWidth;
+    const maxScrollLeft = Math.max(0, newWidth - viewportWidth);
     timeline.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
 
     // Debug output to verify calculations
     console.log('Zoom Level:', zoomLevel);
+    console.log('Start Year:', startYear, 'End Year:', endYear);
     console.log('Old Width:', oldWidth, 'New Width:', newWidth);
     console.log('Cursor Position:', cursorPosition, 'Cursor Ratio:', cursorRatio);
-    console.log('New Scroll Left:', newScrollLeft, 'Max Scroll:', maxScrollLeft);
+    console.log('New Position:', newPosition, 'New Scroll Left:', newScrollLeft, 'Max Scroll:', maxScrollLeft);
 }
 
-// Wrapper function for button-based zooming (without cursor position)
+// Wrapper function for initial timeline render
 function populateTimeline(events) {
     const timeline = document.getElementById('timeline');
-    const currentScrollLeft = timeline.scrollLeft;
-    const viewportWidth = timeline.clientWidth;
-    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
-    populateTimelineWithCursor(events, cursorPosition);
+    timeline.scrollLeft = 0; // Reset scroll to start
+    populateTimelineWithCursor(events, 0); // Start at the beginning
 }
 
 // Sidebar resize functionality
