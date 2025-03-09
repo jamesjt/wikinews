@@ -1,7 +1,6 @@
-// Google Sheet public CSV URL
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv';
+// script.js
 
-// Default location set to Kyiv (as a fallback)
+// Define default location (Kyiv)
 const defaultLocation = [50.45, 30.52];
 
 // Initialize the Leaflet map
@@ -13,38 +12,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Array to store markers
 const markers = [];
 
-// Fetch events from Google Sheet CSV
-fetch(SHEET_CSV_URL)
+// Fetch and parse CSV
+fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
     .then(csvText => {
-        // Parse CSV using Papa Parse
         Papa.parse(csvText, {
-            header: true, // Treat first row as headers
+            header: true,
             complete: function(results) {
-                // Debug: Log headers and sample data
-                console.log('Parsed Headers:', results.meta.fields);
-                console.log('Parsed Data Sample:', results.data.slice(0, 3));
-
                 const events = results.data.map((row, index) => {
-                    // Safely access and trim CSV fields
                     const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : '';
                     const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : '';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
 
-                    // Skip rows with missing date or description
                     if (!dateStr || !description) {
                         console.warn('Skipping row due to missing date or description:', row);
                         return null;
                     }
 
-                    // Parse Location column as latitude, longitude pair
                     let location;
                     if (locationStr) {
                         const [latStr, lonStr] = locationStr.split(',').map(coord => coord.trim());
                         const lat = parseFloat(latStr);
                         const lon = parseFloat(lonStr);
                         if (!isNaN(lat) && !isNaN(lon)) {
-                            location = [lat, lon]; // Valid coordinate pair
+                            location = [lat, lon];
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, using default`, row);
                             location = defaultLocation;
@@ -55,28 +46,24 @@ fetch(SHEET_CSV_URL)
                     }
 
                     return {
-                        date: dateStr, // Treat as string, no parsing
+                        date: dateStr,
                         description: description,
-                        location: location, // Use parsed coordinates
-                        story: 'The War in Ukraine',
-                        index: index // Use index for timeline positioning
+                        location: location,
+                        index: index
                     };
-                }).filter(event => event !== null); // Remove skipped rows
+                }).filter(event => event !== null);
 
-                // Add markers to the map using Location column coordinates
-                events.forEach(event => {
+                // Add markers to the map
+                events.forEach((event, index) => {
+                    event.index = index; // Ensure index is set
                     const marker = L.marker(event.location)
                         .addTo(map)
                         .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
                     markers.push(marker);
                 });
 
-                // Populate sidebar and timeline
-                populateSidebar(events);
-                populateTimeline(events);
-            },
-            error: function(error) {
-                console.error('Papa Parse error:', error);
+                // Build the collapsible sidebar
+                buildSidebar(events);
             }
         });
     })
@@ -84,61 +71,104 @@ fetch(SHEET_CSV_URL)
         console.error('Error fetching CSV:', error);
     });
 
-// Populate sidebar with interactive list items
-function populateSidebar(events) {
+// Build the sidebar with collapsible decade and year sections
+function buildSidebar(events) {
+    // Group events by decade and year
+    const groupedEvents = {};
+    const datePattern = /^\d{2}\/\d{2}\/\d{4}$/; // Regex for "MM/DD/YYYY"
+
+    events.forEach(event => {
+        const dateStr = event.date;
+        if (datePattern.test(dateStr)) {
+            const [month, day, year] = dateStr.split('/').map(Number);
+            const decade = `${Math.floor(year / 10) * 10}s`; // e.g., "1990s"
+            if (!groupedEvents[decade]) groupedEvents[decade] = {};
+            if (!groupedEvents[decade][year]) groupedEvents[decade][year] = [];
+            event.displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`; // "MM/DD"
+            groupedEvents[decade][year].push(event);
+        } else {
+            console.warn('Skipping event with invalid date format:', event);
+        }
+    });
+
+    // Sort decades and years numerically
+    const sortedDecades = Object.keys(groupedEvents).sort((a, b) => parseInt(a) - parseInt(b));
     const eventList = document.getElementById('event-list');
     eventList.innerHTML = '';
-    events.forEach((event, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${event.date}: ${event.description}`;
-        li.setAttribute('data-event-index', index);
-        li.addEventListener('click', function() {
+
+    sortedDecades.forEach(decade => {
+        const decadeLi = document.createElement('li');
+        decadeLi.className = 'decade';
+        const decadeToggle = document.createElement('span');
+        decadeToggle.className = 'toggle';
+        const decadeIndicator = document.createElement('span');
+        decadeIndicator.className = 'indicator';
+        decadeIndicator.textContent = '[+]';
+        decadeToggle.appendChild(decadeIndicator);
+        decadeToggle.appendChild(document.createTextNode(` ${decade}`));
+        const decadeEvents = Object.values(groupedEvents[decade]).flat();
+        const eventCount = decadeEvents.length;
+        decadeToggle.appendChild(document.createTextNode(` (${eventCount} events)`));
+        decadeLi.appendChild(decadeToggle);
+
+        const yearUl = document.createElement('ul');
+        yearUl.className = 'year-list';
+        const sortedYears = Object.keys(groupedEvents[decade]).sort((a, b) => parseInt(a) - parseInt(b));
+
+        sortedYears.forEach(year => {
+            const yearLi = document.createElement('li');
+            yearLi.className = 'year';
+            const yearToggle = document.createElement('span');
+            yearToggle.className = 'toggle';
+            const yearIndicator = document.createElement('span');
+            yearIndicator.className = 'indicator';
+            yearIndicator.textContent = '[+]';
+            yearToggle.appendChild(yearIndicator);
+            yearToggle.appendChild(document.createTextNode(` ${year}`));
+            const yearEvents = groupedEvents[decade][year];
+            const yearEventCount = yearEvents.length;
+            yearToggle.appendChild(document.createTextNode(` (${yearEventCount} events)`));
+            yearLi.appendChild(yearToggle);
+
+            const eventUl = document.createElement('ul');
+            eventUl.className = 'event-list';
+            yearEvents.forEach(event => {
+                const eventLi = document.createElement('li');
+                eventLi.className = 'event-item';
+                eventLi.textContent = `${event.displayDate}: ${event.description}`;
+                eventLi.setAttribute('data-event-index', event.index);
+                eventUl.appendChild(eventLi);
+            });
+            yearLi.appendChild(eventUl);
+            yearUl.appendChild(yearLi);
+        });
+
+        decadeLi.appendChild(yearUl);
+        eventList.appendChild(decadeLi);
+    });
+
+    // Add toggle functionality for collapsible sections
+    document.querySelectorAll('.toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const sublist = this.nextElementSibling;
+            const indicator = this.querySelector('.indicator');
+            if (sublist.classList.contains('show')) {
+                sublist.classList.remove('show');
+                indicator.textContent = '[+]';
+            } else {
+                sublist.classList.add('show');
+                indicator.textContent = '[-]';
+            }
+        });
+    });
+
+    // Add map interactivity for event items
+    document.querySelectorAll('.event-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-event-index'));
             const marker = markers[index];
             map.setView(marker.getLatLng(), 10);
             marker.openPopup();
         });
-        eventList.appendChild(li);
     });
 }
-
-// Populate timeline with bubbles (position based on index)
-function populateTimeline(events) {
-    const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = ''; // Clear existing bubbles
-    events.forEach((event, index) => {
-        const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50; // Even spacing, center if one event
-        const bubble = document.createElement('div');
-        bubble.className = 'event-bubble';
-        bubble.style.left = `${position}%`;
-        bubble.title = `${event.date}: ${event.description}`;
-        timelineBar.appendChild(bubble);
-    });
-}
-
-// Sidebar resize functionality
-const sidebar = document.getElementById('sidebar');
-const resizeHandle = document.querySelector('.resize-handle');
-let isResizing = false;
-
-resizeHandle.addEventListener('mousedown', function(e) {
-    isResizing = true;
-    e.preventDefault();
-});
-
-document.addEventListener('mousemove', function(e) {
-    if (!isResizing) return;
-    e.preventDefault();
-    const container = document.getElementById('container');
-    const containerRect = container.getBoundingClientRect();
-    const mouseXInContainer = e.clientX - containerRect.left;
-    let newWidth = (mouseXInContainer / containerRect.width) * 100;
-    const minWidth = 10;
-    const maxWidth = 50;
-    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-    sidebar.style.flexBasis = `${newWidth}%`;
-    map.invalidateSize();
-});
-
-document.addEventListener('mouseup', function() {
-    isResizing = false;
-});
