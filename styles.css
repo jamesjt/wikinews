@@ -141,24 +141,25 @@ body {
 .event-item {
     padding: 5px 0;
     display: flex;
-    flex-direction: column; /* Stack date and summary vertically */
-    align-items: flex-start; /* Align text to the left */
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .event-date {
     font-weight: bold;
-    margin-bottom: 2px; /* Space between date and summary */
+    margin-bottom: 2px;
+    display: flex; /* Make date a flex container */
+    justify-content: space-between; /* Push icon to the right */
+    width: 100%; /* Ensure it spans full width */
 }
 
 .event-summary {
-    /* No flex: 1 needed since we're not justifying space-between anymore */
+    /* No special styling needed beyond inherited properties */
 }
 
 .location-icon {
     width: 16px;
     height: 16px;
-    margin-top: 2px; /* Align with summary */
-    align-self: flex-end; /* Move icon to the right */
 }
 
 .event-item:hover {
