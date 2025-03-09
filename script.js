@@ -14,15 +14,13 @@ const markers = [];
 
 let events = [];
 
-// Month names for conversion
 const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-// Function to add ordinal suffix (e.g., "9th")
 function getOrdinal(day) {
-    if (day > 3 && day < 21) return `${day}th`; // 4th to 20th
+    if (day > 3 && day < 21) return `${day}th`;
     switch (day % 10) {
         case 1: return `${day}st`;
         case 2: return `${day}nd`;
@@ -72,10 +70,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     };
                 }).filter(event => event !== null);
 
-                // Build the collapsible sidebar (all events)
                 buildSidebar(events);
-
-                // Populate timeline with bubbles (all events)
                 populateTimeline(events);
             }
         });
@@ -97,7 +92,7 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${months[month - 1]} ${getOrdinal(day)}`; // e.g., "February 9th"
+            displayDate = `${months[month - 1]} ${getOrdinal(day)}`;
         } else {
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
