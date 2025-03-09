@@ -22,12 +22,13 @@ body {
     position: relative;
     height: 100%;
     display: inline-block; /* Allows width to expand for scrolling */
+    padding-left: 20px; /* Add 20px padding on the left side */
 }
 
 .main-line {
     position: absolute;
     top: 50%;
-    left: 10px;
+    left: 20px; /* Adjust to account for padding */
     right: 10px;
     height: 2px;
     background: #333;
@@ -42,7 +43,7 @@ body {
 }
 
 .left-bar {
-    left: 10px;
+    left: 20px; /* Adjust to account for padding */
 }
 
 .right-bar {
