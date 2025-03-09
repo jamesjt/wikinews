@@ -143,10 +143,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.appendChild(zoomOutBtn);
 
                 zoomInBtn.addEventListener('click', () => {
-                    // For button zoom, center the zoom on the current viewport center
                     const currentScrollLeft = timeline.scrollLeft;
                     const viewportWidth = timeline.clientWidth;
-                    const cursorPosition = currentScrollLeft + viewportWidth / 2;
+                    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
                     zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
                     populateTimelineWithCursor(events, cursorPosition);
                 });
@@ -154,7 +153,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 zoomOutBtn.addEventListener('click', () => {
                     const currentScrollLeft = timeline.scrollLeft;
                     const viewportWidth = timeline.clientWidth;
-                    const cursorPosition = currentScrollLeft + viewportWidth / 2;
+                    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
                     zoomLevel = Math.max(zoomLevel - 1, 1);
                     populateTimelineWithCursor(events, cursorPosition);
                 });
@@ -163,7 +162,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     const rect = timeline.getBoundingClientRect();
-                    const cursorPosition = e.clientX - rect.left;
+                    const cursorX = e.clientX - rect.left; // Cursor position relative to timeline viewport
+                    const cursorPosition = timeline.scrollLeft + cursorX; // Absolute position in timeline
                     if (e.deltaY < 0) { // Wheel up: zoom in
                         zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
                     } else { // Wheel down: zoom out
@@ -391,10 +391,10 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const endYear = Math.max(...years);
     const yearRange = endYear - startYear + 1;
 
-    // Calculate the old width and the cursor's position in the timeline's coordinate system
-    const oldZoomScale = zoomScales[zoomLevel - 1] || zoomScales[0];
-    const oldWidth = yearRange * 50 * oldZoomScale;
-    const absoluteCursorPosition = cursorPosition + timeline.scrollLeft;
+    // Get the current width and calculate the old zoom scale
+    const oldWidth = parseFloat(timelineBar.style.width) || (yearRange * 50 * zoomScales[0]);
+    const oldZoomScale = oldWidth / (yearRange * 50);
+    const absoluteCursorPosition = cursorPosition; // Cursor position in timeline coordinates
     const cursorRatio = absoluteCursorPosition / oldWidth;
 
     // Calculate new width after zoom
@@ -533,6 +533,12 @@ function populateTimelineWithCursor(events, cursorPosition) {
     // Ensure scroll position is within bounds
     const maxScrollLeft = newWidth - timeline.clientWidth;
     timeline.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
+
+    // Debug output to verify calculations
+    console.log('Zoom Level:', zoomLevel);
+    console.log('Old Width:', oldWidth, 'New Width:', newWidth);
+    console.log('Cursor Position:', cursorPosition, 'Cursor Ratio:', cursorRatio);
+    console.log('New Scroll Left:', newScrollLeft, 'Max Scroll:', maxScrollLeft);
 }
 
 // Wrapper function for button-based zooming (without cursor position)
@@ -540,7 +546,7 @@ function populateTimeline(events) {
     const timeline = document.getElementById('timeline');
     const currentScrollLeft = timeline.scrollLeft;
     const viewportWidth = timeline.clientWidth;
-    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Default to viewport center
+    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Center of viewport
     populateTimelineWithCursor(events, cursorPosition);
 }
 
