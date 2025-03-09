@@ -1,3 +1,5 @@
+/* styles.css */
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -59,33 +61,7 @@ body {
     padding-left: 20px;
 }
 
-#sidebar p {
-    margin: 10px 0;
-}
-
-#event-list li {
-    cursor: pointer; /* Makes list items appear clickable */
-}
-
-#event-list li:hover {
-    background-color: #f0f0f0; /* Hover effect for visual feedback */
-}
-
-.resize-handle {
-    width: 5px;
-    background: #ccc;
-    cursor: col-resize;
-}
-
-.resize-handle:hover {
-    background: #aaa;
-}
-
-#map {
-    flex: 1;
-}
-
-/* most recently added Hide sublists by default */
+/* Hide sublists by default */
 #event-list ul {
     display: none;
 }
@@ -104,4 +80,18 @@ body {
 /* Style for the [+]/[-] indicators */
 .indicator {
     margin-right: 5px;
+}
+
+.resize-handle {
+    width: 5px;
+    background: #ccc;
+    cursor: col-resize;
+}
+
+.resize-handle:hover {
+    background: #aaa;
+}
+
+#map {
+    flex: 1;
 }
