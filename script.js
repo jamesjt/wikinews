@@ -172,6 +172,14 @@ function buildSidebar(events) {
                 dateDiv.className = 'event-date';
                 dateDiv.textContent = event.displayDate;
 
+                if (event.location) {
+                    const locationIcon = document.createElement('img');
+                    locationIcon.className = 'location-icon';
+                    locationIcon.src = 'icon-location.svg';
+                    locationIcon.alt = 'Location';
+                    dateDiv.appendChild(locationIcon);
+                }
+
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'event-summary';
                 summaryDiv.textContent = event.description;
@@ -179,14 +187,6 @@ function buildSidebar(events) {
                 eventItem.appendChild(dateDiv);
                 eventItem.appendChild(summaryDiv);
                 eventItem.setAttribute('data-event-index', event.index);
-
-                if (event.location) {
-                    const locationIcon = document.createElement('img');
-                    locationIcon.className = 'location-icon';
-                    locationIcon.src = 'icon-location.svg';
-                    locationIcon.alt = 'Location';
-                    eventItem.appendChild(locationIcon);
-                }
 
                 eventDiv.appendChild(eventItem);
             });
@@ -258,9 +258,4 @@ document.addEventListener('mousemove', function(e) {
     const maxWidth = 50;
     newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
     sidebar.style.flexBasis = `${newWidth}%`;
-    map.invalidateSize();
-});
-
-document.addEventListener('mouseup', function() {
-    isResizing = false;
-});
+    map.invalidateSize
