@@ -25,7 +25,7 @@ function getOrdinal(day) {
     switch (day % 10) {
         case 1: return `${day}st`;
         case 2: return `${day}nd`;
-        case 3: return `${day}rd`; // Fixed typo: changed 'year' to 'day'
+        case 3: return `${day}rd`;
         default: return `${day}th`;
     }
 }
@@ -287,7 +287,7 @@ function buildSidebar(events) {
                 const iconsContainer = document.createElement('div');
                 iconsContainer.className = 'icons-container';
 
-                if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
+                if (event.documentNames.length > 0 && documentLinks.length > 0) {
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
                     const docContainer = document.createElement('div');
@@ -391,12 +391,12 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const endYear = Math.max(...years);
 
     // Calculate the old width and cursor position ratio
-    const oldZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 6 : 4); // Increased scale for Layer 2 to 6
+    const oldZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 4); // Tripled scale for Layer 2 from 6 to 18
     const oldWidth = (endYear - startYear + 1) * 50 * oldZoomScale;
     const cursorRatio = cursorPosition / oldWidth;
 
     // Calculate new width after zoom
-    const newZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 6 : 4); // Increased scale for Layer 2 to 6
+    const newZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 18 : 4); // Tripled scale for Layer 2 from 6 to 18
     const newWidth = (endYear - startYear + 1) * 50 * newZoomScale;
 
     // Rebuild the timeline
@@ -437,7 +437,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
             // Add month markers with increased spacing
             for (let month = 0; month < 12; month++) {
                 const monthFraction = (month + 0.5) / 12; // Center the month marker
-                const monthPosition = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 6); // Adjust for scale
+                const monthPosition = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 18); // Adjust for new scale
                 const monthMarker = document.createElement('div');
                 monthMarker.className = 'year-marker small-marker';
                 monthMarker.style.left = `${monthPosition}%`;
@@ -509,7 +509,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
         } else if (zoomLevel === 2) {
             const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
             const monthFraction = (month - 0.5) / 12;
-            positionPercent = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 6); // Adjusted for scale
+            positionPercent = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 18); // Adjusted for new scale
         } else if (zoomLevel === 3) {
             const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
             const monthFraction = (month - 0.5) / 12;
