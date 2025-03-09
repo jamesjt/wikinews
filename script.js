@@ -258,4 +258,9 @@ document.addEventListener('mousemove', function(e) {
     const maxWidth = 50;
     newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
     sidebar.style.flexBasis = `${newWidth}%`;
-    map.invalidateSize
+    map.invalidateSize();
+});
+
+document.addEventListener('mouseup', function() {
+    isResizing = false;
+});
