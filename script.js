@@ -19,6 +19,17 @@ const months = [
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
+// Function to get ordinal suffix for days (e.g., 1st, 2nd, 3rd)
+function getOrdinal(day) {
+    if (day > 3 && day < 21) return `${day}th`;
+    switch (day % 10) {
+        case 1: return `${day}st`;
+        case 2: return `${day}nd`;
+        case 3: return `${day}rd`;
+        default: return `${day}th`;
+    }
+}
+
 // Zoom level state
 let zoomLevel = 1; // 1 = most zoomed out, 2 = medium zoom, 3 = most zoomed in
 const zoomLevels = [1, 2, 3];
@@ -97,10 +108,10 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             });
                             markers.push(marker);
                         } else {
-                            console.warn('Invalid coordinates in Location: ${locationStr}, no marker will be placed', row);
+                            console.warn(`Invalid coordinates in Location: "${locationStr}" for row ${index}:`, row);
                         }
                     } else {
-                        console.warn('Missing Location data, no marker will be placed:', row);
+                        console.warn(`Missing Location data for row ${index} (Date: ${dateStr}, Short Summary: ${shortSummary}), no marker will be placed:`, row);
                     }
 
                     return {
@@ -126,7 +137,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 zoomInBtn.className = 'zoom-btn zoom-in';
                 zoomInBtn.textContent = '+';
                 const zoomOutBtn = document.createElement('button');
-                zoomOutBtn.className = 'zoom-out';
+                zoomOutBtn.className = 'zoom-btn zoom-out'; // Fixed class name
                 zoomOutBtn.textContent = '-';
                 timeline.appendChild(zoomInBtn);
                 timeline.appendChild(zoomOutBtn);
