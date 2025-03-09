@@ -46,25 +46,29 @@ fetch(SHEET_CSV_URL)
                 console.log('Parsed Data Sample:', results.data.slice(0, 3));
 
                 const events = results.data.map(row => {
-                    const dateStr = row['Date-MDY'];
-                    const date = new Date(dateStr); // Assumes MM/DD/YYYY format
-                    if (isNaN(date.getTime())) {
-                        console.warn(`Invalid date: ${dateStr}`);
+                    const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : null;
+                    if (!dateStr) {
+                        console.warn('Missing date in row:', row);
                         return null;
                     }
-                    const description = row['Short Summary - Date'] || '';
-                    const locationStr = row['Location'] ? row['Location'].toLowerCase() : '';
+                    // Parse date for sorting/timeline, but keep string for display
+                    const dateForSorting = new Date(dateStr);
+                    const date = isNaN(dateForSorting.getTime()) ? new Date('1990-01-01') : dateForSorting; // Fallback to 1990 if invalid
+                    const dateDisplay = dateStr; // Use raw string for display
+                    const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : '';
+                    const locationStr = row['Location'] ? row['Location'].toLowerCase().trim() : '';
                     const location = locations[locationStr] || defaultLocation;
 
                     return {
-                        date: date,
+                        date: date, // For sorting and timeline
+                        dateDisplay: dateDisplay, // For sidebar display
                         description: description,
                         location: location,
                         story: 'The War in Ukraine'
                     };
                 }).filter(event => event !== null);
 
-                // Sort events by date
+                // Sort events by date (using parsed Date object)
                 events.sort((a, b) => a.date - b.date);
 
                 // Add markers to the map
@@ -236,7 +240,7 @@ const events = eventLines.map(line => {
 events.sort((a, b) => a.date - b.date);
 */
 
-// Function to format dates
+// Function to format dates (no longer used for Date-MDY, kept for reference)
 function formatDate(date) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
@@ -248,7 +252,7 @@ function populateSidebar(events) {
     eventList.innerHTML = '';
     events.forEach((event, index) => {
         const li = document.createElement('li');
-        li.textContent = `${formatDate(event.date)}: ${event.description}`;
+        li.textContent = `${event.dateDisplay}: ${event.description}`; // Use raw date string
         li.setAttribute('data-event-index', index);
         li.addEventListener('click', function() {
             const marker = markers[index];
