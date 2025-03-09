@@ -84,3 +84,24 @@ body {
 #map {
     flex: 1;
 }
+
+/* most recently added Hide sublists by default */
+#event-list ul {
+    display: none;
+}
+
+/* Show sublists when the 'show' class is added */
+#event-list ul.show {
+    display: block;
+}
+
+/* Style for toggle elements */
+.toggle {
+    cursor: pointer;
+    user-select: none; /* Prevent text selection */
+}
+
+/* Style for the [+]/[-] indicators */
+.indicator {
+    margin-right: 5px;
+}
