@@ -229,27 +229,33 @@ function buildSidebar(events) {
                 dateDiv.appendChild(dateText);
 
                 if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
+                    const docWrapper = document.createElement('div');
+                    docWrapper.className = 'document-wrapper';
+                    const docContainer = document.createElement('div');
+                    docContainer.className = 'document-icon';
+                    const documentIcon = document.createElement('img');
+                    documentIcon.src = 'icon-document.png';
+                    documentIcon.alt = 'Document';
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'document-tooltip';
+                    
+                    // Add all documents to one tooltip
                     const minLength = Math.min(event.documentNames.length, event.documentLinks.length);
                     for (let i = 0; i < minLength; i++) {
-                        const docWrapper = document.createElement('div');
-                        docWrapper.className = 'document-wrapper';
-                        const docContainer = document.createElement('div');
-                        docContainer.className = 'document-icon';
-                        const documentIcon = document.createElement('img');
-                        documentIcon.src = 'icon-document.png';
-                        documentIcon.alt = 'Document';
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'document-tooltip';
-                        tooltip.innerHTML = `<img src="icon-document.png" alt="Document"><a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>`;
-                        tooltip.querySelector('a').addEventListener('click', (e) => {
+                        const docEntry = document.createElement('div');
+                        docEntry.className = 'doc-entry';
+                        docEntry.innerHTML = `<img src="icon-document.png" alt="Document"><a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>`;
+                        docEntry.querySelector('a').addEventListener('click', (e) => {
                             e.stopPropagation();
                             window.open(event.documentLinks[i], '_blank');
                         });
-                        docContainer.appendChild(documentIcon);
-                        docWrapper.appendChild(docContainer);
-                        docWrapper.appendChild(tooltip);
-                        dateDiv.appendChild(docWrapper);
+                        tooltip.appendChild(docEntry);
                     }
+                    
+                    docContainer.appendChild(documentIcon);
+                    docWrapper.appendChild(docContainer);
+                    docWrapper.appendChild(tooltip);
+                    dateDiv.appendChild(docWrapper);
                 }
 
                 if (event.location) {
