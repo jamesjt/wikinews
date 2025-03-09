@@ -21,8 +21,8 @@ const locations = {
 // Default location set to Kyiv
 const defaultLocation = locations["kyiv"];
 
-// Google Sheet public CSV URL (replace with your actual URL)
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv'; // e.g., https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/pub?output=csv
+// Google Sheet public CSV URL
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv';
 
 // Initialize the Leaflet map
 const map = L.map('map').setView([48.3794, 31.1656], 6);
@@ -37,58 +37,57 @@ const markers = [];
 fetch(SHEET_CSV_URL)
     .then(response => response.text())
     .then(csvText => {
-        // Parse CSV into an array of rows
-        const rows = csvText.split('\n').map(row => row.split(','));
+        // Parse CSV using Papa Parse
+        Papa.parse(csvText, {
+            header: true, // Treat first row as headers
+            complete: function(results) {
+                // Debug: Log the headers and first few rows
+                console.log('Parsed Headers:', results.meta.fields);
+                console.log('Parsed Data Sample:', results.data.slice(0, 3));
 
-        // Extract headers from the first row
-        const headers = rows[0];
-        const dateIndex = headers.indexOf('Date-MDY');
-        const descIndex = headers.indexOf('Short Summary - Date');
-        const locIndex = headers.indexOf('Location'); // Optional column
+                const events = results.data.map(row => {
+                    const dateStr = row['Date-MDY'];
+                    const date = new Date(dateStr); // Assumes MM/DD/YYYY format
+                    if (isNaN(date.getTime())) {
+                        console.warn(`Invalid date: ${dateStr}`);
+                        return null;
+                    }
+                    const description = row['Short Summary - Date'] || '';
+                    const locationStr = row['Location'] ? row['Location'].toLowerCase() : '';
+                    const location = locations[locationStr] || defaultLocation;
 
-        if (dateIndex === -1 || descIndex === -1) {
-            throw new Error('Required columns "Date-MDY" or "Short Summary - Date" not found in CSV');
-        }
+                    return {
+                        date: date,
+                        description: description,
+                        location: location,
+                        story: 'The War in Ukraine'
+                    };
+                }).filter(event => event !== null);
 
-        // Parse rows into events, skipping header row
-        const events = rows.slice(1).map(row => {
-            const dateStr = row[dateIndex];
-            const date = new Date(dateStr); // Assumes MM/DD/YYYY format
-            if (isNaN(date.getTime())) {
-                console.warn(`Invalid date: ${dateStr}`);
-                return null;
+                // Sort events by date
+                events.sort((a, b) => a.date - b.date);
+
+                // Add markers to the map
+                events.forEach(event => {
+                    const marker = L.marker(event.location)
+                        .addTo(map)
+                        .bindPopup(`<b>${event.description}</b><br>Commentary: <a href="#">Link</a>`);
+                    markers.push(marker);
+                });
+
+                // Populate sidebar
+                populateSidebar(events);
+
+                // Populate timeline
+                populateTimeline(events);
+            },
+            error: function(error) {
+                console.error('Papa Parse error:', error);
             }
-            const description = row[descIndex] || '';
-            const locationStr = locIndex !== -1 && row[locIndex] ? row[locIndex].toLowerCase() : '';
-            const location = locations[locationStr] || defaultLocation;
-
-            return {
-                date: date,
-                description: description,
-                location: location,
-                story: 'The War in Ukraine'
-            };
-        }).filter(event => event !== null);
-
-        // Sort events by date
-        events.sort((a, b) => a.date - b.date);
-
-        // Add markers to the map
-        events.forEach(event => {
-            const marker = L.marker(event.location)
-                .addTo(map)
-                .bindPopup(`<b>${event.description}</b><br>Commentary: <a href="#">Link</a>`);
-            markers.push(marker);
         });
-
-        // Populate sidebar
-        populateSidebar(events);
-
-        // Populate timeline
-        populateTimeline(events);
     })
     .catch(error => {
-        console.error('Error fetching or parsing CSV:', error);
+        console.error('Error fetching CSV:', error);
     });
 
 // Commented out original eventLines approach
