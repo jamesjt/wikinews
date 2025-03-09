@@ -148,18 +148,27 @@ body {
 .event-date {
     font-weight: bold;
     margin-bottom: 2px;
-    display: flex; /* Make date a flex container */
-    justify-content: space-between; /* Push icon to the right */
-    width: 100%; /* Ensure it spans full width */
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .event-summary {
-    /* No special styling needed beyond inherited properties */
+    cursor: pointer; /* Indicate clickability */
+}
+
+.event-summary:hover {
+    text-decoration: underline; /* Visual feedback */
 }
 
 .location-icon {
     width: 16px;
     height: 16px;
+    cursor: pointer; /* Indicate clickability */
+}
+
+.location-icon:hover {
+    opacity: 0.7; /* Hover effect */
 }
 
 .event-item:hover {
