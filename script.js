@@ -15,24 +15,13 @@ const markers = [];
 let events = [];
 
 const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
-function getOrdinal(day) {
-    if (day > 3 && day < 21) return `${day}th`;
-    switch (day % 10) {
-        case 1: return `${day}st`;
-        case 2: return `${day}nd`;
-        case 3: return `${day}rd`;
-        default: return `${day}th`;
-    }
-}
-
 // Zoom level state
-let zoomLevel = 1; // 1 = fully zoomed out, up to 5 = fully zoomed in
-const zoomLevels = [1, 2, 3, 4, 5];
-const zoomScales = [1, 2, 3, 4, 5]; // Corresponding width multipliers
+let zoomLevel = 1; // 1 = most zoomed out, 2 = medium zoom, 3 = most zoomed in
+const zoomLevels = [1, 2, 3];
 
 // Fetch and parse CSV
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
@@ -137,7 +126,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 zoomInBtn.className = 'zoom-btn zoom-in';
                 zoomInBtn.textContent = '+';
                 const zoomOutBtn = document.createElement('button');
-                zoomOutBtn.className = 'zoom-btn zoom-out';
+                zoomOutBtn.className = 'zoom-out';
                 zoomOutBtn.textContent = '-';
                 timeline.appendChild(zoomInBtn);
                 timeline.appendChild(zoomOutBtn);
@@ -389,18 +378,17 @@ function populateTimelineWithCursor(events, cursorPosition) {
 
     const startYear = Math.min(...years);
     const endYear = Math.max(...years);
-    const yearRange = endYear - startYear + 1;
 
     // Calculate the old width and cursor position ratio
-    const oldZoomScale = zoomScales[Math.max(0, zoomLevel - 2)] || zoomScales[0]; // Previous zoom level or default
-    const oldWidth = yearRange * 50 * oldZoomScale;
+    const oldZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 2 : 4); // Scale factors for each layer
+    const oldWidth = (endYear - startYear + 1) * 50 * oldZoomScale;
     const cursorRatio = cursorPosition / oldWidth;
 
     // Calculate new width after zoom
-    const newZoomScale = zoomScales[zoomLevel - 1];
-    const newWidth = yearRange * 50 * newZoomScale;
+    const newZoomScale = zoomLevel === 1 ? 1 : (zoomLevel === 2 ? 2 : 4); // Scale factors for each layer
+    const newWidth = (endYear - startYear + 1) * 50 * newZoomScale;
 
-    // Rebuild the timeline (removed timeline-indicator)
+    // Rebuild the timeline
     timelineBar.innerHTML = `
         <div class="main-line"></div>
         <div class="left-bar"></div>
@@ -408,85 +396,113 @@ function populateTimelineWithCursor(events, cursorPosition) {
     `;
     timelineBar.style.width = `${newWidth}px`;
 
-    // Group events by decade for zoomed-out view
-    const groupedByDecade = {};
-    events.forEach(event => {
-        const dateStr = event.date;
-        const yearMatch = dateStr.match(/\d{4}/);
-        const year = yearMatch ? parseInt(yearMatch[0]) : null;
-        if (year) {
-            const decade = Math.floor(year / 10) * 10;
-            if (!groupedByDecade[decade]) groupedByDecade[decade] = [];
-            groupedByDecade[decade].push({ ...event, year });
+    // Add year markers and month/day markers based on zoom level
+    if (zoomLevel === 1) {
+        // Layer 1: Big markers for decades, small markers for other years
+        for (let year = startYear; year <= endYear; year++) {
+            const isDecade = year % 10 === 0;
+            const position = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const marker = document.createElement('div');
+            marker.style.left = `${position}%`;
+            if (isDecade) {
+                marker.className = 'year-marker big-marker';
+                marker.textContent = year;
+            } else {
+                marker.className = 'year-marker small-marker';
+                marker.textContent = year.toString().slice(-2); // Last two digits
+            }
+            timelineBar.appendChild(marker);
         }
-    });
+    } else if (zoomLevel === 2) {
+        // Layer 2: Big markers for years, small markers for months
+        for (let year = startYear; year <= endYear; year++) {
+            const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const yearMarker = document.createElement('div');
+            yearMarker.className = 'year-marker big-marker';
+            yearMarker.style.left = `${yearPosition}%`;
+            yearMarker.textContent = year;
+            timelineBar.appendChild(yearMarker);
 
-    // Add year markers, starting with 1990 just right of the left bar
-    const leftBarPositionPx = 20; // Left bar is at 20px (relative to timeline-bar)
-    const year1990Px = leftBarPositionPx + 10; // 1990 marker is 10px to the right of the left bar
-    const yearMarkerWidthPx = 50; // Approximate width per year (adjusted for zoom)
+            // Add month markers
+            for (let month = 0; month < 12; month++) {
+                const monthPosition = yearPosition + ((month + 0.5) / 12) * (100 / (endYear - startYear + 1));
+                const monthMarker = document.createElement('div');
+                monthMarker.className = 'year-marker small-marker';
+                monthMarker.style.left = `${monthPosition}%`;
+                monthMarker.textContent = months[month].slice(0, 3); // First three letters
+                timelineBar.appendChild(monthMarker);
+            }
+        }
+    } else if (zoomLevel === 3) {
+        // Layer 3: Big markers for years and months, small markers for days
+        for (let year = startYear; year <= endYear; year++) {
+            const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const yearMarker = document.createElement('div');
+            yearMarker.className = 'year-marker big-marker';
+            yearMarker.style.left = `${yearPosition}%`;
+            yearMarker.textContent = year;
+            timelineBar.appendChild(yearMarker);
 
-    for (let year = startYear; year <= endYear; year++) {
-        // Calculate the position in pixels relative to the timeline width
-        const yearOffset = year - 1990; // Years relative to 1990
-        const yearPositionPx = year1990Px + (yearOffset * yearMarkerWidthPx * newZoomScale);
-        const yearPositionPercent = (yearPositionPx / newWidth) * 100;
+            for (let month = 0; month < 12; month++) {
+                const monthPosition = yearPosition + ((month + 0.5) / 12) * (100 / (endYear - startYear + 1));
+                const monthMarker = document.createElement('div');
+                monthMarker.className = 'year-marker big-marker';
+                monthMarker.style.left = `${monthPosition}%`;
+                monthMarker.textContent = months[month].slice(0, 3); // First three letters
+                timelineBar.appendChild(monthMarker);
 
-        const yearMarker = document.createElement('div');
-        yearMarker.className = 'year-marker';
-        yearMarker.style.left = `${yearPositionPercent}%`;
-        yearMarker.textContent = year;
-        timelineBar.appendChild(yearMarker);
+                // Approximate number of days in a month (average 30.44 days)
+                const daysInMonth = 30.44;
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayPosition = monthPosition + ((day - 0.5) / daysInMonth) * (100 / (12 * (endYear - startYear + 1)));
+                    const dayMarker = document.createElement('div');
+                    dayMarker.className = 'year-marker small-marker';
+                    dayMarker.style.left = `${dayPosition}%`;
+                    dayMarker.textContent = day;
+                    timelineBar.appendChild(dayMarker);
+                }
+            }
+        }
     }
 
-    // Add decade labels
-    Object.keys(groupedByDecade).sort((a, b) => a - b).forEach(decade => {
-        const decadeStart = parseInt(decade);
-        const decadeOffset = decadeStart - 1990;
-        const decadePositionPx = year1990Px + (decadeOffset * yearMarkerWidthPx * newZoomScale);
-        const decadePositionPercent = (decadePositionPx / newWidth) * 100;
+    // Add decade labels for Layer 1
+    if (zoomLevel === 1) {
+        for (let year = startYear; year <= endYear; year += 10) {
+            const position = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const decadeLabel = document.createElement('div');
+            decadeLabel.className = 'decade-label';
+            decadeLabel.style.left = `${position}%`;
+            decadeLabel.textContent = `${year}s`;
+            timelineBar.appendChild(decadeLabel);
+        }
+    }
 
-        const decadeLabel = document.createElement('div');
-        decadeLabel.className = 'decade-label';
-        decadeLabel.style.left = `${decadePositionPercent}%`;
-        decadeLabel.textContent = `${decade}s`;
-        timelineBar.appendChild(decadeLabel);
-    });
-
-    // Show bubbles with events starting 2px to the right of each year marker
+    // Show bubbles relative to date at all zoom levels
     events.forEach((event, index) => {
         const dateStr = event.date;
         const yearMatch = dateStr.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
-        if (!year) return;
+        if (!year || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
 
-        // Calculate the base position for the start of the year
-        const yearOffset = year - 1990;
-        const yearPositionPx = year1990Px + (yearOffset * yearMarkerWidthPx * newZoomScale);
-        const yearPositionPercent = (yearPositionPx / newWidth) * 100;
+        const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
+        const date = new Date(yearStr, month - 1, day);
+        const startOfYear = new Date(year, 0, 1);
+        const daysInYear = (new Date(year, 11, 31) - startOfYear) / (1000 * 60 * 60 * 24);
+        const daysFromStart = (date - startOfYear) / (1000 * 60 * 60 * 24);
+        const yearFraction = daysFromStart / daysInYear;
 
-        // Calculate the event's position within the year
         let positionPercent;
-        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
-            const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
-            const date = new Date(yearStr, month - 1, day);
-            const startOfYear = new Date(year, 0, 1);
-            const daysInYear = (new Date(year, 11, 31) - startOfYear) / (1000 * 60 * 60 * 24);
-            const daysFromStart = (date - startOfYear) / (1000 * 60 * 60 * 24);
-            const yearFraction = daysFromStart / daysInYear; // Fraction of the year
-
-            // Convert the year fraction to a percentage of the year's width
-            const yearWidthPx = yearMarkerWidthPx * newZoomScale; // Width of one year in pixels
-            const offsetWithinYearPx = yearFraction * yearWidthPx;
-            const offsetWithinYearPercent = (offsetWithinYearPx / newWidth) * 100;
-
-            // Add 2px offset to the right of the year marker
-            const twoPxOffsetPercent = (2 / newWidth) * 100;
-            positionPercent = yearPositionPercent + twoPxOffsetPercent + offsetWithinYearPercent;
-        } else {
-            // For non-M/D/Y format dates, position at the start of the year + 2px
-            const twoPxOffsetPercent = (2 / newWidth) * 100;
-            positionPercent = yearPositionPercent + twoPxOffsetPercent;
+        if (zoomLevel === 1) {
+            positionPercent = ((year - startYear) / (endYear - startYear + 1)) * 100;
+        } else if (zoomLevel === 2) {
+            const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const monthFraction = (month - 0.5) / 12;
+            positionPercent = yearPosition + monthFraction * (100 / (endYear - startYear + 1));
+        } else if (zoomLevel === 3) {
+            const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
+            const monthFraction = (month - 0.5) / 12;
+            const dayFraction = (day - 0.5) / 30.44; // Average days per month
+            positionPercent = yearPosition + monthFraction * (100 / (12 * (endYear - startYear + 1))) + dayFraction * (100 / (12 * 30.44 * (endYear - startYear + 1)));
         }
 
         // Event bubble
@@ -533,21 +549,18 @@ function populateTimelineWithCursor(events, cursorPosition) {
         timelineBar.appendChild(bubble);
 
         // Add date label (consistent across all zoom levels, numeric month/day)
-        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
-            const [month, day] = dateStr.split('/').map(part => parseInt(part, 10));
-            const dateLabel = document.createElement('div');
-            dateLabel.className = 'event-date-label';
-            dateLabel.style.left = `${positionPercent}%`; // Use the adjusted position
-            dateLabel.textContent = `${month}/${day}`; // Numeric format (e.g., "12/15")
+        const dateLabel = document.createElement('div');
+        dateLabel.className = 'event-date-label';
+        dateLabel.style.left = `${positionPercent}%`; // Use the adjusted position
+        dateLabel.textContent = `${month}/${day}`; // Numeric format (e.g., "12/15")
 
-            // Position halfway between main line (50%) and bubble
-            if (bubble.classList.contains('above')) {
-                dateLabel.style.top = '30px'; // Halfway from 50% (main line) to 10px (bubble top)
-            } else if (bubble.classList.contains('below')) {
-                dateLabel.style.bottom = '30px'; // Halfway from 50% (main line) to 10px (bubble bottom)
-            }
-            timelineBar.appendChild(dateLabel);
+        // Position halfway between main line (50%) and bubble
+        if (bubble.classList.contains('above')) {
+            dateLabel.style.top = '30px'; // Halfway from 50% (main line) to 10px (bubble top)
+        } else if (bubble.classList.contains('below')) {
+            dateLabel.style.bottom = '30px'; // Halfway from 50% (main line) to 10px (bubble bottom)
         }
+        timelineBar.appendChild(dateLabel);
     });
 
     // Adjust scroll position to keep the cursor over the same point
