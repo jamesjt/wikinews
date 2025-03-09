@@ -64,6 +64,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 // Build the collapsible sidebar
                 buildSidebar(events);
+
+                // Populate timeline with bubbles (position based on index)
+                populateTimeline(events);
             }
         });
     })
@@ -73,25 +76,23 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
 // Build the sidebar with collapsible decade and year sections
 function buildSidebar(events) {
-    // Group events by decade and year
     const groupedEvents = {};
-    const datePattern = /^\d{2}\/\d{2}\/\d{4}$/; // Regex for "MM/DD/YYYY"
+    const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
 
     events.forEach(event => {
         const dateStr = event.date;
         if (datePattern.test(dateStr)) {
             const [month, day, year] = dateStr.split('/').map(Number);
-            const decade = `${Math.floor(year / 10) * 10}s`; // e.g., "1990s"
+            const decade = `${Math.floor(year / 10) * 10}s`;
             if (!groupedEvents[decade]) groupedEvents[decade] = {};
             if (!groupedEvents[decade][year]) groupedEvents[decade][year] = [];
-            event.displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`; // "MM/DD"
+            event.displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
             groupedEvents[decade][year].push(event);
         } else {
             console.warn('Skipping event with invalid date format:', event);
         }
     });
 
-    // Sort decades and years numerically
     const sortedDecades = Object.keys(groupedEvents).sort((a, b) => parseInt(a) - parseInt(b));
     const eventList = document.getElementById('event-list');
     eventList.innerHTML = '';
@@ -147,7 +148,6 @@ function buildSidebar(events) {
         eventList.appendChild(decadeLi);
     });
 
-    // Add toggle functionality for collapsible sections
     document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
@@ -162,7 +162,6 @@ function buildSidebar(events) {
         });
     });
 
-    // Add map interactivity for event items
     document.querySelectorAll('.event-item').forEach(item => {
         item.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-event-index'));
@@ -172,3 +171,45 @@ function buildSidebar(events) {
         });
     });
 }
+
+// Populate timeline with bubbles (position based on index)
+function populateTimeline(events) {
+    const timelineBar = document.querySelector('.timeline-bar');
+    timelineBar.innerHTML = ''; // Clear existing bubbles except the static indicator
+    events.forEach((event, index) => {
+        const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50;
+        const bubble = document.createElement('div');
+        bubble.className = 'event-bubble';
+        bubble.style.left = `${position}%`;
+        bubble.title = `${event.date}: ${event.description}`;
+        timelineBar.appendChild(bubble);
+    });
+}
+
+// Sidebar resize functionality
+const sidebar = document.getElementById('sidebar');
+const resizeHandle = document.querySelector('.resize-handle');
+let isResizing = false;
+
+resizeHandle.addEventListener('mousedown', function(e) {
+    isResizing = true;
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+    e.preventDefault();
+    const container = document.getElementById('container');
+    const containerRect = container.getBoundingClientRect();
+    const mouseXInContainer = e.clientX - containerRect.left;
+    let newWidth = (mouseXInContainer / containerRect.width) * 100;
+    const minWidth = 10;
+    const maxWidth = 50;
+    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+    sidebar.style.flexBasis = `${newWidth}%`;
+    map.invalidateSize();
+});
+
+document.addEventListener('mouseup', function() {
+    isResizing = false;
+});
