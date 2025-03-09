@@ -104,7 +104,7 @@ function buildSidebar(events) {
         decadeToggle.className = 'toggle';
         const decadeIndicator = document.createElement('span');
         decadeIndicator.className = 'toggle-indicator';
-        decadeIndicator.textContent = '[+]';
+        decadeIndicator.textContent = '▶'; // Chevron right (closed)
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
         const decadeEvents = Object.values(groupedEvents[decade]).flat();
@@ -123,7 +123,7 @@ function buildSidebar(events) {
             yearToggle.className = 'toggle';
             const yearIndicator = document.createElement('span');
             yearIndicator.className = 'toggle-indicator';
-            yearIndicator.textContent = '[+]';
+            yearIndicator.textContent = '▶'; // Chevron right (closed)
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
             const yearEvents = groupedEvents[decade][year];
@@ -154,10 +154,10 @@ function buildSidebar(events) {
             const indicator = this.querySelector('.toggle-indicator');
             if (sublist.classList.contains('show')) {
                 sublist.classList.remove('show');
-                indicator.textContent = '[+]';
+                indicator.textContent = '▶'; // Chevron right (closed)
             } else {
                 sublist.classList.add('show');
-                indicator.textContent = '[-]';
+                indicator.textContent = '▼'; // Chevron down (open)
             }
         });
     });
