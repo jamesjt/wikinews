@@ -12,6 +12,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Array to store markers (for reference, but not used for indexing)
 const markers = [];
 
+let events = []; // Global to access in click handler
+
 // Fetch and parse CSV
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -20,7 +22,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
             header: true,
             complete: function(results) {
                 console.log('Parsed Data Sample:', results.data.slice(0, 5));
-                const events = results.data.map((row, index) => {
+                events = results.data.map((row, index) => {
                     const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : 'Unknown Date';
                     const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : 'No Description';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
@@ -36,7 +38,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             marker = L.marker(location)
                                 .addTo(map)
                                 .bindPopup(`<b>${description}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
-                            markers.push(marker); // Still track markers, but not for indexing
+                            markers.push(marker);
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
                         }
@@ -48,7 +50,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         date: dateStr,
                         description: description,
                         location: location,
-                        marker: marker, // Store marker reference directly
+                        marker: marker,
                         index: index
                     };
                 }).filter(event => event !== null);
@@ -112,10 +114,13 @@ function buildSidebar(events) {
         decadeIndicator.src = 'icon-arrow-accordion.svg';
         decadeIndicator.alt = 'Toggle';
         decadeToggle.appendChild(decadeIndicator);
-        decadeToggle.appendChild(document.createTextNode(` ${decade}`));
+        decadeToggle.appendChild(document.createTextNode(` ${decade} `));
         const decadeEvents = Object.values(groupedEvents[decade]).flat();
         const eventCount = decadeEvents.length;
-        decadeToggle.appendChild(document.createTextNode(` (${eventCount} events)`));
+        const countSpan = document.createElement('span');
+        countSpan.className = 'event-count';
+        countSpan.textContent = eventCount;
+        decadeToggle.appendChild(countSpan);
         decadeDiv.appendChild(decadeToggle);
 
         const yearDiv = document.createElement('div');
@@ -136,10 +141,13 @@ function buildSidebar(events) {
             yearIndicator.src = 'icon-arrow-accordion.svg';
             yearIndicator.alt = 'Toggle';
             yearToggle.appendChild(yearIndicator);
-            yearToggle.appendChild(document.createTextNode(` ${year}`));
+            yearToggle.appendChild(document.createTextNode(` ${year} `));
             const yearEvents = groupedEvents[decade][year];
             const yearEventCount = yearEvents.length;
-            yearToggle.appendChild(document.createTextNode(` (${yearEventCount} events)`));
+            const yearCountSpan = document.createElement('span');
+            yearCountSpan.className = 'event-count';
+            yearCountSpan.textContent = yearEventCount;
+            yearToggle.appendChild(yearCountSpan);
             yearSection.appendChild(yearToggle);
 
             const eventDiv = document.createElement('div');
@@ -184,8 +192,8 @@ function buildSidebar(events) {
     document.querySelectorAll('.event-item').forEach(item => {
         item.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-event-index'));
-            const event = events[index]; // Access the event object directly
-            if (event.marker) { // Use the stored marker reference
+            const event = events[index];
+            if (event.marker) {
                 map.setView(event.marker.getLatLng(), 10);
                 event.marker.openPopup();
             }
