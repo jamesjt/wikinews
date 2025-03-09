@@ -124,10 +124,19 @@ body {
 
 .event-item {
     padding: 5px 0;
+    display: flex; /* Use flex to align text and icon */
+    justify-content: space-between; /* Text left, icon right */
+    align-items: center;
 }
 
 .event-item:hover {
     background-color: #e0e0e0;
+}
+
+.location-icon {
+    width: 16px; /* Match toggle-indicator size or adjust as needed */
+    height: 16px;
+    margin-left: 8px; /* Space between text and icon */
 }
 
 .resize-handle {
