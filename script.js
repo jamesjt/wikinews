@@ -1,4 +1,4 @@
-// script.js
+// script.js (Ensure saved as UTF-8)
 
 // Define default location (Kyiv)
 const defaultLocation = [50.45, 30.52];
@@ -104,7 +104,7 @@ function buildSidebar(events) {
         decadeToggle.className = 'toggle';
         const decadeIndicator = document.createElement('span');
         decadeIndicator.className = 'toggle-indicator';
-        decadeIndicator.textContent = '▶'; // Chevron right (closed)
+        decadeIndicator.textContent = '\u25B6'; // Unicode for chevron right (closed)
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
         const decadeEvents = Object.values(groupedEvents[decade]).flat();
@@ -123,7 +123,7 @@ function buildSidebar(events) {
             yearToggle.className = 'toggle';
             const yearIndicator = document.createElement('span');
             yearIndicator.className = 'toggle-indicator';
-            yearIndicator.textContent = '▶'; // Chevron right (closed)
+            yearIndicator.textContent = '\u25B6'; // Unicode for chevron right (closed)
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
             const yearEvents = groupedEvents[decade][year];
@@ -154,10 +154,10 @@ function buildSidebar(events) {
             const indicator = this.querySelector('.toggle-indicator');
             if (sublist.classList.contains('show')) {
                 sublist.classList.remove('show');
-                indicator.textContent = '▶'; // Chevron right (closed)
+                indicator.textContent = '\u25B6'; // Chevron right (closed)
             } else {
                 sublist.classList.add('show');
-                indicator.textContent = '▼'; // Chevron down (open)
+                indicator.textContent = '\u25BC'; // Chevron down (open)
             }
         });
     });
