@@ -102,9 +102,10 @@ function buildSidebar(events) {
         decadeDiv.className = 'decade';
         const decadeToggle = document.createElement('span');
         decadeToggle.className = 'toggle';
-        const decadeIndicator = document.createElement('span');
+        const decadeIndicator = document.createElement('img');
         decadeIndicator.className = 'toggle-indicator';
-        decadeIndicator.textContent = '\u25B6'; // Unicode for chevron right (closed)
+        decadeIndicator.src = 'icon-arrow-accordion.svg'; // Path to your SVG
+        decadeIndicator.alt = 'Toggle';
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
         const decadeEvents = Object.values(groupedEvents[decade]).flat();
@@ -121,9 +122,10 @@ function buildSidebar(events) {
             yearSection.className = 'year';
             const yearToggle = document.createElement('span');
             yearToggle.className = 'toggle';
-            const yearIndicator = document.createElement('span');
+            const yearIndicator = document.createElement('img');
             yearIndicator.className = 'toggle-indicator';
-            yearIndicator.textContent = '\u25B6'; // Unicode for chevron right (closed)
+            yearIndicator.src = 'icon-arrow-accordion.svg'; // Path to your SVG
+            yearIndicator.alt = 'Toggle';
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
             const yearEvents = groupedEvents[decade][year];
@@ -151,13 +153,10 @@ function buildSidebar(events) {
     document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
-            const indicator = this.querySelector('.toggle-indicator');
             if (sublist.classList.contains('show')) {
                 sublist.classList.remove('show');
-                indicator.textContent = '\u25B6'; // Chevron right (closed)
             } else {
                 sublist.classList.add('show');
-                indicator.textContent = '\u25BC'; // Chevron down (open)
             }
         });
     });
