@@ -54,7 +54,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             location = [lat, lon];
                             const numberedIcon = L.divIcon({
                                 className: 'numbered-marker',
-                                html: `<div>${index + 1}</div>`, // Numbered marker
+                                html: `<div>${index + 1}</div>`,
                                 iconSize: [24, 24],
                                 iconAnchor: [12, 12],
                                 popupAnchor: [0, -12]
@@ -129,14 +129,14 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${event.index + 1}: ${months[month - 1]} ${getOrdinal(day)}`; // Add number before date
+            displayDate = `${event.index + 1}: ${months[month - 1]} ${getOrdinal(day)}`;
         } else {
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
                 year = yearMatch[0];
             }
             console.warn('Non-standard date format, using full string:', dateStr);
-            displayDate = `${event.index + 1}: ${dateStr}`; // Add number for non-standard dates
+            displayDate = `${event.index + 1}: ${dateStr}`;
         }
 
         const decade = year === 'Unknown' ? 'Unknown' : `${Math.floor(parseInt(year) / 10) * 10}s`;
@@ -248,7 +248,7 @@ function buildSidebar(events) {
         eventList.appendChild(decadeDiv);
     });
 
-    document.querySelectorAll('.toggle').forEach(toggle fb=> {
+    document.querySelectorAll('.toggle').forEach(toggle => { // Fixed syntax: 'fb=>' to '=>'
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
             if (sublist.classList.contains('show')) {
