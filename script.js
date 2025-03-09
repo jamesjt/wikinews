@@ -9,7 +9,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Array to store markers
+// Array to store markers (for reference, but not used for indexing)
 const markers = [];
 
 // Fetch and parse CSV
@@ -26,12 +26,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
 
                     let location = null;
+                    let marker = null;
                     if (locationStr) {
                         const [latStr, lonStr] = locationStr.split(',').map(coord => coord.trim());
                         const lat = parseFloat(latStr);
                         const lon = parseFloat(lonStr);
                         if (!isNaN(lat) && !isNaN(lon)) {
                             location = [lat, lon];
+                            marker = L.marker(location)
+                                .addTo(map)
+                                .bindPopup(`<b>${description}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
+                            markers.push(marker); // Still track markers, but not for indexing
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
                         }
@@ -43,20 +48,10 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         date: dateStr,
                         description: description,
                         location: location,
+                        marker: marker, // Store marker reference directly
                         index: index
                     };
                 }).filter(event => event !== null);
-
-                // Add markers to the map only for events with valid locations
-                events.forEach((event, index) => {
-                    event.index = index;
-                    if (event.location) {
-                        const marker = L.marker(event.location)
-                            .addTo(map)
-                            .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
-                        markers.push(marker);
-                    }
-                });
 
                 // Build the collapsible sidebar (all events)
                 buildSidebar(events);
@@ -155,7 +150,6 @@ function buildSidebar(events) {
                 eventItem.textContent = `${event.displayDate}: ${event.description}`;
                 eventItem.setAttribute('data-event-index', event.index);
 
-                // Add location icon if event has a location
                 if (event.location) {
                     const locationIcon = document.createElement('img');
                     locationIcon.className = 'location-icon';
@@ -190,10 +184,10 @@ function buildSidebar(events) {
     document.querySelectorAll('.event-item').forEach(item => {
         item.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-event-index'));
-            const marker = markers[index];
-            if (marker) {
-                map.setView(marker.getLatLng(), 10);
-                marker.openPopup();
+            const event = events[index]; // Access the event object directly
+            if (event.marker) { // Use the stored marker reference
+                map.setView(event.marker.getLatLng(), 10);
+                event.marker.openPopup();
             }
         });
     });
