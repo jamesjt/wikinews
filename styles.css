@@ -9,7 +9,7 @@ body {
 }
 
 #timeline {
-    height: 50px;
+    height: 100px; /* Increased height to accommodate above/below layout */
     background: #eee;
     position: relative;
     border-bottom: 1px solid #ccc;
@@ -20,15 +20,60 @@ body {
     height: 100%;
 }
 
+.main-line {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    right: 10px;
+    height: 2px;
+    background: #333;
+}
+
+.left-bar, .right-bar {
+    position: absolute;
+    width: 2px;
+    height: 50%;
+    background: #333;
+    top: 25%;
+}
+
+.left-bar {
+    left: 10px;
+}
+
+.right-bar {
+    right: 10px;
+}
+
 .event-bubble {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 20px;
+    height: 20px;
     background: green;
     border-radius: 50%;
-    top: 50%;
-    transform: translateY(-50%);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.event-bubble.above {
+    top: 10px; /* Position above the main line */
+}
+
+.event-bubble.below {
+    bottom: 10px; /* Position below the main line */
+}
+
+.event-number {
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.event-bubble:hover {
+    transform: scale(1.2);
 }
 
 .timeline-indicator {
