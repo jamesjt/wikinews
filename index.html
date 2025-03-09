@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive History Map</title>
+    <title>Project 451 / Wikinews</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <!-- Custom CSS -->
@@ -21,11 +21,10 @@
     <div id="container">
         <div id="sidebar">
             <h2>Stories</h2>
-            <ul>
-                <li>The War in Ukraine
-                    <ul id="event-list"></ul>
-                </li>
-            </ul>
+            <div class="story-section">
+                <div class="story-title">The War in Ukraine</div>
+                <div id="event-list"></div>
+            </div>
             <h2>Commentary</h2>
             <p>Sample commentary linked to events, such as news articles or analyses.</p>
         </div>
