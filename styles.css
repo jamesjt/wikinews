@@ -198,7 +198,6 @@ body {
     font-weight: bold;
     margin-bottom: 2px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     width: 100%;
     position: relative;
@@ -211,12 +210,12 @@ body {
     background: green; /* Default green for no location */
     border-radius: 50%;
     color: white;
-    font-size: 12px;
+    font-size: 10px; /* Changed from 12px */
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
+    margin-right: 3px; /* Changed from 8px */
     flex-shrink: 0; /* Prevents shrinking in flex layout */
 }
 
@@ -228,6 +227,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px; /* Small gap between document and location icons */
+    margin-left: auto; /* Pushes icons to the right */
 }
 
 .event-summary {
