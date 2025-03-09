@@ -192,7 +192,7 @@ body {
 }
 
 .document-wrapper:hover .document-tooltip {
-    display: block; /* Show as block to stack items vertically */
+    display: flex;
 }
 
 .document-tooltip {
@@ -202,21 +202,13 @@ body {
     left: 50%;
     transform: translateX(-50%);
     background-color: white;
-    padding: 8px;
+    padding: 8px; /* Changed from 4px 8px to 8px */
     border-radius: 4px;
     font-size: 14px;
+    white-space: nowrap;
     z-index: 2000;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.document-tooltip .doc-entry {
-    display: flex; /* Each entry mimics .document-link */
     align-items: center;
-    margin-bottom: 4px; /* Space between entries, like map popup */
-}
-
-.document-tooltip .doc-entry:last-child {
-    margin-bottom: 0; /* No margin on last entry */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .document-tooltip img {
