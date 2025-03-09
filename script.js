@@ -43,6 +43,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const summary = row['Summary - Date'] ? row['Summary - Date'].trim() : 'No Summary';
                     const blurb = row['Blurb'] ? row['Blurb'].trim() : 'No Blurb';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
+                    const documentNames = row['Document Name'] ? row['Document Name'].split(',').map(name => name.trim()) : [];
+                    const documentLinks = row['Document Link'] ? row['Document Link'].split(',').map(link => link.trim()) : [];
 
                     let location = null;
                     let marker = null;
@@ -59,9 +61,21 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 iconAnchor: [12, 12],
                                 popupAnchor: [0, -12]
                             });
+                            let popupContent = `<b>${shortSummary}</b><br>Date: ${dateStr}`;
+                            if (documentNames.length > 0 && documentLinks.length > 0) {
+                                for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
+                                    popupContent += `<div class="document-link"><img src="icon-document.png" alt="Document"><a href="${documentLinks[i]}" target="_blank">${documentNames[i]}</a></div>`;
+                                }
+                            }
                             marker = L.marker(location, { icon: numberedIcon })
                                 .addTo(map)
-                                .bindPopup(`<b>${shortSummary}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
+                                .bindPopup(popupContent);
+                            marker.on('popupopen', () => {
+                                const links = marker.getPopup().getElement().querySelectorAll('.document-link a');
+                                links.forEach((link, i) => {
+                                    link.addEventListener('click', () => window.open(documentLinks[i], '_blank'));
+                                });
+                            });
                             marker.on('click', () => {
                                 const eventIndex = events.findIndex(e => e.marker === marker);
                                 if (eventIndex !== -1) {
@@ -103,7 +117,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         location: location,
                         marker: marker,
                         index: index,
-                        summaryState: 0
+                        summaryState: 0,
+                        documentNames: documentNames,
+                        documentLinks: documentLinks
                     };
                 }).filter(event => event !== null);
 
@@ -208,7 +224,28 @@ function buildSidebar(events) {
 
                 const dateDiv = document.createElement('div');
                 dateDiv.className = 'event-date';
-                dateDiv.textContent = event.displayDate;
+                const dateText = document.createElement('span');
+                dateText.textContent = event.displayDate;
+                dateDiv.appendChild(dateText);
+
+                if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
+                    const minLength = Math.min(event.documentNames.length, event.documentLinks.length);
+                    for (let i = 0; i < minLength; i++) {
+                        const documentIcon = document.createElement('img');
+                        documentIcon.className = 'document-icon';
+                        documentIcon.src = 'icon-document.png';
+                        documentIcon.alt = 'Document';
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'document-tooltip';
+                        tooltip.innerHTML = `<a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>`;
+                        documentIcon.appendChild(tooltip);
+                        documentIcon.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            window.open(event.documentLinks[i], '_blank');
+                        });
+                        dateDiv.appendChild(documentIcon);
+                    }
+                }
 
                 if (event.location) {
                     const locationIcon = document.createElement('img');
@@ -248,7 +285,7 @@ function buildSidebar(events) {
         eventList.appendChild(decadeDiv);
     });
 
-    document.querySelectorAll('.toggle').forEach(toggle => { // Fixed syntax: 'fb=>' to '=>'
+    document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
             if (sublist.classList.contains('show')) {
