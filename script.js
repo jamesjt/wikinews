@@ -228,6 +228,9 @@ function buildSidebar(events) {
                 dateText.textContent = event.displayDate;
                 dateDiv.appendChild(dateText);
 
+                const iconsContainer = document.createElement('div');
+                iconsContainer.className = 'icons-container';
+
                 if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
@@ -239,7 +242,6 @@ function buildSidebar(events) {
                     const tooltip = document.createElement('div');
                     tooltip.className = 'document-tooltip';
                     
-                    // Add all documents to one tooltip
                     const minLength = Math.min(event.documentNames.length, event.documentLinks.length);
                     for (let i = 0; i < minLength; i++) {
                         const docEntry = document.createElement('div');
@@ -255,7 +257,7 @@ function buildSidebar(events) {
                     docContainer.appendChild(documentIcon);
                     docWrapper.appendChild(docContainer);
                     docWrapper.appendChild(tooltip);
-                    dateDiv.appendChild(docWrapper);
+                    iconsContainer.appendChild(docWrapper);
                 }
 
                 if (event.location) {
@@ -270,8 +272,10 @@ function buildSidebar(events) {
                             event.marker.openPopup();
                         }
                     });
-                    dateDiv.appendChild(locationIcon);
+                    iconsContainer.appendChild(locationIcon);
                 }
+
+                dateDiv.appendChild(iconsContainer);
 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'event-summary';
