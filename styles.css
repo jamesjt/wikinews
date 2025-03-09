@@ -9,15 +9,19 @@ body {
 }
 
 #timeline {
-    height: 100px; /* Increased height to accommodate above/below layout */
+    height: 150px; /* Increased height for labels and zoom */
     background: #eee;
     position: relative;
     border-bottom: 1px solid #ccc;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    white-space: nowrap;
 }
 
 .timeline-bar {
     position: relative;
     height: 100%;
+    display: inline-block; /* Allows width to expand for scrolling */
 }
 
 .main-line {
@@ -86,6 +90,82 @@ body {
     height: 100%;
     background: blue;
     top: 0;
+}
+
+.decade-label {
+    position: absolute;
+    top: 5px;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.year-label {
+    position: absolute;
+    top: 30px;
+    transform: translateX(-50%);
+    font-size: 12px;
+}
+
+.event-date-label {
+    position: absolute;
+    top: 70px;
+    transform: translateX(-50%) rotate(-45deg);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.event-line {
+    position: absolute;
+    width: 1px;
+    background: #333;
+    z-index: 1;
+}
+
+.decade-event-count {
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.decade-event-count span {
+    position: absolute;
+    top: -5px;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.zoom-btn {
+    position: absolute;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    background: #fff;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.zoom-btn:hover {
+    background: #ddd;
+}
+
+.zoom-in {
+    right: 40px;
+}
+
+.zoom-out {
+    right: 5px;
 }
 
 #container {
@@ -210,12 +290,12 @@ body {
     background: green; /* Default green for no location */
     border-radius: 50%;
     color: white;
-    font-size: 10px; /* Changed from 12px */
+    font-size: 10px;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 3px; /* Changed from 8px */
+    margin-right: 3px;
     flex-shrink: 0; /* Prevents shrinking in flex layout */
 }
 
