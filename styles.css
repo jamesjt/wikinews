@@ -114,18 +114,34 @@ body {
 }
 
 .toggle.open {
-    background-color: #e6f0fa;
-    color: #1a73e8;
+    background-color: #d3d3d3; /* Grey background when open */
+    color: #666; /* Grey text when open */
 }
 
 .toggle.open .toggle-indicator {
     transform: rotate(0deg);
 }
 
+.event-count {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+    background-color: #d3d3d3; /* Same grey as open background */
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+.toggle.open .event-count {
+    color: #666; /* Match text color when open */
+}
+
 .event-item {
     padding: 5px 0;
-    display: flex; /* Use flex to align text and icon */
-    justify-content: space-between; /* Text left, icon right */
+    display: flex;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -134,9 +150,9 @@ body {
 }
 
 .location-icon {
-    width: 16px; /* Match toggle-indicator size or adjust as needed */
+    width: 16px;
     height: 16px;
-    margin-left: 8px; /* Space between text and icon */
+    margin-left: 8px;
 }
 
 .resize-handle {
