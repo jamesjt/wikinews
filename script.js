@@ -55,6 +55,34 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             marker = L.marker(location)
                                 .addTo(map)
                                 .bindPopup(`<b>${shortSummary}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
+                            // Add click handler to marker
+                            marker.on('click', () => {
+                                const eventIndex = events.findIndex(e => e.marker === marker);
+                                if (eventIndex !== -1) {
+                                    const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+                                    if (eventItem) {
+                                        // Expand parent decade and year if collapsed
+                                        const yearSection = eventItem.closest('.year');
+                                        const decadeSection = yearSection.closest('.decade');
+                                        const yearList = yearSection.querySelector('.year-list');
+                                        const decadeList = decadeSection.querySelector('.decade-list');
+                                        const yearToggle = yearSection.querySelector('.toggle');
+                                        const decadeToggle = decadeSection.querySelector('.toggle');
+
+                                        if (!decadeList.classList.contains('show')) {
+                                            decadeList.classList.add('show');
+                                            decadeToggle.classList.add('open');
+                                        }
+                                        if (!yearList.classList.contains('show')) {
+                                            yearList.classList.add('show');
+                                            yearToggle.classList.add('open');
+                                        }
+
+                                        // Scroll to the event item
+                                        eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                }
+                            });
                             markers.push(marker);
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
@@ -71,7 +99,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         location: location,
                         marker: marker,
                         index: index,
-                        summaryState: 0 // 0: shortSummary, 1: summary, 2: blurb
+                        summaryState: 0
                     };
                 }).filter(event => event !== null);
 
@@ -183,7 +211,7 @@ function buildSidebar(events) {
                     locationIcon.src = 'icon-location.svg';
                     locationIcon.alt = 'Location';
                     locationIcon.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent event-item click
+                        e.stopPropagation();
                         if (event.marker) {
                             map.setView(event.marker.getLatLng(), 10);
                             event.marker.openPopup();
@@ -194,15 +222,11 @@ function buildSidebar(events) {
 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'event-summary';
-                summaryDiv.textContent = event.shortSummary; // Start with short summary
+                summaryDiv.textContent = event.shortSummary;
                 summaryDiv.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent event-item click
-                    event.summaryState = (event.summaryState + 1) % 3; // Cycle 0, 1, 2
-                    summaryDiv.textContent = [
-                        event.shortSummary,
-                        event.summary,
-                        event.blurb
-                    ][event.summaryState];
+                    e.stopPropagation();
+                    event.summaryState = (event.summaryState + 1) % 3;
+                    summaryDiv.textContent = [event.shortSummary, event.summary, event.blurb][event.summaryState];
                 });
 
                 eventItem.appendChild(dateDiv);
