@@ -1,86 +1,48 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-}
-
+/* Ensure the container layout isolates the timeline */
 #container {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack timeline and content vertically */
     height: 100vh;
 }
 
+/* Timeline container with fixed height */
 #timeline {
     width: 100%;
     height: 150px; /* Fixed height for the timeline */
-    min-height: 150px;
-    max-height: 150px;
+    min-height: 150px; /* Prevent shrinking */
+    max-height: 150px; /* Prevent expanding */
     overflow-x: auto;
     overflow-y: hidden;
-    flex-shrink: 0;
-    background-color: #f0f0f0;
-    position: relative;
+    flex-shrink: 0; /* Prevent the timeline from shrinking */
 }
 
+/* Ensure the timeline-bar inside maintains its height */
 .timeline-bar {
     height: 100%;
     position: relative;
 }
 
-.main-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: #333;
+/* Content area containing sidebar and map */
+#content {
+    display: flex;
+    flex-grow: 1; /* Take remaining space */
+    overflow: hidden; /* Prevent overflow affecting layout */
 }
 
-.left-bar, .right-bar {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: #333;
+#sidebar {
+    flex-basis: 20%;
+    min-width: 200px;
+    max-width: 50%;
+    overflow-y: auto; /* Allow sidebar to scroll vertically */
+    height: 100%; /* Ensure sidebar takes full height of content area */
 }
 
-.left-bar {
-    left: 0;
+#map {
+    flex-grow: 1;
+    height: 100%; /* Map takes full height of content area */
 }
 
-.right-bar {
-    right: 0;
-}
-
-.year-marker {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    text-align: center;
-    color: #333;
-}
-
-.year-marker.big-marker {
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.year-marker.small-marker {
-    font-size: 10px;
-}
-
-.decade-label {
-    position: absolute;
-    top: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #555;
-}
-
+/* Ensure event bubbles and labels fit within the fixed height */
 .event-bubble {
     position: absolute;
     width: 24px;
@@ -101,234 +63,8 @@ body {
     bottom: 10px;
 }
 
-.event-bubble.has-location {
-    background-color: #28a745;
-}
-
-.event-number {
-    font-size: 12px;
-}
-
 .event-date-label {
     position: absolute;
     font-size: 10px;
     color: #333;
-}
-
-.zoom-btn {
-    position: fixed;
-    top: 10px;
-    z-index: 1000;
-    width: 30px;
-    height: 30px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.zoom-in {
-    right: 50px;
-}
-
-.zoom-out {
-    right: 10px;
-}
-
-#sidebar {
-    flex-basis: 20%;
-    min-width: 200px;
-    max-width: 50%;
-    overflow-y: auto;
-    background-color: #fff;
-    border-right: 1px solid #ccc;
-    position: relative;
-}
-
-#map {
-    flex-grow: 1;
-    height: calc(100vh - 150px); /* Subtract timeline height */
-}
-
-.resize-handle {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 5px;
-    height: 100%;
-    background-color: #ccc;
-    cursor: ew-resize;
-}
-
-#event-list {
-    padding: 10px;
-}
-
-.decade, .year {
-    margin-bottom: 10px;
-}
-
-.toggle {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-}
-
-.toggle.open .toggle-indicator {
-    transform: rotate(90deg);
-}
-
-.toggle-indicator {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
-    transition: transform 0.2s;
-}
-
-.event-count {
-    background-color: #007bff;
-    color: white;
-    border-radius: 10px;
-    padding: 2px 6px;
-    font-size: 12px;
-    margin-left: 5px;
-}
-
-.decade-list, .year-list {
-    display: none;
-    padding-left: 20px;
-}
-
-.decade-list.show, .year-list.show {
-    display: block;
-}
-
-.event-item {
-    margin: 5px 0;
-    padding: 5px;
-    border-bottom: 1px solid #eee;
-}
-
-.event-date {
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-}
-
-.event-number-circle {
-    width: 20px;
-    height: 20px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 5px;
-    font-size: 12px;
-}
-
-.event-number-circle.has-location {
-    background-color: #28a745;
-}
-
-.icons-container {
-    margin-left: 10px;
-    display: flex;
-    align-items: center;
-}
-
-.document-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-.document-icon img {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.document-tooltip {
-    display: none;
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    z-index: 1000;
-    top: 20px;
-    left: 0;
-}
-
-.document-wrapper:hover .document-tooltip {
-    display: block;
-}
-
-.doc-entry {
-    display: flex;
-    align-items: center;
-    margin: 2px 0;
-}
-
-.doc-entry img {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
-}
-
-.doc-entry a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.doc-entry a:hover {
-    text-decoration: underline;
-}
-
-.location-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 5px;
-    cursor: pointer;
-}
-
-.event-summary {
-    margin-top: 5px;
-    color: #555;
-    cursor: pointer;
-}
-
-.numbered-marker {
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-}
-
-.document-link {
-    display: flex;
-    align-items: center;
-    margin-top: 5px;
-}
-
-.document-link img {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
-}
-
-.document-link a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.document-link a:hover {
-    text-decoration: underline;
 }
