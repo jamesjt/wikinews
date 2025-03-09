@@ -31,7 +31,8 @@ body {
     cursor: pointer;
 }
 
-.indicator {
+/* Specific to timeline indicator */
+.timeline-indicator {
     position: absolute;
     width: 2px;
     height: 100%;
@@ -48,8 +49,8 @@ body {
     flex: 0 0 20%;
     background: #f9f9f9;
     padding: 10px;
-    overflow-y: auto; /* Enables vertical scrolling */
-    max-height: calc(100vh - 50px); /* Limits height to viewport minus timeline */
+    overflow-y: auto;
+    max-height: calc(100vh - 50px);
 }
 
 #sidebar h2 {
@@ -74,12 +75,13 @@ body {
 /* Style for toggle elements */
 .toggle {
     cursor: pointer;
-    user-select: none; /* Prevent text selection */
+    user-select: none;
 }
 
-/* Style for the [+]/[-] indicators */
-.indicator {
+/* Specific to sidebar toggle indicators */
+.toggle-indicator {
     margin-right: 5px;
+    display: inline; /* Keep inline with text */
 }
 
 .resize-handle {
