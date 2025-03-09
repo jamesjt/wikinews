@@ -1,4 +1,4 @@
-// script.js (Ensure saved as UTF-8) test
+// script.js (Ensure saved as UTF-8)
 
 // Define default location (Kyiv) - only used as a fallback if needed elsewhere
 const defaultLocation = [50.45, 30.52];
@@ -508,13 +508,13 @@ function populateTimelineWithCursor(events, cursorPosition) {
         });
         timelineBar.appendChild(bubble);
 
-        // Add date label (only day and month when zoomed in, positioned halfway to bubble)
-        if (zoomLevel > 1 && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+        // Add date label (consistent across all zoom levels, numeric month/day)
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
             const [month, day] = dateStr.split('/').map(part => parseInt(part, 10));
             const dateLabel = document.createElement('div');
             dateLabel.className = 'event-date-label';
             dateLabel.style.left = `${position}%`;
-            dateLabel.textContent = `${months[month - 1]} ${getOrdinal(day)}`;
+            dateLabel.textContent = `${month}/${day}`; // Numeric format (e.g., "12/15")
 
             // Position halfway between main line (50%) and bubble
             if (bubble.classList.contains('above')) {
@@ -522,12 +522,6 @@ function populateTimelineWithCursor(events, cursorPosition) {
             } else if (bubble.classList.contains('below')) {
                 dateLabel.style.bottom = '30px'; // Halfway from 50% (main line) to 10px (bubble bottom)
             }
-            timelineBar.appendChild(dateLabel);
-        } else if (zoomLevel === 1) {
-            const dateLabel = document.createElement('div');
-            dateLabel.className = 'event-date-label';
-            dateLabel.style.left = `${position}%`;
-            dateLabel.textContent = event.date;
             timelineBar.appendChild(dateLabel);
         }
     });
