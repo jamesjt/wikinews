@@ -39,7 +39,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 console.log('Parsed Data Sample:', results.data.slice(0, 5));
                 events = results.data.map((row, index) => {
                     const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : 'Unknown Date';
-                    const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : 'No Description';
+                    const shortSummary = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : 'No Short Summary';
+                    const summary = row['Summary - Date'] ? row['Summary - Date'].trim() : 'No Summary';
+                    const blurb = row['Blurb'] ? row['Blurb'].trim() : 'No Blurb';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
 
                     let location = null;
@@ -52,7 +54,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             location = [lat, lon];
                             marker = L.marker(location)
                                 .addTo(map)
-                                .bindPopup(`<b>${description}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
+                                .bindPopup(`<b>${shortSummary}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
                             markers.push(marker);
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
@@ -63,10 +65,13 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                     return {
                         date: dateStr,
-                        description: description,
+                        shortSummary: shortSummary,
+                        summary: summary,
+                        blurb: blurb,
                         location: location,
                         marker: marker,
-                        index: index
+                        index: index,
+                        summaryState: 0 // 0: shortSummary, 1: summary, 2: blurb
                     };
                 }).filter(event => event !== null);
 
@@ -177,12 +182,28 @@ function buildSidebar(events) {
                     locationIcon.className = 'location-icon';
                     locationIcon.src = 'icon-location.svg';
                     locationIcon.alt = 'Location';
+                    locationIcon.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent event-item click
+                        if (event.marker) {
+                            map.setView(event.marker.getLatLng(), 10);
+                            event.marker.openPopup();
+                        }
+                    });
                     dateDiv.appendChild(locationIcon);
                 }
 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'event-summary';
-                summaryDiv.textContent = event.description;
+                summaryDiv.textContent = event.shortSummary; // Start with short summary
+                summaryDiv.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent event-item click
+                    event.summaryState = (event.summaryState + 1) % 3; // Cycle 0, 1, 2
+                    summaryDiv.textContent = [
+                        event.shortSummary,
+                        event.summary,
+                        event.blurb
+                    ][event.summaryState];
+                });
 
                 eventItem.appendChild(dateDiv);
                 eventItem.appendChild(summaryDiv);
@@ -210,17 +231,6 @@ function buildSidebar(events) {
             }
         });
     });
-
-    document.querySelectorAll('.event-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const index = parseInt(this.getAttribute('data-event-index'));
-            const event = events[index];
-            if (event.marker) {
-                map.setView(event.marker.getLatLng(), 10);
-                event.marker.openPopup();
-            }
-        });
-    });
 }
 
 // Populate timeline with bubbles (position based on index)
@@ -232,7 +242,7 @@ function populateTimeline(events) {
         const bubble = document.createElement('div');
         bubble.className = 'event-bubble';
         bubble.style.left = `${position}%`;
-        bubble.title = `${event.date}: ${event.description}`;
+        bubble.title = `${event.date}: ${event.shortSummary}`;
         timelineBar.appendChild(bubble);
     });
 }
