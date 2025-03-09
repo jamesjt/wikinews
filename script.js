@@ -29,6 +29,10 @@ function getOrdinal(day) {
     }
 }
 
+// Zoom level state
+let zoomLevel = 1; // 1 = fully zoomed out (decades), 2 = zoomed in (specific dates)
+const zoomLevels = [1, 2];
+
 // Fetch and parse CSV
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -125,6 +129,27 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 buildSidebar(events);
                 populateTimeline(events);
+
+                // Add zoom controls
+                const timeline = document.getElementById('timeline');
+                const zoomInBtn = document.createElement('button');
+                zoomInBtn.className = 'zoom-btn zoom-in';
+                zoomInBtn.textContent = '+';
+                const zoomOutBtn = document.createElement('button');
+                zoomOutBtn.className = 'zoom-btn zoom-out';
+                zoomOutBtn.textContent = '-';
+                timeline.appendChild(zoomInBtn);
+                timeline.appendChild(zoomOutBtn);
+
+                zoomInBtn.addEventListener('click', () => {
+                    zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
+                    populateTimeline(events);
+                });
+
+                zoomOutBtn.addEventListener('click', () => {
+                    zoomLevel = Math.max(zoomLevel - 1, 1);
+                    populateTimeline(events);
+                });
             }
         });
     })
@@ -145,14 +170,14 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${months[month - 1]} ${getOrdinal(day)}`; // Removed number prefix here since we'll add it separately
+            displayDate = `${months[month - 1]} ${getOrdinal(day)}`;
         } else {
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
                 year = yearMatch[0];
             }
             console.warn('Non-standard date format, using full string:', dateStr);
-            displayDate = dateStr; // Removed number prefix here too
+            displayDate = dateStr;
         }
 
         const decade = year === 'Unknown' ? 'Unknown' : `${Math.floor(parseInt(year) / 10) * 10}s`;
@@ -324,7 +349,7 @@ function buildSidebar(events) {
     });
 }
 
-// Populate timeline with bubbles alternating above and below the main line
+// Populate timeline with dynamic start and end years, zoom levels, and scrolling
 function populateTimeline(events) {
     const timelineBar = document.querySelector('.timeline-bar');
     timelineBar.innerHTML = `
@@ -333,53 +358,154 @@ function populateTimeline(events) {
         <div class="right-bar"></div>
         <span class="timeline-indicator" style="left: 50%"></span>
     `;
-    events.forEach((event, index) => {
-        const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50;
-        const bubble = document.createElement('div');
-        bubble.className = 'event-bubble';
-        bubble.style.left = `${position}%`;
-        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
-        bubble.title = `${event.date}: ${event.shortSummary}`;
-        // Set class based on location presence
-        if (event.location) {
-            bubble.classList.add('has-location');
-        }
-        // Alternate above and below the main line
-        if (index % 2 === 0) {
-            bubble.classList.add('above');
-        } else {
-            bubble.classList.add('below');
-        }
-        // Add click event to open sidebar event and move map
-        bubble.addEventListener('click', () => {
-            const eventIndex = index;
-            const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
-            if (eventItem) {
-                const yearSection = eventItem.closest('.year');
-                const decadeSection = yearSection.closest('.decade');
-                const yearList = yearSection.querySelector('.year-list');
-                const decadeList = decadeSection.querySelector('.decade-list');
-                const yearToggle = yearSection.querySelector('.toggle');
-                const decadeToggle = decadeSection.querySelector('.toggle');
 
-                if (!decadeList.classList.contains('show')) {
-                    decadeList.classList.add('show');
-                    decadeToggle.classList.add('open');
-                }
-                if (!yearList.classList.contains('show')) {
-                    yearList.classList.add('show');
-                    yearToggle.classList.add('open');
-                }
+    // Determine the range of years
+    const years = events.map(event => {
+        const dateStr = event.date;
+        const yearMatch = dateStr.match(/\d{4}/);
+        return yearMatch ? parseInt(yearMatch[0]) : null;
+    }).filter(year => year !== null);
 
-                eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            if (event.marker) {
-                map.setView(event.marker.getLatLng(), 10);
-                event.marker.openPopup();
-            }
-        });
-        timelineBar.appendChild(bubble);
+    if (years.length === 0) {
+        console.warn('No valid years found in events.');
+        return;
+    }
+
+    const startYear = Math.min(...years);
+    const endYear = Math.max(...years);
+    const yearRange = endYear - startYear + 1;
+
+    // Group events by decade for zoomed-out view
+    const groupedByDecade = {};
+    events.forEach(event => {
+        const dateStr = event.date;
+        const yearMatch = dateStr.match(/\d{4}/);
+        const year = yearMatch ? parseInt(yearMatch[0]) : null;
+        if (year) {
+            const decade = Math.floor(year / 10) * 10;
+            if (!groupedByDecade[decade]) groupedByDecade[decade] = [];
+            groupedByDecade[decade].push({ ...event, year });
+        }
     });
+
+    // Calculate zoom scale
+    const zoomScale = zoomLevel === 1 ? 1 : 3; // Zoomed in makes timeline 3x wider
+    timelineBar.style.width = `${yearRange * 50 * zoomScale}px`; // 50px per year, scaled by zoom
+
+    if (zoomLevel === 1) {
+        // Zoomed out: Show decades with event counts
+        Object.keys(groupedByDecade).sort((a, b) => a - b).forEach(decade => {
+            const decadeStart = parseInt(decade);
+            const decadeEvents = groupedByDecade[decade];
+            const position = ((decadeStart - startYear) / yearRange) * 100;
+
+            // Decade label
+            const decadeLabel = document.createElement('div');
+            decadeLabel.className = 'decade-label';
+            decadeLabel.style.left = `${position}%`;
+            decadeLabel.textContent = `${decade}s`;
+            timelineBar.appendChild(decadeLabel);
+
+            // Event count triangle
+            const eventCount = decadeEvents.length;
+            const triangle = document.createElement('div');
+            triangle.className = 'decade-event-count';
+            triangle.style.left = `${position}%`;
+            triangle.innerHTML = `<span>${eventCount}</span>`;
+            timelineBar.appendChild(triangle);
+        });
+    } else {
+        // Zoomed in: Show individual events with dates and lines
+        events.forEach((event, index) => {
+            const dateStr = event.date;
+            const yearMatch = dateStr.match(/\d{4}/);
+            const year = yearMatch ? parseInt(yearMatch[0]) : null;
+            if (!year) return;
+
+            // Parse date for precise positioning
+            let position;
+            if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
+                const date = new Date(yearStr, month - 1, day);
+                const startDate = new Date(startYear, 0, 1);
+                const endDate = new Date(endYear + 1, 0, 1);
+                const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                const daysFromStart = (date - startDate) / (1000 * 60 * 60 * 24);
+                position = (daysFromStart / totalDays) * 100;
+            } else {
+                // Fallback to year-based positioning
+                position = ((year - startYear) / yearRange) * 100;
+            }
+
+            // Date label on main line
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'event-date-label';
+            dateLabel.style.left = `${position}%`;
+            dateLabel.textContent = event.date;
+            timelineBar.appendChild(dateLabel);
+
+            // Line connecting to bubble
+            const line = document.createElement('div');
+            line.className = 'event-line';
+            line.style.left = `${position}%`;
+            line.style.height = index % 2 === 0 ? '40px' : 'calc(100% - 60px)';
+            line.style.top = index % 2 === 0 ? 'calc(50% - 40px)' : '50%';
+            timelineBar.appendChild(line);
+
+            // Event bubble
+            const bubble = document.createElement('div');
+            bubble.className = 'event-bubble';
+            bubble.style.left = `${position}%`;
+            bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
+            bubble.title = `${event.date}: ${event.shortSummary}`;
+            if (event.location) {
+                bubble.classList.add('has-location');
+            }
+            if (index % 2 === 0) {
+                bubble.classList.add('above');
+            } else {
+                bubble.classList.add('below');
+            }
+            bubble.addEventListener('click', () => {
+                const eventIndex = index;
+                const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+                if (eventItem) {
+                    const yearSection = eventItem.closest('.year');
+                    const decadeSection = yearSection.closest('.decade');
+                    const yearList = yearSection.querySelector('.year-list');
+                    const decadeList = decadeSection.querySelector('.decade-list');
+                    const yearToggle = yearSection.querySelector('.toggle');
+                    const decadeToggle = decadeSection.querySelector('.toggle');
+
+                    if (!decadeList.classList.contains('show')) {
+                        decadeList.classList.add('show');
+                        decadeToggle.classList.add('open');
+                    }
+                    if (!yearList.classList.contains('show')) {
+                        yearList.classList.add('show');
+                        yearToggle.classList.add('open');
+                    }
+
+                    eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (event.marker) {
+                    map.setView(event.marker.getLatLng(), 10);
+                    event.marker.openPopup();
+                }
+            });
+            timelineBar.appendChild(bubble);
+        });
+
+        // Add year labels
+        for (let year = startYear; year <= endYear; year++) {
+            const position = ((year - startYear) / yearRange) * 100;
+            const yearLabel = document.createElement('div');
+            yearLabel.className = 'year-label';
+            yearLabel.style.left = `${position}%`;
+            yearLabel.textContent = year;
+            timelineBar.appendChild(yearLabel);
+        }
+    }
 }
 
 // Sidebar resize functionality
