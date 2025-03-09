@@ -612,8 +612,8 @@ resizeHandle.addEventListener('mousedown', function(e) {
 document.addEventListener('mousemove', function(e) {
     if (!isResizing) return;
     e.preventDefault();
-    const content = document.getElementById('content');
-    const containerRect = content.getBoundingClientRect();
+    const container = document.getElementById('container');
+    const containerRect = container.getBoundingClientRect();
     const mouseXInContainer = e.clientX - containerRect.left;
     let newWidth = (mouseXInContainer / containerRect.width) * 100;
     const minWidth = 10;
