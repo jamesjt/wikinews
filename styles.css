@@ -114,8 +114,8 @@ body {
 }
 
 .toggle.open {
-    background-color: #d3d3d3; /* Grey background when open */
-    color: #666; /* Grey text when open */
+    background-color: #d3d3d3;
+    color: #666;
 }
 
 .toggle.open .toggle-indicator {
@@ -129,30 +129,39 @@ body {
     width: 20px;
     height: 20px;
     margin-left: 5px;
-    background-color: #d3d3d3; /* Same grey as open background */
+    background-color: #d3d3d3;
     border-radius: 50%;
     font-size: 14px;
 }
 
 .toggle.open .event-count {
-    color: #666; /* Match text color when open */
+    color: #666;
 }
 
 .event-item {
     padding: 5px 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* Align top for multi-line content */
 }
 
-.event-item:hover {
-    background-color: #e0e0e0;
+.event-date {
+    font-weight: bold;
+    margin-bottom: 2px; /* Small gap between date and summary */
+}
+
+.event-summary {
+    flex: 1; /* Take remaining space */
 }
 
 .location-icon {
     width: 16px;
     height: 16px;
     margin-left: 8px;
+}
+
+.event-item:hover {
+    background-color: #e0e0e0;
 }
 
 .resize-handle {
