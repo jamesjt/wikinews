@@ -180,10 +180,16 @@ body {
     cursor: pointer;
     position: relative;
     margin-right: 16px; /* Space to the left of location icon */
+    display: inline-block; /* Ensure proper layout */
+}
+
+.document-icon img {
+    width: 100%;
+    height: 100%;
 }
 
 .document-icon:hover .document-tooltip {
-    display: block; /* Simple show/hide for debugging */
+    display: block; /* Show tooltip on hover */
 }
 
 .document-tooltip {
@@ -199,7 +205,7 @@ body {
     font-size: 12px;
     white-space: nowrap;
     z-index: 2000; /* High to avoid overlap */
-    border: 1px solid red; /* Temporary for visibility */
+    border: 1px solid red; /* Temporary for visibility, remove after confirming */
 }
 
 .event-item:hover {
