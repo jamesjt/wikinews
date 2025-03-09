@@ -141,23 +141,24 @@ body {
 .event-item {
     padding: 5px 0;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start; /* Align top for multi-line content */
+    flex-direction: column; /* Stack date and summary vertically */
+    align-items: flex-start; /* Align text to the left */
 }
 
 .event-date {
     font-weight: bold;
-    margin-bottom: 2px; /* Small gap between date and summary */
+    margin-bottom: 2px; /* Space between date and summary */
 }
 
 .event-summary {
-    flex: 1; /* Take remaining space */
+    /* No flex: 1 needed since we're not justifying space-between anymore */
 }
 
 .location-icon {
     width: 16px;
     height: 16px;
-    margin-left: 8px;
+    margin-top: 2px; /* Align with summary */
+    align-self: flex-end; /* Move icon to the right */
 }
 
 .event-item:hover {
