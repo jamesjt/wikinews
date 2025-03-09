@@ -1,4 +1,4 @@
-// script.js (Ensure saved as UTF-8)
+// script.js (Ensure saved as UTF-8) test
 
 // Define default location (Kyiv) - only used as a fallback if needed elsewhere
 const defaultLocation = [50.45, 30.52];
