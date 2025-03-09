@@ -177,7 +177,7 @@ body {
 .document-wrapper {
     position: relative;
     display: inline-block;
-    margin-right: 16px; /* Space to the left of location icon */
+    margin-right: 16px;
 }
 
 .document-icon {
@@ -201,18 +201,25 @@ body {
     top: -35px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #333;
-    color: white;
+    background-color: white; /* Match Leaflet popup background */
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px; /* Match .leaflet-popup-content-wrapper */
     white-space: nowrap;
     z-index: 2000;
-    border: 1px solid red; /* Remove after confirming */
+    display: flex; /* Match .document-link layout */
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Add subtle shadow like Leaflet popup */
+}
+
+.document-tooltip img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px; /* Match .document-link img */
 }
 
 .document-tooltip a {
-    color: #1a73e8;
+    color: #1a73e8; /* Match .document-link a */
     text-decoration: none;
 }
 
