@@ -3,39 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project 451 / Wikinews</title>
-    <!-- Leaflet CSS -->
+    <title>Timeline and Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Timeline Section -->
-    <div id="timeline">
-        <div class="timeline-bar">
-            <span class="timeline-indicator" style="left: 50%"></span>
-            <!-- Event bubbles will be added dynamically -->
-        </div>
-    </div>
-    <!-- Main Container with Sidebar, Resize Handle, and Map -->
     <div id="container">
-        <div id="sidebar">
-            <h2>Stories</h2>
-            <div class="story-section">
-                <div class="story-title">The War in Ukraine</div>
+        <div id="timeline">
+            <div class="timeline-bar"></div>
+        </div>
+        <div id="content">
+            <div id="sidebar">
+                <div class="resize-handle"></div>
+                <h2>Stories</h2>
+                <h3>The War in Ukraine</h3>
                 <div id="event-list"></div>
             </div>
-            <h2>Commentary</h2>
-            <p>Sample commentary linked to events, such as news articles or analyses.</p>
+            <div id="map"></div>
         </div>
-        <div class="resize-handle"></div>
-        <div id="map"></div>
     </div>
-    <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- Papa Parse for CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <!-- Custom JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
