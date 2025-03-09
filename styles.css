@@ -94,23 +94,23 @@ body {
     font-weight: bold;
 }
 
-.year-label {
-    position: absolute;
-    top: 30px;
-    transform: translateX(-50%);
-    font-size: 12px;
-}
-
 .year-marker {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%); /* Center both horizontally and vertically */
+    padding: 2px 5px;
+    background-color: #eee;
+    border: 1px solid #000;
+    border-radius: 3px;
+}
+
+.year-marker.big-marker {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.year-marker.small-marker {
     font-size: 10px;
-    color: #333;
-    padding: 2px 5px; /* Match event-date-label padding */
-    background-color: #eee; /* Same grey background as event-date-label */
-    border: 1px solid #000; /* Same black border as event-date-label */
-    border-radius: 3px; /* Same border radius as event-date-label */
 }
 
 .event-date-label {
@@ -119,8 +119,8 @@ body {
     font-size: 10px;
     white-space: nowrap;
     padding: 2px 5px;
-    background-color: #eee; /* Match timeline background */
-    border: 1px solid #000; /* Black border */
+    background-color: #eee;
+    border: 1px solid #000;
     border-radius: 3px;
 }
 
