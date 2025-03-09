@@ -66,11 +66,24 @@ body {
     margin-bottom: 5px;
 }
 
-#event-list .decade-list,
-#event-list .year-list {
-    display: none;
+/* Base level: no extra indent */
+#event-list .decade {
+    margin-bottom: 5px;
 }
 
+/* Year level: indent by 5px */
+#event-list .decade-list {
+    display: none;
+    margin-left: 5px;
+}
+
+/* Event level: indent by another 5px (total 10px) */
+#event-list .year-list {
+    display: none;
+    margin-left: 5px;
+}
+
+/* Show sub-sections when 'show' class is added */
 #event-list .show {
     display: block;
 }
