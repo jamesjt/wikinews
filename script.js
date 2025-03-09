@@ -456,7 +456,8 @@ function populateTimelineWithCursor(events, cursorPosition) {
             timelineBar.appendChild(yearMarker);
 
             for (let month = 0; month < 12; month++) {
-                const monthPosition = yearPosition + ((month + 0.5) / 12) * (100 / (endYear - startYear + 1));
+                const monthFraction = (month + 0.5) / 12; // Center the month marker
+                const monthPosition = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 180); // Adjusted with newZoomScale
                 const monthMarker = document.createElement('div');
                 monthMarker.className = 'year-marker big-marker';
                 monthMarker.style.left = `${monthPosition}%`;
@@ -467,7 +468,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
                 const daysInMonth = 30.44;
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayFraction = (day - 0.5) / daysInMonth; // Center the day marker
-                    const dayPosition = monthPosition + (dayFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180); // Adjust for new scale
+                    const dayPosition = monthPosition + (dayFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180); // Adjusted with newZoomScale
                     const dayMarker = document.createElement('div');
                     dayMarker.className = 'year-marker small-marker';
                     dayMarker.style.left = `${dayPosition}%`;
@@ -498,24 +499,22 @@ function populateTimelineWithCursor(events, cursorPosition) {
         if (!year || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
 
         const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
-        const date = new Date(yearStr, month - 1, day);
-        const startOfYear = new Date(year, 0, 1);
-        const daysInYear = (new Date(year, 11, 31) - startOfYear) / (1000 * 60 * 60 * 24);
-        const daysFromStart = (date - startOfYear) / (1000 * 60 * 60 * 24);
-        const yearFraction = daysFromStart / daysInYear;
+        const monthIndex = month - 1; // 0-based index for month
 
         let positionPercent;
         if (zoomLevel === 1) {
             positionPercent = ((year - startYear) / (endYear - startYear + 1)) * 100;
         } else if (zoomLevel === 2) {
             const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
-            const monthFraction = (month - 0.5) / 12;
-            positionPercent = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 18); // Adjusted for new scale
+            const monthFraction = (monthIndex + 0.5) / 12; // Center the month
+            positionPercent = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 18);
         } else if (zoomLevel === 3) {
             const yearPosition = ((year - startYear) / (endYear - startYear + 1)) * 100;
-            const monthFraction = (month - 0.5) / 12;
-            const dayFraction = (day - 0.5) / 30.44; // Average days per month
-            positionPercent = yearPosition + (monthFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180) + (dayFraction * (100 / (12 * 30.44 * (endYear - startYear + 1))) * newZoomScale / 180); // Adjusted for new scale
+            const monthFraction = (monthIndex + 0.5) / 12; // Center the month
+            const monthPosition = yearPosition + (monthFraction * (100 / (endYear - startYear + 1)) * newZoomScale / 180);
+            const daysInMonth = 30.44; // Average days per month
+            const dayFraction = (day - 0.5) / daysInMonth; // Center the day
+            positionPercent = monthPosition + (dayFraction * (100 / (12 * (endYear - startYear + 1))) * newZoomScale / 180);
         }
 
         // Event bubble
