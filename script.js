@@ -19,13 +19,13 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
         Papa.parse(csvText, {
             header: true,
             complete: function(results) {
-                console.log('Parsed Data Sample:', results.data.slice(0, 5)); // Debug: Log first 5 rows
+                console.log('Parsed Data Sample:', results.data.slice(0, 5));
                 const events = results.data.map((row, index) => {
                     const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : 'Unknown Date';
                     const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : 'No Description';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
 
-                    let location = null; // Default to null (no marker)
+                    let location = null;
                     if (locationStr) {
                         const [latStr, lonStr] = locationStr.split(',').map(coord => coord.trim());
                         const lat = parseFloat(latStr);
@@ -73,7 +73,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 // Build the sidebar with collapsible decade and year sections
 function buildSidebar(events) {
     const groupedEvents = {};
-    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/; // Relaxed pattern for single or double digits
+    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
 
     events.forEach(event => {
         const dateStr = event.date;
@@ -83,9 +83,8 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`; // Normalize to MM/DD
+            displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
         } else {
-            // Fallback: Look for any 4-digit year if pattern fails
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
                 year = yearMatch[0];
@@ -155,6 +154,16 @@ function buildSidebar(events) {
                 eventItem.className = 'event-item';
                 eventItem.textContent = `${event.displayDate}: ${event.description}`;
                 eventItem.setAttribute('data-event-index', event.index);
+
+                // Add location icon if event has a location
+                if (event.location) {
+                    const locationIcon = document.createElement('img');
+                    locationIcon.className = 'location-icon';
+                    locationIcon.src = 'icon-location.svg';
+                    locationIcon.alt = 'Location';
+                    eventItem.appendChild(locationIcon);
+                }
+
                 eventDiv.appendChild(eventItem);
             });
             yearSection.appendChild(eventDiv);
