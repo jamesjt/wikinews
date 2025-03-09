@@ -52,16 +52,22 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         const lon = parseFloat(lonStr);
                         if (!isNaN(lat) && !isNaN(lon)) {
                             location = [lat, lon];
-                            marker = L.marker(location)
+                            // Use divIcon with event index
+                            const numberedIcon = L.divIcon({
+                                className: 'numbered-marker',
+                                html: `<div>${index + 1}</div>`, // Start numbering at 1
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12], // Center of the circle
+                                popupAnchor: [0, -12] // Popup above the marker
+                            });
+                            marker = L.marker(location, { icon: numberedIcon })
                                 .addTo(map)
                                 .bindPopup(`<b>${shortSummary}</b><br>Date: ${dateStr}<br>Commentary: <a href="#">Link</a>`);
-                            // Add click handler to marker
                             marker.on('click', () => {
                                 const eventIndex = events.findIndex(e => e.marker === marker);
                                 if (eventIndex !== -1) {
                                     const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                     if (eventItem) {
-                                        // Expand parent decade and year if collapsed
                                         const yearSection = eventItem.closest('.year');
                                         const decadeSection = yearSection.closest('.decade');
                                         const yearList = yearSection.querySelector('.year-list');
@@ -78,7 +84,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                             yearToggle.classList.add('open');
                                         }
 
-                                        // Scroll to the event item
                                         eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                     }
                                 }
