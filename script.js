@@ -392,7 +392,7 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const yearRange = endYear - startYear + 1;
 
     // Calculate the old width and cursor position ratio
-    const oldZoomScale = zoomScales[Math.max(0, zoomLevel - 2)]; // Previous zoom level
+    const oldZoomScale = zoomScales[Math.max(0, zoomLevel - 2)] || zoomScales[0]; // Previous zoom level or default
     const oldWidth = yearRange * 50 * oldZoomScale;
     const cursorRatio = cursorPosition / oldWidth;
 
@@ -508,13 +508,20 @@ function populateTimelineWithCursor(events, cursorPosition) {
         });
         timelineBar.appendChild(bubble);
 
-        // Add date label (only month and day when zoomed in)
+        // Add date label (only day and month when zoomed in, positioned halfway to bubble)
         if (zoomLevel > 1 && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
             const [month, day] = dateStr.split('/').map(part => parseInt(part, 10));
             const dateLabel = document.createElement('div');
             dateLabel.className = 'event-date-label';
             dateLabel.style.left = `${position}%`;
             dateLabel.textContent = `${months[month - 1]} ${getOrdinal(day)}`;
+
+            // Position halfway between main line (50%) and bubble
+            if (bubble.classList.contains('above')) {
+                dateLabel.style.top = '30px'; // Halfway from 50% (main line) to 10px (bubble top)
+            } else if (bubble.classList.contains('below')) {
+                dateLabel.style.bottom = '30px'; // Halfway from 50% (main line) to 10px (bubble bottom)
+            }
             timelineBar.appendChild(dateLabel);
         } else if (zoomLevel === 1) {
             const dateLabel = document.createElement('div');
