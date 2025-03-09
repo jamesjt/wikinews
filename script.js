@@ -30,8 +30,9 @@ function getOrdinal(day) {
 }
 
 // Zoom level state
-let zoomLevel = 1; // 1 = fully zoomed out (decades), 2 = zoomed in (specific dates)
-const zoomLevels = [1, 2];
+let zoomLevel = 1; // 1 = fully zoomed out, up to 5 = fully zoomed in
+const zoomLevels = [1, 2, 3, 4, 5];
+const zoomScales = [1, 2, 3, 4, 5]; // Corresponding width multipliers
 
 // Fetch and parse CSV
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
@@ -148,6 +149,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 zoomOutBtn.addEventListener('click', () => {
                     zoomLevel = Math.max(zoomLevel - 1, 1);
+                    populateTimeline(events);
+                });
+
+                // Add mouse wheel zoom
+                timeline.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    if (e.deltaY < 0) { // Wheel up: zoom in
+                        zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
+                    } else { // Wheel down: zoom out
+                        zoomLevel = Math.max(zoomLevel - 1, 1);
+                    }
                     populateTimeline(events);
                 });
             }
@@ -389,7 +401,7 @@ function populateTimeline(events) {
     });
 
     // Calculate zoom scale
-    const zoomScale = zoomLevel === 1 ? 1 : 3; // Zoomed in makes timeline 3x wider
+    const zoomScale = zoomScales[zoomLevel - 1];
     timelineBar.style.width = `${yearRange * 50 * zoomScale}px`; // 50px per year, scaled by zoom
 
     if (zoomLevel === 1) {
