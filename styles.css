@@ -1,0 +1,86 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#timeline {
+    height: 50px;
+    background: #eee;
+    position: relative;
+    border-bottom: 1px solid #ccc;
+}
+
+.timeline-bar {
+    position: relative;
+    height: 100%;
+}
+
+.event-bubble {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: green;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.indicator {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: blue;
+    top: 0;
+}
+
+#container {
+    flex: 1;
+    display: flex;
+}
+
+#sidebar {
+    flex: 0 0 20%;
+    background: #f9f9f9;
+    padding: 10px;
+    overflow-y: auto; /* Enables vertical scrolling */
+    max-height: calc(100vh - 50px); /* Limits height to viewport minus timeline */
+}
+
+#sidebar h2 {
+    font-size: 1.2em;
+    margin-top: 0;
+}
+
+#sidebar ul {
+    padding-left: 20px;
+}
+
+#sidebar p {
+    margin: 10px 0;
+}
+
+#event-list li {
+    cursor: pointer; /* Makes list items appear clickable */
+}
+
+#event-list li:hover {
+    background-color: #f0f0f0; /* Hover effect for visual feedback */
+}
+
+.resize-handle {
+    width: 5px;
+    background: #ccc;
+    cursor: col-resize;
+}
+
+.resize-handle:hover {
+    background: #aaa;
+}
+
+#map {
+    flex: 1;
+}

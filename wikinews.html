@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive History Map</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Timeline Section -->
+    <div id="timeline">
+        <div class="timeline-bar">
+            <span class="indicator" style="left: 50%"></span>
+            <!-- Event bubbles will be added dynamically -->
+        </div>
+    </div>
+    <!-- Main Container with Sidebar, Resize Handle, and Map -->
+    <div id="container">
+        <div id="sidebar">
+            <h2>Stories</h2>
+            <ul>
+                <li>The War in Ukraine
+                    <ul id="event-list"></ul>
+                </li>
+            </ul>
+            <h2>Commentary</h2>
+            <p>Sample commentary linked to events, such as news articles or analyses.</p>
+        </div>
+        <div class="resize-handle"></div>
+        <div id="map"></div>
+    </div>
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
