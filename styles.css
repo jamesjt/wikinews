@@ -31,7 +31,6 @@ body {
     cursor: pointer;
 }
 
-/* Specific to timeline indicator */
 .timeline-indicator {
     position: absolute;
     width: 2px;
@@ -58,17 +57,23 @@ body {
     margin-top: 0;
 }
 
-#sidebar ul {
-    padding-left: 20px;
+.story-section {
+    margin-bottom: 10px;
 }
 
-/* Hide sublists by default */
-#event-list ul {
+.story-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Hide sub-sections by default */
+#event-list .decade-list,
+#event-list .year-list {
     display: none;
 }
 
-/* Show sublists when the 'show' class is added */
-#event-list ul.show {
+/* Show sub-sections when the 'show' class is added */
+#event-list .show {
     display: block;
 }
 
@@ -81,7 +86,7 @@ body {
 /* Specific to sidebar toggle indicators */
 .toggle-indicator {
     margin-right: 5px;
-    display: inline; /* Keep inline with text */
+    display: inline;
 }
 
 .resize-handle {
