@@ -45,31 +45,27 @@ fetch(SHEET_CSV_URL)
                 console.log('Parsed Headers:', results.meta.fields);
                 console.log('Parsed Data Sample:', results.data.slice(0, 3));
 
-                const events = results.data.map(row => {
-                    const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : null;
+                const events = results.data.map((row, index) => {
+                    const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : '';
                     if (!dateStr) {
                         console.warn('Missing date in row:', row);
-                        return null;
+                        return null; // Skip rows with no date
                     }
-                    // Parse date for sorting/timeline, but keep string for display
-                    const dateForSorting = new Date(dateStr);
-                    const date = isNaN(dateForSorting.getTime()) ? new Date('1990-01-01') : dateForSorting; // Fallback to 1990 if invalid
-                    const dateDisplay = dateStr; // Use raw string for display
                     const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : '';
                     const locationStr = row['Location'] ? row['Location'].toLowerCase().trim() : '';
                     const location = locations[locationStr] || defaultLocation;
 
                     return {
-                        date: date, // For sorting and timeline
-                        dateDisplay: dateDisplay, // For sidebar display
+                        date: dateStr, // Treat as string for display and timeline
                         description: description,
                         location: location,
-                        story: 'The War in Ukraine'
+                        story: 'The War in Ukraine',
+                        index: index // Keep original order for timeline
                     };
                 }).filter(event => event !== null);
 
-                // Sort events by date (using parsed Date object)
-                events.sort((a, b) => a.date - b.date);
+                // No sorting by date since it's a string now
+                // events.sort((a, b) => a.date - b.date); // Removed
 
                 // Add markers to the map
                 events.forEach(event => {
@@ -240,19 +236,13 @@ const events = eventLines.map(line => {
 events.sort((a, b) => a.date - b.date);
 */
 
-// Function to format dates (no longer used for Date-MDY, kept for reference)
-function formatDate(date) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-}
-
 // Populate sidebar with interactive list items
 function populateSidebar(events) {
     const eventList = document.getElementById('event-list');
     eventList.innerHTML = '';
     events.forEach((event, index) => {
         const li = document.createElement('li');
-        li.textContent = `${event.dateDisplay}: ${event.description}`; // Use raw date string
+        li.textContent = `${event.date}: ${event.description}`; // Use raw date string
         li.setAttribute('data-event-index', index);
         li.addEventListener('click', function() {
             const marker = markers[index];
@@ -263,19 +253,15 @@ function populateSidebar(events) {
     });
 }
 
-// Populate timeline with bubbles
+// Populate timeline with bubbles (position based on index)
 function populateTimeline(events) {
-    const startDate = new Date('1990-01-01');
-    const endDate = new Date('2025-12-31');
     const timelineBar = document.querySelector('.timeline-bar');
-    events.forEach(event => {
-        const timeDiff = event.date.getTime() - startDate.getTime();
-        const totalTime = endDate.getTime() - startDate.getTime();
-        const position = (timeDiff / totalTime) * 100;
+    events.forEach((event, index) => {
+        const position = (index / (events.length - 1)) * 100; // Evenly space based on order
         const bubble = document.createElement('div');
         bubble.className = 'event-bubble';
         bubble.style.left = `${position}%`;
-        bubble.title = event.description;
+        bubble.title = `${event.date}: ${event.description}`;
         timelineBar.appendChild(bubble);
     });
 }
