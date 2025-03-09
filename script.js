@@ -314,16 +314,28 @@ function buildSidebar(events) {
     });
 }
 
-// Populate timeline with bubbles (position based on index)
+// Populate timeline with bubbles alternating above and below the main line
 function populateTimeline(events) {
     const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = '<span class="timeline-indicator" style="left: 50%"></span>';
+    timelineBar.innerHTML = `
+        <div class="main-line"></div>
+        <div class="left-bar"></div>
+        <div class="right-bar"></div>
+        <span class="timeline-indicator" style="left: 50%"></span>
+    `;
     events.forEach((event, index) => {
         const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50;
         const bubble = document.createElement('div');
         bubble.className = 'event-bubble';
         bubble.style.left = `${position}%`;
+        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.title = `${event.date}: ${event.shortSummary}`;
+        // Alternate above and below the main line
+        if (index % 2 === 0) {
+            bubble.classList.add('above');
+        } else {
+            bubble.classList.add('below');
+        }
         timelineBar.appendChild(bubble);
     });
 }
