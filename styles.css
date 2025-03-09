@@ -58,6 +58,10 @@ body {
     transition: transform 0.2s ease;
 }
 
+.event-bubble.has-location {
+    background: blue; /* Blue for events with location data */
+}
+
 .event-bubble.above {
     top: 10px; /* Position above the main line */
 }
