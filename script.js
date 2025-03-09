@@ -238,11 +238,11 @@ function buildSidebar(events) {
                         const tooltip = document.createElement('div');
                         tooltip.className = 'document-tooltip';
                         tooltip.innerHTML = `<a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>`;
-                        documentIcon.appendChild(tooltip);
-                        documentIcon.addEventListener('click', (e) => {
+                        tooltip.querySelector('a').addEventListener('click', (e) => {
                             e.stopPropagation();
                             window.open(event.documentLinks[i], '_blank');
                         });
+                        documentIcon.appendChild(tooltip);
                         dateDiv.appendChild(documentIcon);
                     }
                 }
