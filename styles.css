@@ -66,24 +66,20 @@ body {
     margin-bottom: 5px;
 }
 
-/* Base level: no extra indent */
 #event-list .decade {
     margin-bottom: 5px;
 }
 
-/* Year level: indent by 5px */
 #event-list .decade-list {
     display: none;
     margin-left: 5px;
 }
 
-/* Event level: indent by another 5px (total 10px) */
 #event-list .year-list {
     display: none;
     margin-left: 5px;
 }
 
-/* Show sub-sections when 'show' class is added */
 #event-list .show {
     display: block;
 }
@@ -91,11 +87,26 @@ body {
 .toggle {
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center; /* Vertically center the icon with text */
 }
 
+/* Style for SVG toggle indicator */
 .toggle-indicator {
+    width: 12px; /* Match SVG size */
+    height: 12px;
     margin-right: 5px;
-    display: inline;
+    transition: transform 0.2s ease; /* Smooth rotation */
+}
+
+/* Default state (closed): rotate -90 degrees to point right */
+.toggle-indicator {
+    transform: rotate(-90deg);
+}
+
+/* Open state: no rotation (points down) */
+.show .toggle-indicator {
+    transform: rotate(0deg);
 }
 
 .resize-handle {
