@@ -192,34 +192,33 @@ body {
 }
 
 .document-wrapper:hover .document-tooltip {
-    display: block;
+    display: flex; /* Changed to flex to match layout, only on hover */
 }
 
 .document-tooltip {
-    display: none;
+    display: none; /* Ensure it’s hidden by default */
     position: absolute;
     top: -35px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: white; /* Match Leaflet popup background */
+    background-color: white;
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 14px; /* Match .leaflet-popup-content-wrapper */
+    font-size: 14px;
     white-space: nowrap;
     z-index: 2000;
-    display: flex; /* Match .document-link layout */
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Add subtle shadow like Leaflet popup */
+    align-items: center; /* Match .document-link layout */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .document-tooltip img {
     width: 16px;
     height: 16px;
-    margin-right: 4px; /* Match .document-link img */
+    margin-right: 4px;
 }
 
 .document-tooltip a {
-    color: #1a73e8; /* Match .document-link a */
+    color: #1a73e8;
     text-decoration: none;
 }
 
