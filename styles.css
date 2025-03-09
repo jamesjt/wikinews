@@ -16,13 +16,14 @@ body {
     overflow-x: auto; /* Enable horizontal scrolling */
     overflow-y: hidden;
     white-space: nowrap;
+    padding-left: 30px; /* Add 30px padding on the left side */
 }
 
 .timeline-bar {
     position: relative;
     height: 100%;
     display: inline-block; /* Allows width to expand for scrolling */
-    padding-left: 20px; /* Add 20px padding on the left side */
+    padding-left: 20px; /* Existing padding */
 }
 
 .main-line {
@@ -83,14 +84,6 @@ body {
 
 .event-bubble:hover {
     transform: scale(1.2);
-}
-
-.timeline-indicator {
-    position: absolute;
-    width: 2px;
-    height: 100%;
-    background: blue;
-    top: 0;
 }
 
 .decade-label {
