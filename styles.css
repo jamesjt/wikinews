@@ -192,22 +192,22 @@ body {
 }
 
 .document-wrapper:hover .document-tooltip {
-    display: flex; /* Changed to flex to match layout, only on hover */
+    display: flex;
 }
 
 .document-tooltip {
-    display: none; /* Ensure it’s hidden by default */
+    display: none;
     position: absolute;
     top: -35px;
     left: 50%;
     transform: translateX(-50%);
     background-color: white;
-    padding: 4px 8px;
+    padding: 8px; /* Changed from 4px 8px to 8px */
     border-radius: 4px;
     font-size: 14px;
     white-space: nowrap;
     z-index: 2000;
-    align-items: center; /* Match .document-link layout */
+    align-items: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
