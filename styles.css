@@ -153,7 +153,7 @@ body {
     align-items: center;
     width: 100%;
     position: relative;
-    overflow: visible; /* Prevent clipping of tooltips */
+    overflow: visible;
 }
 
 .event-summary {
@@ -179,23 +179,27 @@ body {
     height: 16px;
     cursor: pointer;
     position: relative;
-    margin-right: 16px; /* Space to the left of location icon */
-    display: inline-block; /* Ensure proper layout */
+    margin-right: 16px;
+    display: inline-block;
+    padding-top: 35px; /* Extend hover area upward to reach tooltip */
 }
 
 .document-icon img {
     width: 100%;
     height: 100%;
+    position: absolute;
+    bottom: 0; /* Align image at the bottom of the padded area */
+    left: 0;
 }
 
 .document-icon:hover .document-tooltip {
-    display: block; /* Show tooltip on hover */
+    display: block;
 }
 
 .document-tooltip {
-    display: none; /* Hidden by default */
+    display: none;
     position: absolute;
-    top: -35px; /* Above the icon */
+    top: -35px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #333;
@@ -204,8 +208,17 @@ body {
     border-radius: 4px;
     font-size: 12px;
     white-space: nowrap;
-    z-index: 2000; /* High to avoid overlap */
-    border: 1px solid red; /* Temporary for visibility, remove after confirming */
+    z-index: 2000;
+    border: 1px solid red; /* Remove after confirming */
+}
+
+.document-tooltip a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.document-tooltip a:hover {
+    text-decoration: underline;
 }
 
 .event-item:hover {
