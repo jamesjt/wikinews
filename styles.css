@@ -152,6 +152,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    position: relative; /* Ensure tooltips can position relative to this */
 }
 
 .event-summary {
@@ -177,17 +178,20 @@ body {
     height: 16px;
     cursor: pointer;
     position: relative;
-    margin-right: 16px; /* Space equal to location icon width, to its left */
+    margin-right: 16px; /* Space to the left of location icon */
+    pointer-events: all; /* Ensure hover events are captured */
 }
 
 .document-icon:hover .document-tooltip {
-    display: block;
+    visibility: visible;
+    opacity: 1;
 }
 
 .document-tooltip {
-    display: none;
+    visibility: hidden; /* Use visibility for smoother transitions */
+    opacity: 0;
     position: absolute;
-    top: -30px; /* Above the icon */
+    top: -35px; /* Adjusted slightly higher to avoid overlap */
     left: 50%;
     transform: translateX(-50%);
     background-color: #333;
@@ -196,7 +200,8 @@ body {
     border-radius: 4px;
     font-size: 12px;
     white-space: nowrap;
-    z-index: 1000;
+    z-index: 2000; /* Increased to ensure it’s above everything */
+    transition: opacity 0.2s ease; /* Smooth fade-in */
 }
 
 .event-item:hover {
