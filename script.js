@@ -145,14 +145,14 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${event.index + 1}: ${months[month - 1]} ${getOrdinal(day)}`;
+            displayDate = `${months[month - 1]} ${getOrdinal(day)}`; // Removed number prefix here since we'll add it separately
         } else {
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
                 year = yearMatch[0];
             }
             console.warn('Non-standard date format, using full string:', dateStr);
-            displayDate = `${event.index + 1}: ${dateStr}`;
+            displayDate = dateStr; // Removed number prefix here too
         }
 
         const decade = year === 'Unknown' ? 'Unknown' : `${Math.floor(parseInt(year) / 10) * 10}s`;
@@ -224,6 +224,16 @@ function buildSidebar(events) {
 
                 const dateDiv = document.createElement('div');
                 dateDiv.className = 'event-date';
+                
+                // Add numbered circle
+                const numberCircle = document.createElement('span');
+                numberCircle.className = 'event-number-circle';
+                if (event.location) {
+                    numberCircle.classList.add('has-location');
+                }
+                numberCircle.textContent = event.index + 1;
+                dateDiv.appendChild(numberCircle);
+
                 const dateText = document.createElement('span');
                 dateText.textContent = event.displayDate;
                 dateDiv.appendChild(dateText);
