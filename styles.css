@@ -88,24 +88,24 @@ body {
     cursor: pointer;
     user-select: none;
     display: flex;
-    align-items: center; /* Vertically center the icon with text */
+    align-items: center;
 }
 
 /* Style for SVG toggle indicator */
 .toggle-indicator {
-    width: 12px; /* Match SVG size */
+    width: 12px;
     height: 12px;
     margin-right: 5px;
-    transition: transform 0.2s ease; /* Smooth rotation */
+    transition: transform 0.2s ease;
 }
 
-/* Default state (closed): rotate -90 degrees to point right */
-.toggle-indicator {
+/* Closed state: rotate -90 degrees to point right */
+.toggle .toggle-indicator {
     transform: rotate(-90deg);
 }
 
 /* Open state: no rotation (points down) */
-.show .toggle-indicator {
+.toggle.open .toggle-indicator {
     transform: rotate(0deg);
 }
 
