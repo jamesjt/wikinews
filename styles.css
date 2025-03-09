@@ -205,6 +205,25 @@ body {
     overflow: visible;
 }
 
+.event-number-circle {
+    width: 20px;
+    height: 20px;
+    background: green; /* Default green for no location */
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    flex-shrink: 0; /* Prevents shrinking in flex layout */
+}
+
+.event-number-circle.has-location {
+    background: blue; /* Blue for events with location */
+}
+
 .icons-container {
     display: flex;
     align-items: center;
