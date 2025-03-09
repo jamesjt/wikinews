@@ -12,7 +12,24 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Array to store markers (for reference, but not used for indexing)
 const markers = [];
 
-let events = []; // Global to access in click handler
+let events = [];
+
+// Month names for conversion
+const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Function to add ordinal suffix (e.g., "9th")
+function getOrdinal(day) {
+    if (day > 3 && day < 21) return `${day}th`; // 4th to 20th
+    switch (day % 10) {
+        case 1: return `${day}st`;
+        case 2: return `${day}nd`;
+        case 3: return `${day}rd`;
+        default: return `${day}th`;
+    }
+}
 
 // Fetch and parse CSV
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
@@ -80,7 +97,7 @@ function buildSidebar(events) {
         if (datePattern.test(dateStr)) {
             const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
             year = yearStr.toString();
-            displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+            displayDate = `${months[month - 1]} ${getOrdinal(day)}`; // e.g., "February 9th"
         } else {
             const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) {
@@ -155,7 +172,17 @@ function buildSidebar(events) {
             yearEvents.forEach(event => {
                 const eventItem = document.createElement('div');
                 eventItem.className = 'event-item';
-                eventItem.textContent = `${event.displayDate}: ${event.description}`;
+
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'event-date';
+                dateDiv.textContent = event.displayDate;
+
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'event-summary';
+                summaryDiv.textContent = event.description;
+
+                eventItem.appendChild(dateDiv);
+                eventItem.appendChild(summaryDiv);
                 eventItem.setAttribute('data-event-index', event.index);
 
                 if (event.location) {
