@@ -103,7 +103,7 @@ function buildSidebar(events) {
         const decadeToggle = document.createElement('span');
         decadeToggle.className = 'toggle';
         const decadeIndicator = document.createElement('span');
-        decadeIndicator.className = 'indicator';
+        decadeIndicator.className = 'toggle-indicator'; // Changed from 'indicator'
         decadeIndicator.textContent = '[+]';
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
@@ -122,7 +122,7 @@ function buildSidebar(events) {
             const yearToggle = document.createElement('span');
             yearToggle.className = 'toggle';
             const yearIndicator = document.createElement('span');
-            yearIndicator.className = 'indicator';
+            yearIndicator.className = 'toggle-indicator'; // Changed from 'indicator'
             yearIndicator.textContent = '[+]';
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
@@ -151,7 +151,7 @@ function buildSidebar(events) {
     document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
-            const indicator = this.querySelector('.indicator');
+            const indicator = this.querySelector('.toggle-indicator');
             if (sublist.classList.contains('show')) {
                 sublist.classList.remove('show');
                 indicator.textContent = '[+]';
@@ -175,7 +175,7 @@ function buildSidebar(events) {
 // Populate timeline with bubbles (position based on index)
 function populateTimeline(events) {
     const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = ''; // Clear existing bubbles except the static indicator
+    timelineBar.innerHTML = '<span class="timeline-indicator" style="left: 50%"></span>'; // Reset with static indicator
     events.forEach((event, index) => {
         const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50;
         const bubble = document.createElement('div');
