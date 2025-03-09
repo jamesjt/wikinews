@@ -22,7 +22,7 @@ const locations = {
 const defaultLocation = locations["kyiv"];
 
 // Google Sheet public CSV URL (replace with your actual URL)
-const SHEET_CSV_URL = 'YOUR_PUBLISHED_CSV_URL_HERE'; // e.g., https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/pub?output=csv
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv'; // e.g., https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/pub?output=csv
 
 // Initialize the Leaflet map
 const map = L.map('map').setView([48.3794, 31.1656], 6);
