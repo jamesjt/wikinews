@@ -104,7 +104,7 @@ function buildSidebar(events) {
         decadeToggle.className = 'toggle';
         const decadeIndicator = document.createElement('img');
         decadeIndicator.className = 'toggle-indicator';
-        decadeIndicator.src = 'icon-arrow-accordion.svg'; // Path to your SVG
+        decadeIndicator.src = 'icon-arrow-accordion.svg';
         decadeIndicator.alt = 'Toggle';
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
@@ -124,7 +124,7 @@ function buildSidebar(events) {
             yearToggle.className = 'toggle';
             const yearIndicator = document.createElement('img');
             yearIndicator.className = 'toggle-indicator';
-            yearIndicator.src = 'icon-arrow-accordion.svg'; // Path to your SVG
+            yearIndicator.src = 'icon-arrow-accordion.svg';
             yearIndicator.alt = 'Toggle';
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
@@ -155,8 +155,10 @@ function buildSidebar(events) {
             const sublist = this.nextElementSibling;
             if (sublist.classList.contains('show')) {
                 sublist.classList.remove('show');
+                this.classList.remove('open');
             } else {
                 sublist.classList.add('show');
+                this.classList.add('open');
             }
         });
     });
