@@ -143,24 +143,33 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.appendChild(zoomOutBtn);
 
                 zoomInBtn.addEventListener('click', () => {
+                    // For button zoom, center the zoom on the current viewport center
+                    const currentScrollLeft = timeline.scrollLeft;
+                    const viewportWidth = timeline.clientWidth;
+                    const cursorPosition = currentScrollLeft + viewportWidth / 2;
                     zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
-                    populateTimeline(events);
+                    populateTimelineWithCursor(events, cursorPosition);
                 });
 
                 zoomOutBtn.addEventListener('click', () => {
+                    const currentScrollLeft = timeline.scrollLeft;
+                    const viewportWidth = timeline.clientWidth;
+                    const cursorPosition = currentScrollLeft + viewportWidth / 2;
                     zoomLevel = Math.max(zoomLevel - 1, 1);
-                    populateTimeline(events);
+                    populateTimelineWithCursor(events, cursorPosition);
                 });
 
                 // Add mouse wheel zoom
                 timeline.addEventListener('wheel', (e) => {
                     e.preventDefault();
+                    const rect = timeline.getBoundingClientRect();
+                    const cursorPosition = e.clientX - rect.left + timeline.scrollLeft;
                     if (e.deltaY < 0) { // Wheel up: zoom in
                         zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
                     } else { // Wheel down: zoom out
                         zoomLevel = Math.max(zoomLevel - 1, 1);
                     }
-                    populateTimeline(events);
+                    populateTimelineWithCursor(events, cursorPosition);
                 });
             }
         });
@@ -278,7 +287,7 @@ function buildSidebar(events) {
                 const iconsContainer = document.createElement('div');
                 iconsContainer.className = 'icons-container';
 
-                if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
+                if (event.documentNames.length > 0 && documentLinks.length > 0) {
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
                     const docContainer = document.createElement('div');
@@ -361,9 +370,16 @@ function buildSidebar(events) {
     });
 }
 
-// Populate timeline with dynamic start and end years, zoom levels, and scrolling
-function populateTimeline(events) {
+// Populate timeline with cursor-based zooming
+function populateTimelineWithCursor(events, cursorPosition) {
+    const timeline = document.getElementById('timeline');
     const timelineBar = document.querySelector('.timeline-bar');
+
+    // Calculate the ratio of the cursor position relative to the timeline width before zooming
+    const oldWidth = parseFloat(timelineBar.style.width) || timeline.clientWidth;
+    const cursorRatio = cursorPosition / oldWidth;
+
+    // Rebuild the timeline
     timelineBar.innerHTML = `
         <div class="main-line"></div>
         <div class="left-bar"></div>
@@ -400,9 +416,10 @@ function populateTimeline(events) {
         }
     });
 
-    // Calculate zoom scale
+    // Calculate zoom scale and set new width
     const zoomScale = zoomScales[zoomLevel - 1];
-    timelineBar.style.width = `${yearRange * 50 * zoomScale}px`; // 50px per year, scaled by zoom
+    const newWidth = yearRange * 50 * zoomScale; // 50px per year, scaled by zoom
+    timelineBar.style.width = `${newWidth}px`;
 
     // Add year markers along the main line
     for (let year = startYear; year <= endYear; year++) {
@@ -506,6 +523,24 @@ function populateTimeline(events) {
             timelineBar.appendChild(dateLabel);
         }
     });
+
+    // Adjust scroll position to keep cursor position in view
+    const newCursorPosition = cursorRatio * newWidth;
+    const viewportWidth = timeline.clientWidth;
+    const newScrollLeft = newCursorPosition - viewportWidth / 2;
+
+    // Ensure scroll position is within bounds
+    const maxScrollLeft = newWidth - viewportWidth;
+    timeline.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
+}
+
+// Wrapper function for button-based zooming (without cursor position)
+function populateTimeline(events) {
+    const timeline = document.getElementById('timeline');
+    const currentScrollLeft = timeline.scrollLeft;
+    const viewportWidth = timeline.clientWidth;
+    const cursorPosition = currentScrollLeft + viewportWidth / 2; // Default to viewport center
+    populateTimelineWithCursor(events, cursorPosition);
 }
 
 // Sidebar resize functionality
