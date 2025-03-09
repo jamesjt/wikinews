@@ -66,24 +66,20 @@ body {
     margin-bottom: 5px;
 }
 
-/* Hide sub-sections by default */
 #event-list .decade-list,
 #event-list .year-list {
     display: none;
 }
 
-/* Show sub-sections when the 'show' class is added */
 #event-list .show {
     display: block;
 }
 
-/* Style for toggle elements */
 .toggle {
     cursor: pointer;
     user-select: none;
 }
 
-/* Specific to sidebar toggle indicators */
 .toggle-indicator {
     margin-right: 5px;
     display: inline;
