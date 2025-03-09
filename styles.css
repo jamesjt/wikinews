@@ -103,8 +103,8 @@ body {
 }
 
 .toggle-indicator {
-    width: 16px;
-    height: 16px;
+    width: 8px; /* Reduced from 16px to 8px (50%) */
+    height: 8px; /* Reduced from 16px to 8px (50%) */
     margin-right: 8px;
     transition: transform 0.2s ease;
 }
@@ -178,7 +178,7 @@ body {
     height: 16px;
     cursor: pointer;
     position: relative;
-    margin-left: 8px; /* Space between multiple document icons */
+    margin-left: 8px;
 }
 
 .document-icon:hover {
