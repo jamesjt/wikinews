@@ -55,7 +55,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 // Add markers to the map
                 events.forEach((event, index) => {
-                    event.index = index; // Ensure index is set
+                    event.index = index;
                     const marker = L.marker(event.location)
                         .addTo(map)
                         .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
@@ -65,7 +65,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 // Build the collapsible sidebar
                 buildSidebar(events);
 
-                // Populate timeline with bubbles (position based on index)
+                // Populate timeline with bubbles
                 populateTimeline(events);
             }
         });
@@ -98,54 +98,54 @@ function buildSidebar(events) {
     eventList.innerHTML = '';
 
     sortedDecades.forEach(decade => {
-        const decadeLi = document.createElement('li');
-        decadeLi.className = 'decade';
+        const decadeDiv = document.createElement('div');
+        decadeDiv.className = 'decade';
         const decadeToggle = document.createElement('span');
         decadeToggle.className = 'toggle';
         const decadeIndicator = document.createElement('span');
-        decadeIndicator.className = 'toggle-indicator'; // Changed from 'indicator'
+        decadeIndicator.className = 'toggle-indicator';
         decadeIndicator.textContent = '[+]';
         decadeToggle.appendChild(decadeIndicator);
         decadeToggle.appendChild(document.createTextNode(` ${decade}`));
         const decadeEvents = Object.values(groupedEvents[decade]).flat();
         const eventCount = decadeEvents.length;
         decadeToggle.appendChild(document.createTextNode(` (${eventCount} events)`));
-        decadeLi.appendChild(decadeToggle);
+        decadeDiv.appendChild(decadeToggle);
 
-        const yearUl = document.createElement('ul');
-        yearUl.className = 'year-list';
+        const yearDiv = document.createElement('div');
+        yearDiv.className = 'decade-list';
         const sortedYears = Object.keys(groupedEvents[decade]).sort((a, b) => parseInt(a) - parseInt(b));
 
         sortedYears.forEach(year => {
-            const yearLi = document.createElement('li');
-            yearLi.className = 'year';
+            const yearSection = document.createElement('div');
+            yearSection.className = 'year';
             const yearToggle = document.createElement('span');
             yearToggle.className = 'toggle';
             const yearIndicator = document.createElement('span');
-            yearIndicator.className = 'toggle-indicator'; // Changed from 'indicator'
+            yearIndicator.className = 'toggle-indicator';
             yearIndicator.textContent = '[+]';
             yearToggle.appendChild(yearIndicator);
             yearToggle.appendChild(document.createTextNode(` ${year}`));
             const yearEvents = groupedEvents[decade][year];
             const yearEventCount = yearEvents.length;
             yearToggle.appendChild(document.createTextNode(` (${yearEventCount} events)`));
-            yearLi.appendChild(yearToggle);
+            yearSection.appendChild(yearToggle);
 
-            const eventUl = document.createElement('ul');
-            eventUl.className = 'event-list';
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'year-list';
             yearEvents.forEach(event => {
-                const eventLi = document.createElement('li');
-                eventLi.className = 'event-item';
-                eventLi.textContent = `${event.displayDate}: ${event.description}`;
-                eventLi.setAttribute('data-event-index', event.index);
-                eventUl.appendChild(eventLi);
+                const eventItem = document.createElement('div');
+                eventItem.className = 'event-item';
+                eventItem.textContent = `${event.displayDate}: ${event.description}`;
+                eventItem.setAttribute('data-event-index', event.index);
+                eventDiv.appendChild(eventItem);
             });
-            yearLi.appendChild(eventUl);
-            yearUl.appendChild(yearLi);
+            yearSection.appendChild(eventDiv);
+            yearDiv.appendChild(yearSection);
         });
 
-        decadeLi.appendChild(yearUl);
-        eventList.appendChild(decadeLi);
+        decadeDiv.appendChild(yearDiv);
+        eventList.appendChild(decadeDiv);
     });
 
     document.querySelectorAll('.toggle').forEach(toggle => {
@@ -175,7 +175,7 @@ function buildSidebar(events) {
 // Populate timeline with bubbles (position based on index)
 function populateTimeline(events) {
     const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = '<span class="timeline-indicator" style="left: 50%"></span>'; // Reset with static indicator
+    timelineBar.innerHTML = '<span class="timeline-indicator" style="left: 50%"></span>';
     events.forEach((event, index) => {
         const position = events.length > 1 ? (index / (events.length - 1)) * 100 : 50;
         const bubble = document.createElement('div');
