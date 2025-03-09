@@ -14,14 +14,85 @@ const locations = {
     "soledar": [48.6833, 38.0667],
     "dnipro": [48.4647, 35.0462],
     "kramatorsk": [48.7386, 37.5844],
-    "azovstal": [47.095, 37.541], // Same as Mariupol
+    "azovstal": [47.095, 37.541],
     "kerch strait bridge": [45.225, 36.615]
 };
 
-// Default location set to Kyiv for events without specific locations
+// Default location set to Kyiv
 const defaultLocation = locations["kyiv"];
 
-// List of events as a multi-line string (all your events restored)
+// Google Sheet public CSV URL (replace with your actual URL)
+const SHEET_CSV_URL = 'YOUR_PUBLISHED_CSV_URL_HERE'; // e.g., https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/pub?output=csv
+
+// Initialize the Leaflet map
+const map = L.map('map').setView([48.3794, 31.1656], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Array to store markers
+const markers = [];
+
+// Fetch events from Google Sheet CSV
+fetch(SHEET_CSV_URL)
+    .then(response => response.text())
+    .then(csvText => {
+        // Parse CSV into an array of rows
+        const rows = csvText.split('\n').map(row => row.split(','));
+
+        // Extract headers from the first row
+        const headers = rows[0];
+        const dateIndex = headers.indexOf('Date-MDY');
+        const descIndex = headers.indexOf('Short Summary - Date');
+        const locIndex = headers.indexOf('Location'); // Optional column
+
+        if (dateIndex === -1 || descIndex === -1) {
+            throw new Error('Required columns "Date-MDY" or "Short Summary - Date" not found in CSV');
+        }
+
+        // Parse rows into events, skipping header row
+        const events = rows.slice(1).map(row => {
+            const dateStr = row[dateIndex];
+            const date = new Date(dateStr); // Assumes MM/DD/YYYY format
+            if (isNaN(date.getTime())) {
+                console.warn(`Invalid date: ${dateStr}`);
+                return null;
+            }
+            const description = row[descIndex] || '';
+            const locationStr = locIndex !== -1 && row[locIndex] ? row[locIndex].toLowerCase() : '';
+            const location = locations[locationStr] || defaultLocation;
+
+            return {
+                date: date,
+                description: description,
+                location: location,
+                story: 'The War in Ukraine'
+            };
+        }).filter(event => event !== null);
+
+        // Sort events by date
+        events.sort((a, b) => a.date - b.date);
+
+        // Add markers to the map
+        events.forEach(event => {
+            const marker = L.marker(event.location)
+                .addTo(map)
+                .bindPopup(`<b>${event.description}</b><br>Commentary: <a href="#">Link</a>`);
+            markers.push(marker);
+        });
+
+        // Populate sidebar
+        populateSidebar(events);
+
+        // Populate timeline
+        populateTimeline(events);
+    })
+    .catch(error => {
+        console.error('Error fetching or parsing CSV:', error);
+    });
+
+// Commented out original eventLines approach
+/*
 const eventLines = `
 February 9, 1990: Baker-Gorbachev talk: NATO won't expand eastward.
 February 9, 1990: Baker-Gorbachev talk: NATO won't expand eastward.
@@ -164,64 +235,47 @@ const events = eventLines.map(line => {
 
 // Sort events by date
 events.sort((a, b) => a.date - b.date);
+*/
 
-// Function to format dates for display
+// Function to format dates
 function formatDate(date) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
 }
 
-// Initialize the Leaflet map, centered on Ukraine
-const map = L.map('map').setView([48.3794, 31.1656], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-
-// Array to store markers for interactivity
-const markers = [];
-
-// Add markers to the map and store them
-events.forEach(event => {
-    const marker = L.marker(event.location)
-        .addTo(map)
-        .bindPopup(`<b>${event.description}</b><br>Commentary: <a href="#">Link</a>`);
-    markers.push(marker);
-});
-
-// Populate the sidebar with interactive list items
-function populateSidebar() {
+// Populate sidebar with interactive list items
+function populateSidebar(events) {
     const eventList = document.getElementById('event-list');
-    eventList.innerHTML = ''; // Clear existing items
+    eventList.innerHTML = '';
     events.forEach((event, index) => {
         const li = document.createElement('li');
         li.textContent = `${formatDate(event.date)}: ${event.description}`;
         li.setAttribute('data-event-index', index);
         li.addEventListener('click', function() {
             const marker = markers[index];
-            map.setView(marker.getLatLng(), 10); // Center map on marker, zoom level 10
-            marker.openPopup(); // Open the marker's popup
+            map.setView(marker.getLatLng(), 10);
+            marker.openPopup();
         });
         eventList.appendChild(li);
     });
 }
 
-// Call populateSidebar after markers are added
-populateSidebar();
-
-// Populate the timeline with bubbles
-const startDate = new Date('1990-01-01');
-const endDate = new Date('2025-12-31');
-const timelineBar = document.querySelector('.timeline-bar');
-events.forEach(event => {
-    const timeDiff = event.date.getTime() - startDate.getTime();
-    const totalTime = endDate.getTime() - startDate.getTime();
-    const position = (timeDiff / totalTime) * 100;
-    const bubble = document.createElement('div');
-    bubble.className = 'event-bubble';
-    bubble.style.left = `${position}%`;
-    bubble.title = event.description;
-    timelineBar.appendChild(bubble);
-});
+// Populate timeline with bubbles
+function populateTimeline(events) {
+    const startDate = new Date('1990-01-01');
+    const endDate = new Date('2025-12-31');
+    const timelineBar = document.querySelector('.timeline-bar');
+    events.forEach(event => {
+        const timeDiff = event.date.getTime() - startDate.getTime();
+        const totalTime = endDate.getTime() - startDate.getTime();
+        const position = (timeDiff / totalTime) * 100;
+        const bubble = document.createElement('div');
+        bubble.className = 'event-bubble';
+        bubble.style.left = `${position}%`;
+        bubble.title = event.description;
+        timelineBar.appendChild(bubble);
+    });
+}
 
 // Sidebar resize functionality
 const sidebar = document.getElementById('sidebar');
