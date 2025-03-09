@@ -231,6 +231,8 @@ function buildSidebar(events) {
                 if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
                     const minLength = Math.min(event.documentNames.length, event.documentLinks.length);
                     for (let i = 0; i < minLength; i++) {
+                        const docWrapper = document.createElement('div');
+                        docWrapper.className = 'document-wrapper';
                         const docContainer = document.createElement('div');
                         docContainer.className = 'document-icon';
                         const documentIcon = document.createElement('img');
@@ -238,10 +240,15 @@ function buildSidebar(events) {
                         documentIcon.alt = 'Document';
                         const tooltip = document.createElement('div');
                         tooltip.className = 'document-tooltip';
-                        tooltip.textContent = event.documentNames[i];
+                        tooltip.innerHTML = `<a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>`;
+                        tooltip.querySelector('a').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            window.open(event.documentLinks[i], '_blank');
+                        });
                         docContainer.appendChild(documentIcon);
-                        docContainer.appendChild(tooltip);
-                        dateDiv.appendChild(docContainer);
+                        docWrapper.appendChild(docContainer);
+                        docWrapper.appendChild(tooltip);
+                        dateDiv.appendChild(docWrapper);
                     }
                 }
 
