@@ -163,7 +163,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     const rect = timeline.getBoundingClientRect();
-                    const cursorPosition = e.clientX - rect.left + timeline.scrollLeft;
+                    const cursorPosition = e.clientX - rect.left;
                     if (e.deltaY < 0) { // Wheel up: zoom in
                         zoomLevel = Math.min(zoomLevel + 1, zoomLevels.length);
                     } else { // Wheel down: zoom out
@@ -287,7 +287,7 @@ function buildSidebar(events) {
                 const iconsContainer = document.createElement('div');
                 iconsContainer.className = 'icons-container';
 
-                if (event.documentNames.length > 0 && documentLinks.length > 0) {
+                if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
                     const docWrapper = document.createElement('div');
                     docWrapper.className = 'document-wrapper';
                     const docContainer = document.createElement('div');
@@ -375,18 +375,6 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const timeline = document.getElementById('timeline');
     const timelineBar = document.querySelector('.timeline-bar');
 
-    // Calculate the ratio of the cursor position relative to the timeline width before zooming
-    const oldWidth = parseFloat(timelineBar.style.width) || timeline.clientWidth;
-    const cursorRatio = cursorPosition / oldWidth;
-
-    // Rebuild the timeline
-    timelineBar.innerHTML = `
-        <div class="main-line"></div>
-        <div class="left-bar"></div>
-        <div class="right-bar"></div>
-        <span class="timeline-indicator" style="left: 50%"></span>
-    `;
-
     // Determine the range of years
     const years = events.map(event => {
         const dateStr = event.date;
@@ -403,6 +391,25 @@ function populateTimelineWithCursor(events, cursorPosition) {
     const endYear = Math.max(...years);
     const yearRange = endYear - startYear + 1;
 
+    // Calculate the old width and the cursor's position in the timeline's coordinate system
+    const oldZoomScale = zoomScales[zoomLevel - 1] || zoomScales[0];
+    const oldWidth = yearRange * 50 * oldZoomScale;
+    const absoluteCursorPosition = cursorPosition + timeline.scrollLeft;
+    const cursorRatio = absoluteCursorPosition / oldWidth;
+
+    // Calculate new width after zoom
+    const newZoomScale = zoomScales[zoomLevel - 1];
+    const newWidth = yearRange * 50 * newZoomScale;
+
+    // Rebuild the timeline
+    timelineBar.innerHTML = `
+        <div class="main-line"></div>
+        <div class="left-bar"></div>
+        <div class="right-bar"></div>
+        <span class="timeline-indicator" style="left: 50%"></span>
+    `;
+    timelineBar.style.width = `${newWidth}px`;
+
     // Group events by decade for zoomed-out view
     const groupedByDecade = {};
     events.forEach(event => {
@@ -415,11 +422,6 @@ function populateTimelineWithCursor(events, cursorPosition) {
             groupedByDecade[decade].push({ ...event, year });
         }
     });
-
-    // Calculate zoom scale and set new width
-    const zoomScale = zoomScales[zoomLevel - 1];
-    const newWidth = yearRange * 50 * zoomScale; // 50px per year, scaled by zoom
-    timelineBar.style.width = `${newWidth}px`;
 
     // Add year markers along the main line
     for (let year = startYear; year <= endYear; year++) {
@@ -524,13 +526,12 @@ function populateTimelineWithCursor(events, cursorPosition) {
         }
     });
 
-    // Adjust scroll position to keep cursor position in view
-    const newCursorPosition = cursorRatio * newWidth;
-    const viewportWidth = timeline.clientWidth;
-    const newScrollLeft = newCursorPosition - viewportWidth / 2;
+    // Adjust scroll position to keep the cursor over the same point
+    const newAbsolutePosition = cursorRatio * newWidth;
+    const newScrollLeft = newAbsolutePosition - cursorPosition;
 
     // Ensure scroll position is within bounds
-    const maxScrollLeft = newWidth - viewportWidth;
+    const maxScrollLeft = newWidth - timeline.clientWidth;
     timeline.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
 }
 
