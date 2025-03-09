@@ -25,7 +25,7 @@ function getOrdinal(day) {
     switch (day % 10) {
         case 1: return `${day}st`;
         case 2: return `${day}nd`;
-        case 3: return `${year}rd`;
+        case 3: return `${day}rd`; // Fixed typo: changed 'year' to 'day'
         default: return `${day}th`;
     }
 }
