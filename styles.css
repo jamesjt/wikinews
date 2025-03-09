@@ -47,9 +47,11 @@ body {
 #sidebar {
     flex: 0 0 20%;
     background: #f9f9f9;
-    padding: 10px;
+    padding: 15px;
     overflow-y: auto;
     max-height: calc(100vh - 50px);
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 #sidebar h2 {
@@ -67,17 +69,25 @@ body {
 }
 
 #event-list .decade {
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    background-color: #f0f0f0;
+    padding: 5px;
 }
 
 #event-list .decade-list {
     display: none;
-    margin-left: 5px;
+    margin-left: 10px;
+}
+
+#event-list .year {
+    margin-bottom: 8px;
+    background-color: #fafafa;
+    padding: 5px;
 }
 
 #event-list .year-list {
     display: none;
-    margin-left: 5px;
+    margin-left: 10px;
 }
 
 #event-list .show {
@@ -89,24 +99,35 @@ body {
     user-select: none;
     display: flex;
     align-items: center;
+    font-weight: bold;
 }
 
-/* Style for SVG toggle indicator */
 .toggle-indicator {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
     transition: transform 0.2s ease;
 }
 
-/* Closed state: rotate -90 degrees to point right */
 .toggle .toggle-indicator {
     transform: rotate(-90deg);
 }
 
-/* Open state: no rotation (points down) */
+.toggle.open {
+    background-color: #e6f0fa;
+    color: #1a73e8;
+}
+
 .toggle.open .toggle-indicator {
     transform: rotate(0deg);
+}
+
+.event-item {
+    padding: 5px 0;
+}
+
+.event-item:hover {
+    background-color: #e0e0e0;
 }
 
 .resize-handle {
