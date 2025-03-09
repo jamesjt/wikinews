@@ -19,15 +19,11 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
         Papa.parse(csvText, {
             header: true,
             complete: function(results) {
+                console.log('Parsed Data Sample:', results.data.slice(0, 5)); // Debug: Log first 5 rows
                 const events = results.data.map((row, index) => {
-                    const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : '';
-                    const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : '';
+                    const dateStr = row['Date-MDY'] ? row['Date-MDY'].trim() : 'Unknown Date';
+                    const description = row['Short Summary - Date'] ? row['Short Summary - Date'].trim() : 'No Description';
                     const locationStr = row['Location'] ? row['Location'].trim() : '';
-
-                    if (!dateStr || !description) {
-                        console.warn('Skipping row due to missing date or description:', row);
-                        return null;
-                    }
 
                     let location = null; // Default to null (no marker)
                     if (locationStr) {
@@ -35,7 +31,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         const lat = parseFloat(latStr);
                         const lon = parseFloat(lonStr);
                         if (!isNaN(lat) && !isNaN(lon)) {
-                            location = [lat, lon]; // Only set if valid
+                            location = [lat, lon];
                         } else {
                             console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
                         }
@@ -46,15 +42,15 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     return {
                         date: dateStr,
                         description: description,
-                        location: location, // Null if no valid location
+                        location: location,
                         index: index
                     };
                 }).filter(event => event !== null);
 
                 // Add markers to the map only for events with valid locations
                 events.forEach((event, index) => {
-                    event.index = index; // Ensure index is set
-                    if (event.location) { // Only create marker if location exists
+                    event.index = index;
+                    if (event.location) {
                         const marker = L.marker(event.location)
                             .addTo(map)
                             .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
@@ -62,7 +58,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     }
                 });
 
-                // Build the collapsible sidebar (all events, with or without location)
+                // Build the collapsible sidebar (all events)
                 buildSidebar(events);
 
                 // Populate timeline with bubbles (all events)
@@ -77,23 +73,38 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 // Build the sidebar with collapsible decade and year sections
 function buildSidebar(events) {
     const groupedEvents = {};
-    const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/; // Relaxed pattern for single or double digits
 
     events.forEach(event => {
         const dateStr = event.date;
+        let year = 'Unknown';
+        let displayDate = dateStr;
+
         if (datePattern.test(dateStr)) {
-            const [month, day, year] = dateStr.split('/').map(Number);
-            const decade = `${Math.floor(year / 10) * 10}s`;
-            if (!groupedEvents[decade]) groupedEvents[decade] = {};
-            if (!groupedEvents[decade][year]) groupedEvents[decade][year] = [];
-            event.displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-            groupedEvents[decade][year].push(event);
+            const [month, day, yearStr] = dateStr.split('/').map(part => parseInt(part, 10));
+            year = yearStr.toString();
+            displayDate = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`; // Normalize to MM/DD
         } else {
-            console.warn('Skipping event with invalid date format:', event);
+            // Fallback: Look for any 4-digit year if pattern fails
+            const yearMatch = dateStr.match(/\d{4}/);
+            if (yearMatch) {
+                year = yearMatch[0];
+            }
+            console.warn('Non-standard date format, using full string:', dateStr);
         }
+
+        const decade = year === 'Unknown' ? 'Unknown' : `${Math.floor(parseInt(year) / 10) * 10}s`;
+        if (!groupedEvents[decade]) groupedEvents[decade] = {};
+        if (!groupedEvents[decade][year]) groupedEvents[decade][year] = [];
+        event.displayDate = displayDate;
+        groupedEvents[decade][year].push(event);
     });
 
-    const sortedDecades = Object.keys(groupedEvents).sort((a, b) => parseInt(a) - parseInt(b));
+    const sortedDecades = Object.keys(groupedEvents).sort((a, b) => {
+        if (a === 'Unknown') return 1;
+        if (b === 'Unknown') return -1;
+        return parseInt(a) - parseInt(b);
+    });
     const eventList = document.getElementById('event-list');
     eventList.innerHTML = '';
 
@@ -115,7 +126,11 @@ function buildSidebar(events) {
 
         const yearDiv = document.createElement('div');
         yearDiv.className = 'decade-list';
-        const sortedYears = Object.keys(groupedEvents[decade]).sort((a, b) => parseInt(a) - parseInt(b));
+        const sortedYears = Object.keys(groupedEvents[decade]).sort((a, b) => {
+            if (a === 'Unknown') return 1;
+            if (b === 'Unknown') return -1;
+            return parseInt(a) - parseInt(b);
+        });
 
         sortedYears.forEach(year => {
             const yearSection = document.createElement('div');
@@ -167,7 +182,7 @@ function buildSidebar(events) {
         item.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-event-index'));
             const marker = markers[index];
-            if (marker) { // Only attempt to center if a marker exists
+            if (marker) {
                 map.setView(marker.getLatLng(), 10);
                 marker.openPopup();
             }
