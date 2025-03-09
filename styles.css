@@ -176,7 +176,7 @@ body {
 }
 
 .numbered-marker {
-    background-color: #ff7800; /* Orange, or choose your color */
+    background-color: #0000ff; /* Blue instead of orange */
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -185,8 +185,8 @@ body {
     line-height: 24px;
     font-size: 14px;
     font-weight: bold;
-    border: 2px solid #fff; /* White border for contrast */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Optional shadow */
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .resize-handle {
