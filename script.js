@@ -231,15 +231,17 @@ function buildSidebar(events) {
                 if (event.documentNames.length > 0 && event.documentLinks.length > 0) {
                     const minLength = Math.min(event.documentNames.length, event.documentLinks.length);
                     for (let i = 0; i < minLength; i++) {
+                        const docContainer = document.createElement('div');
+                        docContainer.className = 'document-icon';
                         const documentIcon = document.createElement('img');
-                        documentIcon.className = 'document-icon';
                         documentIcon.src = 'icon-document.png';
                         documentIcon.alt = 'Document';
                         const tooltip = document.createElement('div');
                         tooltip.className = 'document-tooltip';
-                        tooltip.textContent = event.documentNames[i]; // Just the name, no link yet
-                        documentIcon.appendChild(tooltip);
-                        dateDiv.appendChild(documentIcon);
+                        tooltip.textContent = event.documentNames[i];
+                        docContainer.appendChild(documentIcon);
+                        docContainer.appendChild(tooltip);
+                        dateDiv.appendChild(docContainer);
                     }
                 }
 
