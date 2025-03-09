@@ -110,9 +110,13 @@ body {
 .year-marker {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%); /* Center both horizontally and vertically */
     font-size: 10px;
     color: #333;
+    padding: 2px 5px; /* Match event-date-label padding */
+    background-color: #eee; /* Same grey background as event-date-label */
+    border: 1px solid #000; /* Same black border as event-date-label */
+    border-radius: 3px; /* Same border radius as event-date-label */
 }
 
 .event-date-label {
