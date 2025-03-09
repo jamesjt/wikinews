@@ -1,6 +1,6 @@
 // script.js (Ensure saved as UTF-8)
 
-// Define default location (Kyiv)
+// Define default location (Kyiv) - only used as a fallback if needed elsewhere
 const defaultLocation = [50.45, 30.52];
 
 // Initialize the Leaflet map
@@ -29,43 +29,43 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         return null;
                     }
 
-                    let location;
+                    let location = null; // Default to null (no marker)
                     if (locationStr) {
                         const [latStr, lonStr] = locationStr.split(',').map(coord => coord.trim());
                         const lat = parseFloat(latStr);
                         const lon = parseFloat(lonStr);
                         if (!isNaN(lat) && !isNaN(lon)) {
-                            location = [lat, lon];
+                            location = [lat, lon]; // Only set if valid
                         } else {
-                            console.warn(`Invalid coordinates in Location: ${locationStr}, using default`, row);
-                            location = defaultLocation;
+                            console.warn(`Invalid coordinates in Location: ${locationStr}, no marker will be placed`, row);
                         }
                     } else {
-                        console.warn('Missing Location data, using default:', row);
-                        location = defaultLocation;
+                        console.warn('Missing Location data, no marker will be placed:', row);
                     }
 
                     return {
                         date: dateStr,
                         description: description,
-                        location: location,
+                        location: location, // Null if no valid location
                         index: index
                     };
                 }).filter(event => event !== null);
 
-                // Add markers to the map
+                // Add markers to the map only for events with valid locations
                 events.forEach((event, index) => {
-                    event.index = index;
-                    const marker = L.marker(event.location)
-                        .addTo(map)
-                        .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
-                    markers.push(marker);
+                    event.index = index; // Ensure index is set
+                    if (event.location) { // Only create marker if location exists
+                        const marker = L.marker(event.location)
+                            .addTo(map)
+                            .bindPopup(`<b>${event.description}</b><br>Date: ${event.date}<br>Commentary: <a href="#">Link</a>`);
+                        markers.push(marker);
+                    }
                 });
 
-                // Build the collapsible sidebar
+                // Build the collapsible sidebar (all events, with or without location)
                 buildSidebar(events);
 
-                // Populate timeline with bubbles
+                // Populate timeline with bubbles (all events)
                 populateTimeline(events);
             }
         });
@@ -167,8 +167,10 @@ function buildSidebar(events) {
         item.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-event-index'));
             const marker = markers[index];
-            map.setView(marker.getLatLng(), 10);
-            marker.openPopup();
+            if (marker) { // Only attempt to center if a marker exists
+                map.setView(marker.getLatLng(), 10);
+                marker.openPopup();
+            }
         });
     });
 }
