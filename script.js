@@ -336,6 +336,34 @@ function populateTimeline(events) {
         } else {
             bubble.classList.add('below');
         }
+        // Add click event to open sidebar event and move map
+        bubble.addEventListener('click', () => {
+            const eventIndex = index;
+            const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+            if (eventItem) {
+                const yearSection = eventItem.closest('.year');
+                const decadeSection = yearSection.closest('.decade');
+                const yearList = yearSection.querySelector('.year-list');
+                const decadeList = decadeSection.querySelector('.decade-list');
+                const yearToggle = yearSection.querySelector('.toggle');
+                const decadeToggle = decadeSection.querySelector('.toggle');
+
+                if (!decadeList.classList.contains('show')) {
+                    decadeList.classList.add('show');
+                    decadeToggle.classList.add('open');
+                }
+                if (!yearList.classList.contains('show')) {
+                    yearList.classList.add('show');
+                    yearToggle.classList.add('open');
+                }
+
+                eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (event.marker) {
+                map.setView(event.marker.getLatLng(), 10);
+                event.marker.openPopup();
+            }
+        });
         timelineBar.appendChild(bubble);
     });
 }
