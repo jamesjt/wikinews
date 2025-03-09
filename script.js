@@ -330,6 +330,10 @@ function populateTimeline(events) {
         bubble.style.left = `${position}%`;
         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.title = `${event.date}: ${event.shortSummary}`;
+        // Set class based on location presence
+        if (event.location) {
+            bubble.classList.add('has-location');
+        }
         // Alternate above and below the main line
         if (index % 2 === 0) {
             bubble.classList.add('above');
