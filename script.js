@@ -258,7 +258,8 @@ function populateTimeline(cursorPos = 0) {
     events.forEach((event, index) => {
         const dateStr = event.date;
         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-        const [month, day, year] = dateStr.split('/').map(Number);
+        const [month, day] = dateStr.split('/').map(Number); // Only month and day
+        const [year] = dateStr.split('/').map(Number).slice(2); // Extract year for positioning
         const yearOffset = year - startYear;
         let pos;
         if (zoomLevel === 1) {
@@ -284,8 +285,8 @@ function populateTimeline(cursorPos = 0) {
 
         const label = document.createElement('div');
         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-        label.style.left = `${pos}px`;
-        label.textContent = zoomLevel === 1 ? `${month}/${day}/${year}` : zoomLevel === 2 ? `${month}/${day}` : `${day}`;
+        label.style.left = `${pos - 16}px`; /* Position to the left of the bubble (16px is bubble width) */
+        label.textContent = `${months[month - 1]} ${getOrdinal(day)}`; // Show only month and day
 
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
