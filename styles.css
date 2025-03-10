@@ -85,7 +85,7 @@ body {
     background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
     z-index: 2000; /* Above map tiles but below custom controls */
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
     pointer-events: auto; /* Allow interaction with timeline */
@@ -164,35 +164,19 @@ body {
     transform: translate(-50%, -50%);
 }
 
-/* Hover tooltip for timeline bubbles appears below the bubble */
-.bubble-tooltip {
-    display: none; /* Hidden by default */
+/* Dynamically created tooltip styling */
+.dynamic-tooltip {
     position: absolute;
-    top: 25px; /* Below the bubble */
-    left: 50%;
-    transform: translateX(-50%);
     background: #fff;
     border: 1px solid #ccc;
     padding: 6px;
     font-size: 12px;
     line-height: 1.4;
     border-radius: 3px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
     z-index: 2003; /* On top of event-bubble */
-}
-
-.event-bubble:hover .bubble-tooltip {
-    display: block;
-}
-
-.bubble-tooltip a {
-    color: #1a73e8;
-    text-decoration: none;
-}
-
-.bubble-tooltip a:hover {
-    text-decoration: underline;
+    pointer-events: none; /* Prevent tooltip from interfering with mouse events */
 }
 
 /* The small date label for each timeline event bubble */
@@ -234,29 +218,9 @@ body {
     font-size: 14px;
 }
 
+/* Remove zoom-btn styles since buttons are removed */
 .zoom-btn {
-    position: absolute;
-    top: 10px;
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    z-index: 2003; /* Above timeline and tooltips */
-}
-
-.zoom-btn:hover {
-    background: #eee;
-}
-
-.zoom-in {
-    right: 40px;
-}
-
-.zoom-out {
-    right: 10px;
+    display: none; /* Hide the buttons */
 }
 
 /* Leaflet’s numbered markers on the map */
