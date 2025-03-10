@@ -24,6 +24,11 @@
     </header>
     <!-- Timeline Overlay -->
     <div id="timeline">
+        <select id="timeline-select">
+            <option value="ukraine" selected>The War in Ukraine</option>
+            <option value="timeline2">Timeline 2</option>
+            <option value="timeline3">Timeline 3</option>
+        </select>
         <div class="timeline-bar">
             <!-- Timeline content will be added dynamically -->
         </div>
@@ -32,11 +37,7 @@
     <div id="main-content">
         <!-- Sidebar -->
         <div id="sidebar">
-            <h2>Stories</h2>
-            <div class="story-section">
-                <div class="story-title">The War in Ukraine</div>
-                <div id="event-list"></div>
-            </div>
+            <div id="event-list"></div>
             <h2>Commentary</h2>
             <p>Sample commentary linked to events, such as news articles or analyses.</p>
         </div>
