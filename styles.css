@@ -115,11 +115,11 @@ body {
 }
 
 .event-bubble.above {
-    top: 40px; /* Adjusted to leave space for date label */
+    top: 30px; /* Pushed up by 10px from the original 40px */
 }
 
 .event-bubble.below {
-    bottom: 40px; /* Adjusted to leave space for date label */
+    bottom: 30px; /* Pushed up by 10px from the original 40px */
 }
 
 .event-bubble:hover {
@@ -148,12 +148,12 @@ body {
 }
 
 .event-label.above {
-    top: 20px; /* Position higher above the bubble */
+    top: 10px; /* Adjusted to match new bubble position */
     left: 50%; /* Center above the bubble */
 }
 
 .event-label.below {
-    bottom: 20px; /* Position higher below the bubble */
+    bottom: 10px; /* Adjusted to match new bubble position */
     left: 50%; /* Center below the bubble */
 }
 
@@ -163,6 +163,10 @@ body {
     transform: translate(-50%, -50%);
     font-size: 12px;
     color: #555;
+    background: #f8f8f8; /* Same as timeline background */
+    border: 1px solid #000; /* Black border */
+    padding: 0 4px;
+    border-radius: 3px;
 }
 
 .marker.major {
