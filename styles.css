@@ -85,7 +85,7 @@ body {
     background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
     z-index: 2000; /* Above map tiles but below custom controls */
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
     white-space: nowrap;
     padding: 10px 20px;
     pointer-events: auto; /* Allow interaction with timeline */
