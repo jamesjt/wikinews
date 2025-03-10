@@ -15,25 +15,16 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = [];
 let events = [];
 
-// We'll store the initial scale determined after the first population.
-let baseScale = 1;
-let firstPopulate = true;
+// Load TimelineJS library (assuming CDN usage)
+const timelineScript = document.createElement('script');
+timelineScript.src = 'https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js';
+document.head.appendChild(timelineScript);
 
-// For timeline panning.
-let isPanning = false;
-let panStartX = 0;
-
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function getOrdinal(day) {
-    if (day > 3 && day < 21) return `${day}th`;
-    switch (day % 10) {
-        case 1: return `${day}st`;
-        case 2: return `${day}nd`;
-        case 3: return `${day}rd`;
-        default: return `${day}th`;
-    }
-}
+// Load TimelineJS CSS
+const timelineCSS = document.createElement('link');
+timelineCSS.rel = 'stylesheet';
+timelineCSS.href = 'https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css';
+document.head.appendChild(timelineCSS);
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -66,7 +57,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Build the same popup content we'll also use for the timeline bubble.
                             let popupContent = `<b>${shortSummary}</b><br>Date: ${dateStr}`;
                             if (documentNames.length && documentLinks.length) {
                                 for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -90,7 +80,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         }
                     }
 
-                    // Only include the event if we can parse a valid mm/dd/yyyy date.
                     const isValidDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr);
                     return {
                         date: dateStr,
@@ -108,31 +97,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 }).filter(event => event.timestamp);
 
                 buildSidebar(events);
-                populateTimeline();
-
-                // Add panning to timeline.
-                const timeline = document.getElementById('timeline');
-                timeline.addEventListener('mousedown', (e) => {
-                    isPanning = true;
-                    panStartX = e.pageX + timeline.scrollLeft;
-                    e.preventDefault();
-                });
-                timeline.addEventListener('mousemove', (e) => {
-                    if (!isPanning) return;
-                    timeline.scrollLeft = panStartX - e.pageX;
-                });
-                timeline.addEventListener('mouseup', () => {
-                    isPanning = false;
-                });
-                timeline.addEventListener('mouseleave', () => {
-                    isPanning = false;
-                });
-
-                // Ensure map resizes when sidebar changes
-                window.addEventListener('resize', () => {
-                    map.invalidateSize();
-                    populateTimeline(); // Recompute timeline width on resize
-                });
+                // Call TimelineJS setup after events are processed
+                setupTimelineJS(csvText);
             }
         });
     })
@@ -141,6 +107,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 function buildSidebar(events) {
     const groupedEvents = {};
     const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    function getOrdinal(day) {
+        if (day > 3 && day < 21) return `${day}th`;
+        switch (day % 10) {
+            case 1: return `${day}st`;
+            case 2: return `${day}nd`;
+            case 3: return `${day}rd`;
+            default: return `${day}th`;
+        }
+    }
 
     events.forEach(event => {
         const dateStr = event.date;
@@ -199,7 +176,6 @@ function buildSidebar(events) {
                 eventItem.className = 'event-item';
                 eventItem.setAttribute('data-event-index', event.index);
 
-                // Filter out empty or whitespace-only document names
                 const validDocumentNames = event.documentNames.filter(name => name && name.trim() !== '');
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
@@ -224,7 +200,6 @@ function buildSidebar(events) {
                     </div>
                     <div class="event-summary">${event.shortSummary}</div>
                 `;
-                // cycle through shortSummary, summary, blurb on click.
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
                     event.summaryState = (event.summaryState + 1) % 3;
                     eventItem.querySelector('.event-summary').textContent = [event.shortSummary, event.summary, event.blurb][event.summaryState];
@@ -254,155 +229,6 @@ function buildSidebar(events) {
     });
 }
 
-function populateTimeline() {
-    const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = '<div class="timeline-line"></div>';
-
-    if (!events.length) return;
-
-    const minTime = Math.min(...events.map(e => e.timestamp));
-    const maxTime = Math.max(...events.map(e => e.timestamp));
-    const timeRange = maxTime - minTime;
-
-    const timelineContainer = document.getElementById('timeline');
-    // We'll allow some padding on sides.
-    const containerWidth = timelineContainer.clientWidth - 40;
-
-    // Sort events by timestamp.
-    events.sort((a, b) => a.timestamp - b.timestamp);
-
-    let lastPos = 0;
-
-    // Add decade markers.
-    const years = events
-        .map(e => {
-            const match = e.date.match(/\d{4}/);
-            return match ? parseInt(match[0], 10) : null;
-        })
-        .filter(Boolean);
-    if (!years.length) return;
-
-    const startYear = Math.min(...years);
-    const endYear = Math.max(...years);
-
-    for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
-        const yearTime = new Date(`01/01/${year}`).getTime();
-        const timeOffset = yearTime - minTime;
-        const pos = (timeOffset / timeRange) * containerWidth;
-        const marker = document.createElement('div');
-        marker.className = 'marker major';
-        marker.style.left = `${pos}px`;
-        marker.textContent = year;
-        timelineBar.appendChild(marker);
-    }
-
-    // Place events.
-    events.forEach((event, index) => {
-        const dateStr = event.date;
-        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-        const timeOffset = event.timestamp - minTime;
-        let pos = (timeOffset / timeRange) * containerWidth;
-
-        // Force min gap of 20 px.
-        if (pos - lastPos < 20) {
-            pos = lastPos + 20;
-        }
-        lastPos = pos;
-
-        const bubble = document.createElement('div');
-        bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
-        bubble.style.left = `${pos}px`;
-        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
-        bubble.addEventListener('click', () => {
-            const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-            if (eventItem) expandAndScrollToEvent(eventItem);
-            if (event.marker) {
-                map.setView(event.marker.getLatLng(), 10);
-                event.marker.openPopup();
-            }
-        });
-
-        // Add hover event listeners for dynamic tooltip
-        bubble.addEventListener('mouseover', (e) => {
-            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-            if (event.documentNames.length && event.documentLinks.length) {
-                for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-                    tooltipContent += `
-                        <div class="document-link">
-                            <img src="icon-document.png" alt="Document">
-                            <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
-                        </div>`;
-                }
-            }
-
-            const tooltip = document.createElement('div');
-            tooltip.className = 'dynamic-tooltip';
-            tooltip.innerHTML = tooltipContent;
-            document.body.appendChild(tooltip);
-
-            // Position tooltip relative to mouse cursor
-            const mouseX = e.pageX;
-            const mouseY = e.pageY;
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-
-            // Adjust position to keep tooltip within viewport
-            let left = mouseX + 10; // Offset slightly to the right of cursor
-            let top = mouseY - tooltipHeight - 10; // Above cursor
-
-            // Check boundaries
-            if (left + tooltipWidth > window.innerWidth) {
-                left = mouseX - tooltipWidth - 10; // Move to left if too far right
-            }
-            if (top < 0) {
-                top = mouseY + 10; // Move below cursor if too high
-            }
-            if (left < 0) {
-                left = 0; // Ensure it doesn't go off the left edge
-            }
-
-            tooltip.style.left = `${left}px`;
-            tooltip.style.top = `${top}px`;
-        });
-
-        bubble.addEventListener('mouseout', () => {
-            const tooltips = document.querySelectorAll('.dynamic-tooltip');
-            tooltips.forEach(tooltip => tooltip.remove());
-        });
-
-        const label = document.createElement('div');
-        label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-        label.style.left = `${pos}px`;
-        const [month, day] = dateStr.split('/').map(Number);
-        label.textContent = `${month}/${day}`;
-
-        timelineBar.appendChild(bubble);
-        timelineBar.appendChild(label);
-    });
-
-    const fullWidth = lastPos + 40;
-    timelineBar.style.width = `${fullWidth}px`;
-
-    // On first populate, store the scale needed to fit fully in container.
-    if (firstPopulate) {
-        if (fullWidth > containerWidth + 1) {
-            baseScale = containerWidth / fullWidth;
-        } else {
-            baseScale = 1;
-        }
-        firstPopulate = false;
-    }
-
-    // Fixed scale since zooming is disabled
-    const userScale = 1;
-
-    // Final scale is the product.
-    const finalScale = baseScale * userScale;
-
-    timelineBar.style.transformOrigin = 'left center';
-    timelineBar.style.transform = `scaleX(${finalScale})`;
-}
-
 function expandAndScrollToEvent(eventItem) {
     const yearSection = eventItem.closest('.year');
     const decadeSection = yearSection.closest('.decade');
@@ -422,20 +248,77 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// TimelineJS setup
+function setupTimelineJS(csvText) {
+    // Parse CSV into TimelineJS-compatible JSON
+    const timelineData = {
+        events: []
+    };
+
+    events.forEach((event, index) => {
+        const [month, day, year] = event.date.split('/').map(num => parseInt(num, 10));
+        let text = `<p>${event.summary}</p>`;
+        if (event.documentNames.length && event.documentLinks.length) {
+            text += '<div>';
+            for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
+                text += `<div class="document-link"><a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a></div>`;
+            }
+            text += '</div>';
+        }
+
+        timelineData.events.push({
+            start_date: {
+                month: month.toString(),
+                day: day.toString(),
+                year: year.toString()
+            },
+            text: {
+                headline: event.shortSummary,
+                text: text
+            },
+            unique_id: `event-${index}` // For event tracking
+        });
+    });
+
+    // Initialize TimelineJS
+    timelineScript.onload = () => {
+        const timeline = new TL.Timeline('timeline', timelineData, {
+            height: 120,
+            marker_height_min: 30,
+            initial_zoom: 1
+        });
+
+        // Add click event listener for TimelineJS events
+        timeline.on('change', (data) => {
+            const eventId = data.unique_id;
+            if (eventId) {
+                const index = parseInt(eventId.split('-')[1]);
+                const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
+                if (eventItem) {
+                    expandAndScrollToEvent(eventItem);
+                }
+                const event = events[index];
+                if (event && event.marker) {
+                    map.setView(event.marker.getLatLng(), 10);
+                    event.marker.openPopup();
+                }
+            }
+        });
+    };
+}
+
 // Handle sidebar resize
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const resizeHandle = document.querySelector('.resize-handle');
     let isResizing = false;
 
-    // Start resizing on mousedown
     resizeHandle.addEventListener('mousedown', (e) => {
         isResizing = true;
         document.body.style.cursor = 'col-resize';
-        e.preventDefault(); // Prevent text selection
+        e.preventDefault();
     });
 
-    // Handle resizing on mousemove
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
 
@@ -443,18 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = container.getBoundingClientRect();
         const newWidth = e.clientX - containerRect.left;
 
-        // Enforce min and max widths from CSS
         const minWidth = parseInt(getComputedStyle(sidebar).minWidth);
         const maxWidth = parseInt(getComputedStyle(sidebar).maxWidth);
         
         if (newWidth >= minWidth && newWidth <= maxWidth) {
             sidebar.style.flex = `0 0 ${newWidth}px`;
-            map.invalidateSize(); // Update map size
-            populateTimeline();   // Recompute timeline width
+            map.invalidateSize();
+            // TimelineJS will automatically adjust to new width
         }
     });
 
-    // Stop resizing on mouseup
     document.addEventListener('mouseup', () => {
         if (isResizing) {
             isResizing = false;
@@ -462,3 +343,173 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// /* BEGIN COMMENTED ORIGINAL TIMELINE CODE
+// // We'll store the initial scale determined after the first population.
+// let baseScale = 1;
+// let firstPopulate = true;
+
+// // For timeline panning.
+// let isPanning = false;
+// let panStartX = 0;
+
+// function populateTimeline() {
+//     const timelineBar = document.querySelector('.timeline-bar');
+//     timelineBar.innerHTML = '<div class="timeline-line"></div>';
+
+//     if (!events.length) return;
+
+//     const minTime = Math.min(...events.map(e => e.timestamp));
+//     const maxTime = Math.max(...events.map(e => e.timestamp));
+//     const timeRange = maxTime - minTime;
+
+//     const timelineContainer = document.getElementById('timeline');
+//     const containerWidth = timelineContainer.clientWidth - 40;
+
+//     events.sort((a, b) => a.timestamp - b.timestamp);
+
+//     let lastPos = 0;
+
+//     const years = events
+//         .map(e => {
+//             const match = e.date.match(/\d{4}/);
+//             return match ? parseInt(match[0], 10) : null;
+//         })
+//         .filter(Boolean);
+//     if (!years.length) return;
+
+//     const startYear = Math.min(...years);
+//     const endYear = Math.max(...years);
+
+//     for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
+//         const yearTime = new Date(`01/01/${year}`).getTime();
+//         const timeOffset = yearTime - minTime;
+//         const pos = (timeOffset / timeRange) * containerWidth;
+//         const marker = document.createElement('div');
+//         marker.className = 'marker major';
+//         marker.style.left = `${pos}px`;
+//         marker.textContent = year;
+//         timelineBar.appendChild(marker);
+//     }
+
+//     events.forEach((event, index) => {
+//         const dateStr = event.date;
+//         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
+//         const timeOffset = event.timestamp - minTime;
+//         let pos = (timeOffset / timeRange) * containerWidth;
+
+//         if (pos - lastPos < 20) {
+//             pos = lastPos + 20;
+//         }
+//         lastPos = pos;
+
+//         const bubble = document.createElement('div');
+//         bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
+//         bubble.style.left = `${pos}px`;
+//         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
+//         bubble.addEventListener('click', () => {
+//             const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
+//             if (eventItem) expandAndScrollToEvent(eventItem);
+//             if (event.marker) {
+//                 map.setView(event.marker.getLatLng(), 10);
+//                 event.marker.openPopup();
+//             }
+//         });
+
+//         bubble.addEventListener('mouseover', (e) => {
+//             let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
+//             if (event.documentNames.length && event.documentLinks.length) {
+//                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
+//                     tooltipContent += `
+//                         <div class="document-link">
+//                             <img src="icon-document.png" alt="Document">
+//                             <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
+//                         </div>`;
+//                 }
+//             }
+
+//             const tooltip = document.createElement('div');
+//             tooltip.className = 'dynamic-tooltip';
+//             tooltip.innerHTML = tooltipContent;
+//             document.body.appendChild(tooltip);
+
+//             const mouseX = e.pageX;
+//             const mouseY = e.pageY;
+//             const tooltipWidth = tooltip.offsetWidth;
+//             const tooltipHeight = tooltip.offsetHeight;
+
+//             let left = mouseX + 10;
+//             let top = mouseY - tooltipHeight - 10;
+
+//             if (left + tooltipWidth > window.innerWidth) {
+//                 left = mouseX - tooltipWidth - 10;
+//             }
+//             if (top < 0) {
+//                 top = mouseY + 10;
+//             }
+//             if (left < 0) {
+//                 left = 0;
+//             }
+
+//             tooltip.style.left = `${left}px`;
+//             tooltip.style.top = `${top}px`;
+//         });
+
+//         bubble.addEventListener('mouseout', () => {
+//             const tooltips = document.querySelectorAll('.dynamic-tooltip');
+//             tooltips.forEach(tooltip => tooltip.remove());
+//         });
+
+//         const label = document.createElement('div');
+//         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
+//         label.style.left = `${pos}px`;
+//         const [month, day] = dateStr.split('/').map(Number);
+//         label.textContent = `${month}/${day}`;
+
+//         timelineBar.appendChild(bubble);
+//         timelineBar.appendChild(label);
+//     });
+
+//     const fullWidth = lastPos + 40;
+//     timelineBar.style.width = `${fullWidth}px`;
+
+//     if (firstPopulate) {
+//         if (fullWidth > containerWidth + 1) {
+//             baseScale = containerWidth / fullWidth;
+//         } else {
+//             baseScale = 1;
+//         }
+//         firstPopulate = false;
+//     }
+
+//     const userScale = 1;
+//     const finalScale = baseScale * userScale;
+
+//     timelineBar.style.transformOrigin = 'left center';
+//     timelineBar.style.transform = `scaleX(${finalScale})`;
+// }
+
+// // Add panning to timeline (inside fetch callback)
+// const timeline = document.getElementById('timeline');
+// timeline.addEventListener('mousedown', (e) => {
+//     isPanning = true;
+//     panStartX = e.pageX + timeline.scrollLeft;
+//     e.preventDefault();
+// });
+// timeline.addEventListener('mousemove', (e) => {
+//     if (!isPanning) return;
+//     timeline.scrollLeft = panStartX - e.pageX;
+// });
+// timeline.addEventListener('mouseup', () => {
+//     isPanning = false;
+// });
+// timeline.addEventListener('mouseleave', () => {
+//     isPanning = false;
+// });
+
+// // Window resize event (inside fetch callback)
+// window.addEventListener('resize', () => {
+//     map.invalidateSize();
+//     populateTimeline();
+// });
+// END COMMENTED ORIGINAL TIMELINE CODE */
