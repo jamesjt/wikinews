@@ -148,11 +148,13 @@ body {
 }
 
 .event-label.above {
-    bottom: 50px;
+    left: calc(50% - 16px); /* Position to the left of the bubble */
+    top: 20px;
 }
 
 .event-label.below {
-    top: 50px;
+    left: calc(50% - 16px); /* Position to the left of the bubble */
+    bottom: 20px;
 }
 
 .marker {
