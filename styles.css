@@ -48,47 +48,16 @@ body {
     background: #777;
 }
 
-#main-content {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-}
-
-#sidebar {
-    flex: 0 0 20%;
-    background: #f9f9f9;
-    padding: 15px;
-    overflow-y: auto;
-    height: calc(100vh - 60px); /* Adjust for header height */
-}
-
-#right-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative; /* Ensure positioning context for children */
-}
-
-#map {
-    flex: 1;
-    min-height: 0; /* Prevents overflow */
-    position: relative; /* Positioning context for timeline overlay */
-}
-
-/* Timeline Overlay on Map */
+/* Timeline styling */
 #timeline {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
     height: 120px;
     background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
-    z-index: 2000; /* Above map tiles but below custom controls */
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
     pointer-events: auto; /* Allow interaction with timeline */
+    flex-shrink: 0; /* Prevent timeline from shrinking */
 }
 
 /* Ensure timeline content is not clipped by overflow */
@@ -109,6 +78,31 @@ body {
     transform: translateY(-50%);
 }
 
+#main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#sidebar {
+    flex: 0 0 20%;
+    background: #f9f9f9;
+    padding: 15px;
+    overflow-y: auto;
+    height: calc(100vh - 180px); /* Adjust for header + timeline height */
+}
+
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    flex: 1;
+    min-height: 0; /* Prevents overflow */
+}
+
 /* Move Leaflet zoom controls to bottom right */
 .leaflet-control-zoom {
     position: absolute !important;
@@ -118,9 +112,9 @@ body {
     top: auto !important;
 }
 
-/* Ensure Leaflet controls (like zoom buttons) are above the timeline */
+/* Ensure Leaflet controls (like zoom buttons) are above other elements */
 .leaflet-control {
-    z-index: 2001; /* Above timeline */
+    z-index: 2001; /* Above other elements */
 }
 
 /* The bubble used to mark timeline events */
