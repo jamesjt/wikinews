@@ -119,6 +119,17 @@ body {
     font-size: 14px !important; /* Smaller headline */
 }
 
+/* Hide TimelineJS attribution */
+.tl-attribution {
+    display: none;
+}
+
+/* Hide TimelineJS navigation icons */
+.tl-icon-goback,
+.tl-icon-goend {
+    display: none !important;
+}
+
 #main-content {
     flex: 1;
     display: flex;
