@@ -280,7 +280,7 @@ function setupTimelineJS(csvText) {
         if (event.documentNames.length && event.documentLinks.length) {
             text += '<div>';
             for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-                text += `<div class="document-link"><a href="${documentLinks[i]}" target="_blank">${event.documentNames[i]}</a></div>`;
+                text += `<div class="document-link"><a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a></div>`;
             }
             text += '</div>';
         }
