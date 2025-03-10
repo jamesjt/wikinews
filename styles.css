@@ -73,8 +73,7 @@ body {
     background: #f8f8f8;
     position: relative;
     border-bottom: 1px solid #ddd;
-    /* Instead of hiding overflow, allow horizontal scrolling. */
-    overflow-x: auto;
+    overflow-x: auto; /* so we can scroll/pan horizontally */
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
@@ -108,6 +107,7 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease;
     transform: translateX(-50%);
+    z-index: 9999; /* Ensure bubble is above other elements */
 }
 
 .event-bubble.has-location {
@@ -137,14 +137,13 @@ body {
     transform: translate(-50%, -50%);
 }
 
-/* Hover tooltip for timeline bubbles now appears below the bubble */
+/* Hover tooltip for timeline bubbles appears below the bubble */
 .bubble-tooltip {
     display: none; /* Hidden by default */
     position: absolute;
-    top: 25px; /* Place it below the bubble */
+    top: 25px; /* Below the bubble */
     left: 50%;
     transform: translateX(-50%);
-    /* Let the content define the width */
     background: #fff;
     border: 1px solid #ccc;
     padding: 6px;
@@ -152,8 +151,8 @@ body {
     line-height: 1.4;
     border-radius: 3px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    z-index: 9999;
-    white-space: nowrap; /* Force single line if you prefer. Remove if multiline is desired. */
+    white-space: nowrap;
+    z-index: 10000; /* Placed higher than bubble, so tooltip is on top */
 }
 
 .event-bubble:hover .bubble-tooltip {
