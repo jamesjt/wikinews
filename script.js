@@ -13,7 +13,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = [];
 let events = [];
 
+let baseScale = 1;
 let firstPopulate = true;
+
+let isPanning = false;
+let panStartX = 0;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -28,7 +32,10 @@ function getOrdinal(day) {
 }
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
-    .then(response => response.text())
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+    })
     .then(csvText => {
         Papa.parse(csvText, {
             header: true,
@@ -100,6 +107,19 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 buildSidebar(events);
                 populateTimeline();
 
+                const timeline = document.getElementById('timeline');
+                timeline.addEventListener('mousedown', (e) => {
+                    isPanning = true;
+                    panStartX = e.pageX + timeline.scrollLeft;
+                    e.preventDefault();
+                });
+                timeline.addEventListener('mousemove', (e) => {
+                    if (!isPanning) return;
+                    timeline.scrollLeft = panStartX - e.pageX;
+                });
+                timeline.addEventListener('mouseup', () => isPanning = false);
+                timeline.addEventListener('mouseleave', () => isPanning = false);
+
                 window.addEventListener('resize', () => {
                     map.invalidateSize();
                     populateTimeline();
@@ -107,7 +127,10 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
             }
         });
     })
-    .catch(error => console.error('Error fetching CSV:', error));
+    .catch(error => {
+        console.error('Error fetching CSV:', error);
+        alert('Failed to load data from Google Sheet. Please try again later.');
+    });
 
 function buildSidebar(events) {
     const groupedEvents = {};
@@ -236,49 +259,71 @@ function populateTimeline() {
 
     const minTime = Math.min(...events.map(e => e.timestamp));
     const maxTime = Math.max(...events.map(e => e.timestamp));
-    const timeRange = maxTime - minTime || 1;
+    const timeRange = maxTime - minTime;
 
-    const virtualHeight = 10000;
-    let lastPos = 0;
-    const minGap = 50;
+    const timelineContainer = document.getElementById('timeline');
+    const containerWidth = timelineContainer.clientWidth - 40;
 
     events.sort((a, b) => a.timestamp - b.timestamp);
 
-    const positions = events.map(event => {
-        const timeOffset = event.timestamp - minTime;
-        let pos = (timeOffset / timeRange) * virtualHeight;
-        if (pos - lastPos < minGap) pos = lastPos + minGap;
-        lastPos = pos;
-        return pos;
-    });
+    let lastPos = 0;
 
+    addDecadeMarkers(timelineBar, minTime, timeRange, containerWidth);
+    placeEventsOnTimeline(timelineBar, minTime, timeRange, containerWidth);
+
+    const fullWidth = lastPos + 40;
+    timelineBar.style.width = `${fullWidth}px`;
+
+    if (firstPopulate) {
+        baseScale = (fullWidth > containerWidth + 1) ? containerWidth / fullWidth : 1;
+        firstPopulate = false;
+    }
+
+    const finalScale = baseScale * 1; // Fixed scale, no zooming
+    timelineBar.style.transformOrigin = 'left center';
+    timelineBar.style.transform = `scaleX(${finalScale})`;
+}
+
+function addDecadeMarkers(timelineBar, minTime, timeRange, containerWidth) {
     const years = events
         .map(e => {
             const match = e.date.match(/\d{4}/);
             return match ? parseInt(match[0], 10) : null;
         })
         .filter(Boolean);
-    if (years.length) {
-        const startYear = Math.min(...years);
-        const endYear = Math.max(...years);
-        for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
-            const yearTime = new Date(`01/01/${year}`).getTime();
-            const timeOffset = yearTime - minTime;
-            let pos = (timeOffset / timeRange) * virtualHeight;
-            const marker = document.createElement('div');
-            marker.className = 'marker major';
-            marker.style.top = `${pos}px`;
-            marker.textContent = year;
-            timelineBar.appendChild(marker);
-        }
+    if (!years.length) return;
+
+    const startYear = Math.min(...years);
+    const endYear = Math.max(...years);
+
+    for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
+        const yearTime = new Date(`01/01/${year}`).getTime();
+        const timeOffset = yearTime - minTime;
+        const pos = (timeOffset / timeRange) * containerWidth;
+        const marker = document.createElement('div');
+        marker.className = 'marker major';
+        marker.style.left = `${pos}px`;
+        marker.textContent = year;
+        timelineBar.appendChild(marker);
     }
+}
+
+function placeEventsOnTimeline(timelineBar, minTime, timeRange, containerWidth) {
+    let lastPos = 0;
 
     events.forEach((event, index) => {
-        const pos = positions[index];
+        const dateStr = event.date;
+        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
+        const timeOffset = event.timestamp - minTime;
+        let pos = (timeOffset / timeRange) * containerWidth;
+
+        if (pos - lastPos < 20) pos = lastPos + 20;
+        lastPos = pos;
+
         const bubble = document.createElement('div');
-        bubble.className = `event-bubble ${event.location ? 'has-location' : ''}`;
-        bubble.style.top = `${pos}px`;
-        bubble.innerHTML = `<span class="event-number">${event.index + 1}</span>`;
+        bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
+        bubble.style.left = `${pos}px`;
+        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.addEventListener('click', () => {
             const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
             if (eventItem) expandAndScrollToEvent(eventItem);
@@ -289,7 +334,7 @@ function populateTimeline() {
         });
 
         bubble.addEventListener('mouseover', (e) => {
-            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${event.date}`;
+            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
             if (event.documentNames.length && event.documentLinks.length) {
                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
                     tooltipContent += `
@@ -299,28 +344,28 @@ function populateTimeline() {
                         </div>`;
                 }
             }
+
             const tooltip = document.createElement('div');
             tooltip.className = 'dynamic-tooltip';
             tooltip.innerHTML = tooltipContent;
             document.body.appendChild(tooltip);
+
             positionTooltip(tooltip, e.pageX, e.pageY);
         });
+
         bubble.addEventListener('mouseout', () => {
             document.querySelectorAll('.dynamic-tooltip').forEach(tooltip => tooltip.remove());
         });
 
         const label = document.createElement('div');
-        label.className = `event-label ${index % 2 === 0 ? 'label-left' : 'label-right'}`;
-        label.style.top = `${pos}px`;
-        const [month, day] = event.date.split('/').map(Number);
+        label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
+        label.style.left = `${pos}px`;
+        const [month, day] = dateStr.split('/').map(Number);
         label.textContent = `${month}/${day}`;
 
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
     });
-
-    const fullHeight = lastPos + 50;
-    timelineBar.style.height = `${fullHeight}px`;
 }
 
 function positionTooltip(tooltip, mouseX, mouseY) {
