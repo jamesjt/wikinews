@@ -3,9 +3,68 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+}
+
+#header {
+    height: 60px;
+    background: #333;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: static;
+    flex-shrink: 0;
+}
+
+.site-icon img {
+    vertical-align: middle;
+}
+
+.menu a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+.menu a:hover {
+    text-decoration: underline;
+}
+
+.login button {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.login button:hover {
+    background: #777;
+}
+
+#main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#sidebar {
+    flex: 0 0 20%;
+    background: #f9f9f9;
+    padding: 15px;
+    overflow-y: auto;
+    height: calc(100vh - 60px); /* Adjust for header height */
+}
+
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #timeline {
@@ -17,6 +76,7 @@ body {
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
+    flex-shrink: 0;
 }
 
 .timeline-bar {
@@ -130,21 +190,22 @@ body {
     right: 10px;
 }
 
-#container {
+#map {
     flex: 1;
-    display: flex;
+    min-height: 0; /* Prevents overflow */
 }
 
-#sidebar {
-    flex: 0 0 20%;
-    background: #f9f9f9;
-    padding: 15px;
-    overflow-y: auto;
-    max-height: calc(100vh - 120px);
-    font-size: 16px;
-    line-height: 1.5;
+.resize-handle {
+    width: 5px;
+    background: #ccc;
+    cursor: col-resize;
 }
 
+.resize-handle:hover {
+    background: #aaa;
+}
+
+/* Sidebar Styles */
 #sidebar h2 {
     font-size: 1.2em;
     margin-top: 0;
@@ -364,20 +425,6 @@ body {
     font-weight: bold;
     border: 2px solid #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.resize-handle {
-    width: 5px;
-    background: #ccc;
-    cursor: col-resize;
-}
-
-.resize-handle:hover {
-    background: #aaa;
-}
-
-#map {
-    flex: 1;
 }
 
 .leaflet-popup-content-wrapper {
