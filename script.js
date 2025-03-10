@@ -1,5 +1,14 @@
 // script.js
 
+/*
+============================
+Below are the modifications to provide a timeline that:
+ 1) Dynamically fits into the available horizontal space on load.
+ 2) Zooms in or out if events are clustered or if the user clicks + or - .
+ 3) Allows horizontal scrolling when zoomed in beyond the container’s width.
+============================
+*/
+
 const defaultLocation = [50.45, 30.52];
 const map = L.map('map').setView([48.3794, 31.1656], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -10,6 +19,11 @@ const markers = [];
 let events = [];
 let zoomLevel = 1; // Controls scaling factor
 const zoomScales = [1, 1.5, 2]; // Scaling factors for event density adjustment
+
+// Store the current effective scale for the timeline.
+// This will help us ensure the entire timeline is shown at the initial view.
+// On further zooms, the timeline can exceed container width and scroll.
+let timelineScale = 1;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -206,28 +220,28 @@ function populateTimeline() {
     const maxTime = Math.max(...events.map(e => e.timestamp));
     const timeRange = maxTime - minTime;
 
-    // Get the visible width of the timeline container
+    // Get the visible width of the timeline container.
     const timelineContainer = document.getElementById('timeline');
-    const totalWidth = timelineContainer.clientWidth - 40; // Account for padding (20px left + 20px right)
+    const containerWidth = timelineContainer.clientWidth - 40; // Some padding on sides
 
-    // Calculate event density-based scaling
-    const eventCount = events.length;
-    const timeIntervals = [];
-    for (let i = 0; i < eventCount - 1; i++) {
-        timeIntervals.push(events[i + 1].timestamp - events[i].timestamp);
-    }
-    const avgInterval = timeIntervals.reduce((a, b) => a + b, 0) / timeIntervals.length || 1;
-    const scaleFactor = zoomScales[zoomLevel - 1] * (1 + Math.log(eventCount) / Math.log(10)); // Adjust scale based on event density
+    // Sort events by timestamp so they appear in chronological order.
+    events.sort((a, b) => a.timestamp - b.timestamp);
 
-    // Add decade markers
+    // We track how far along the timeline we've drawn.
+    let lastPos = 0;
+
+    // Add decade markers.
     const years = events.map(e => parseInt(e.date.match(/\d{4}/)?.[0])).filter(y => y);
     if (!years.length) return;
+
     const startYear = Math.min(...years);
     const endYear = Math.max(...years);
+
     for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
         const yearTime = new Date(`01/01/${year}`).getTime();
         const timeOffset = yearTime - minTime;
-        const pos = (timeOffset / timeRange) * totalWidth * scaleFactor;
+        // We'll position it in the base coordinate space (scale=1) first.
+        const pos = (timeOffset / timeRange) * containerWidth;
         const marker = document.createElement('div');
         marker.className = 'marker major';
         marker.style.left = `${pos}px`;
@@ -235,28 +249,17 @@ function populateTimeline() {
         timelineBar.appendChild(marker);
     }
 
-    // Sort events by timestamp to ensure correct alternating
-    events.sort((a, b) => a.timestamp - b.timestamp);
-
-    // Add events with density-based spacing
-    let lastPos = -Infinity;
+    // Place events.
     events.forEach((event, index) => {
         const dateStr = event.date;
         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-        const [month, day] = dateStr.split('/').map(Number);
-
-        // Calculate position based on time and adjust for event density
+        // Position in base coordinate space.
         const timeOffset = event.timestamp - minTime;
-        let pos = (timeOffset / timeRange) * totalWidth * scaleFactor;
-
-        // Adjust position based on number of events in the interval
-        const nextEvent = events[index + 1];
-        const interval = nextEvent ? nextEvent.timestamp - event.timestamp : avgInterval;
-        const eventDensity = eventCount / (timeRange / interval); // Approximate density
-        pos += (Math.log(eventDensity + 1) / Math.log(10)) * 20; // Add spacing based on density
-
-        // Ensure minimum spacing between events
-        if (pos - lastPos < 20) pos = lastPos + 20; // Minimum 20px spacing
+        let pos = (timeOffset / timeRange) * containerWidth;
+        // We ensure events are at least a minimal distance apart.
+        if (pos - lastPos < 20) {
+            pos = lastPos + 20;
+        }
         lastPos = pos;
 
         const bubble = document.createElement('div');
@@ -275,14 +278,38 @@ function populateTimeline() {
         const label = document.createElement('div');
         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
         label.style.left = `${pos}px`;
-        label.textContent = `${month}/${day}`; // Format as M/D
+        // Format date label M/D.
+        const [month, day] = dateStr.split('/').map(Number);
+        label.textContent = `${month}/${day}`;
 
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
     });
 
-    // Adjust timeline-bar width to fit all events
-    timelineBar.style.width = `${lastPos + 20}px`; // Extend to the last event position
+    // Determine final width used by the timeline in base scale.
+    let fullWidth = lastPos + 40; // Some extra padding.
+    // Set timelineBar's base width.
+    timelineBar.style.width = fullWidth + 'px';
+
+    // Decide how much to scale horizontally to:
+    // (1) Fit entire timeline in container at default zoom,
+    // (2) or apply user zoom if present.
+
+    // If we want to ensure at least the entire timeline is shown at zoom=1:
+    let fitScale = 1;
+    if (fullWidth > (containerWidth + 1)) {
+        // Scale down to fit in container if needed at base zoom.
+        fitScale = (containerWidth / fullWidth);
+    }
+
+    // Then incorporate the user-chosen zoom factor.
+    const userScale = zoomScales[zoomLevel - 1];
+
+    timelineScale = fitScale * userScale;
+
+    // Apply scale.
+    timelineBar.style.transformOrigin = 'left center';
+    timelineBar.style.transform = `scaleX(${timelineScale})`;
 }
 
 function expandAndScrollToEvent(eventItem) {
