@@ -97,7 +97,7 @@ body {
     transform: translateY(-50%);
 }
 
-/* The bubble used to mark timeline events. */
+/* The bubble used to mark timeline events */
 .event-bubble {
     position: absolute;
     width: 16px;
@@ -108,7 +108,6 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease;
     transform: translateX(-50%);
-    /* Child tooltip will appear on hover. */
 }
 
 .event-bubble.has-location {
@@ -138,15 +137,14 @@ body {
     transform: translate(-50%, -50%);
 }
 
-/* Hover tooltip on timeline bubbles */
+/* Hover tooltip for timeline bubbles now appears below the bubble */
 .bubble-tooltip {
     display: none; /* Hidden by default */
     position: absolute;
-    top: -70px; /* Adjust as needed to place the tooltip above the bubble */
+    top: 25px; /* Place it below the bubble */
     left: 50%;
     transform: translateX(-50%);
-    min-width: 140px; /* Adjust for your content */
-    max-width: 240px;
+    /* Let the content define the width */
     background: #fff;
     border: 1px solid #ccc;
     padding: 6px;
@@ -155,9 +153,9 @@ body {
     border-radius: 3px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     z-index: 9999;
+    white-space: nowrap; /* Force single line if you prefer. Remove if multiline is desired. */
 }
 
-/* Show the tooltip on bubble hover. */
 .event-bubble:hover .bubble-tooltip {
     display: block;
 }
@@ -166,11 +164,11 @@ body {
     color: #1a73e8;
     text-decoration: none;
 }
+
 .bubble-tooltip a:hover {
     text-decoration: underline;
 }
 
-/* The date label for each event. */
 .event-label {
     position: absolute;
     font-size: 10px;
@@ -192,7 +190,6 @@ body {
     left: 50%;
 }
 
-/* Markers for decade lines. */
 .marker {
     position: absolute;
     top: 50%;
@@ -210,7 +207,6 @@ body {
     font-size: 14px;
 }
 
-/* Zoom buttons for timeline. */
 .zoom-btn {
     position: absolute;
     top: 10px;
@@ -236,7 +232,6 @@ body {
     right: 10px;
 }
 
-/* Leaflet marker styling */
 .numbered-marker {
     background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
     border: 2px solid #2196F3; /* Solid blue border */
@@ -257,7 +252,6 @@ body {
     min-height: 0; /* Prevents overflow */
 }
 
-/* Resizable sidebar handle */
 .resize-handle {
     width: 5px;
     background: #ccc;
@@ -268,7 +262,6 @@ body {
     background: #aaa;
 }
 
-/* Sidebar headings */
 #sidebar h2 {
     font-size: 1.2em;
     margin-top: 0;
@@ -283,7 +276,6 @@ body {
     margin-bottom: 5px;
 }
 
-/* Event list structure */
 #event-list .decade {
     margin-bottom: 8px;
     background-color: #f0f0f0;
@@ -354,7 +346,6 @@ body {
     color: #666;
 }
 
-/* Event item in sidebar. */
 .event-item {
     padding: 5px 0;
     display: flex;
@@ -371,7 +362,6 @@ body {
     position: relative;
 }
 
-/* The circle for event numbering inside the sidebar. */
 .event-number-circle {
     width: 20px;
     height: 20px;
@@ -418,7 +408,6 @@ body {
     opacity: 0.7;
 }
 
-/* Documents listing in sidebar. */
 .document-wrapper {
     position: relative;
     display: inline-block;
@@ -486,7 +475,6 @@ body {
     font-size: 14px;
 }
 
-/* document-link styling inside popups or bubble tooltips */
 .document-link {
     display: flex;
     align-items: center;
