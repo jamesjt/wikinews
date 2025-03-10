@@ -124,9 +124,9 @@ body {
     display: none;
 }
 
-/* Hide the entire buttons containing goback and goend icons */
-.tl-menubar-button.tl-goback,
-.tl-menubar-button.tl-goend {
+/* Hide TimelineJS navigation icons */
+.tl-icon-goback,
+.tl-icon-goend {
     display: none !important;
 }
 
