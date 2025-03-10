@@ -12,8 +12,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const markers = [];
 let events = [];
-
-let firstPopulate = true;
+let isPanning = false;
+let panStartX = 0;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -99,6 +99,19 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 buildSidebar(events);
                 populateTimeline();
+
+                const timeline = document.getElementById('timeline');
+                timeline.addEventListener('mousedown', (e) => {
+                    isPanning = true;
+                    panStartX = e.pageX + timeline.scrollLeft;
+                    e.preventDefault();
+                });
+                timeline.addEventListener('mousemove', (e) => {
+                    if (!isPanning) return;
+                    timeline.scrollLeft = panStartX - e.pageX;
+                });
+                timeline.addEventListener('mouseup', () => isPanning = false);
+                timeline.addEventListener('mouseleave', () => isPanning = false);
 
                 window.addEventListener('resize', () => {
                     map.invalidateSize();
@@ -238,15 +251,13 @@ function populateTimeline() {
     const maxTime = Math.max(...events.map(e => e.timestamp));
     const timeRange = maxTime - minTime || 1;
 
-    const virtualHeight = 10000;
-    let lastPos = 0;
-    const minGap = 50;
-
     events.sort((a, b) => a.timestamp - b.timestamp);
+    let lastPos = 0;
+    const minGap = 20;
 
     const positions = events.map(event => {
         const timeOffset = event.timestamp - minTime;
-        let pos = (timeOffset / timeRange) * virtualHeight;
+        let pos = (timeOffset / timeRange) * 10000; // Arbitrary large scale
         if (pos - lastPos < minGap) pos = lastPos + minGap;
         lastPos = pos;
         return pos;
@@ -264,10 +275,10 @@ function populateTimeline() {
         for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
             const yearTime = new Date(`01/01/${year}`).getTime();
             const timeOffset = yearTime - minTime;
-            let pos = (timeOffset / timeRange) * virtualHeight;
+            const pos = (timeOffset / timeRange) * 10000;
             const marker = document.createElement('div');
             marker.className = 'marker major';
-            marker.style.top = `${pos}px`;
+            marker.style.left = `${pos}px`;
             marker.textContent = year;
             timelineBar.appendChild(marker);
         }
@@ -276,12 +287,10 @@ function populateTimeline() {
     events.forEach((event, index) => {
         const pos = positions[index];
         const bubble = document.createElement('div');
-        bubble.className = `event-bubble ${event.location ? 'has-location' : ''}`;
-        bubble.style.top = `${pos}px`;
+        bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
+        bubble.style.left = `${pos}px`;
         bubble.innerHTML = `<span class="event-number">${event.index + 1}</span>`;
         bubble.addEventListener('click', () => {
-            const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-            if (eventItem) expandAndScrollToEvent(eventItem);
             if (event.marker) {
                 map.setView(event.marker.getLatLng(), 10);
                 event.marker.openPopup();
@@ -310,8 +319,8 @@ function populateTimeline() {
         });
 
         const label = document.createElement('div');
-        label.className = `event-label ${index % 2 === 0 ? 'label-left' : 'label-right'}`;
-        label.style.top = `${pos}px`;
+        label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
+        label.style.left = `${pos}px`;
         const [month, day] = event.date.split('/').map(Number);
         label.textContent = `${month}/${day}`;
 
@@ -319,8 +328,8 @@ function populateTimeline() {
         timelineBar.appendChild(label);
     });
 
-    const fullHeight = lastPos + 50;
-    timelineBar.style.height = `${fullHeight}px`;
+    const fullWidth = lastPos + 40;
+    timelineBar.style.width = `${fullWidth}px`;
 }
 
 function positionTooltip(tooltip, mouseX, mouseY) {
@@ -339,6 +348,11 @@ function positionTooltip(tooltip, mouseX, mouseY) {
 
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = '#fff';
+    tooltip.style.border = '1px solid #ccc';
+    tooltip.style.padding = '5px';
+    tooltip.style.zIndex = '3000';
 }
 
 function expandAndScrollToEvent(eventItem) {
