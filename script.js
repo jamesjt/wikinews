@@ -3,7 +3,7 @@
 /*
 1) Adds a tooltip to each timeline bubble that duplicates the map popup info:
    - Event short summary, date, and document links if present.
-2) Tooltip is shown on hover using a hidden <div> with position absolute.
+2) Creates a DOM element on hover with an absolute position relative to the mouse cursor.
 */
 
 const defaultLocation = [50.45, 30.52];
@@ -20,10 +20,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const markers = [];
 let events = [];
-
-// The discrete zoom levels that apply on top of the initial "fitted" scale.
-let zoomLevel = 1;
-const zoomScales = [1, 1.5, 2];
 
 // We'll store the initial scale determined after the first population.
 let baseScale = 1;
@@ -120,16 +116,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 buildSidebar(events);
                 populateTimeline();
 
-                // Hook up zoom buttons and wheel.
-                const timeline = document.getElementById('timeline');
-                document.querySelector('.zoom-in').addEventListener('click', () => zoomTimeline(1));
-                document.querySelector('.zoom-out').addEventListener('click', () => zoomTimeline(-1));
-                timeline.addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    zoomTimeline(e.deltaY < 0 ? 1 : -1);
-                });
-
                 // Add panning to timeline.
+                const timeline = document.getElementById('timeline');
                 timeline.addEventListener('mousedown', (e) => {
                     isPanning = true;
                     panStartX = e.pageX + timeline.scrollLeft;
@@ -266,14 +254,6 @@ function buildSidebar(events) {
     });
 }
 
-function zoomTimeline(delta) {
-    const oldZoomLevel = zoomLevel;
-    zoomLevel = Math.max(1, Math.min(3, zoomLevel + delta));
-    if (oldZoomLevel !== zoomLevel) {
-        populateTimeline();
-    }
-}
-
 function populateTimeline() {
     const timelineBar = document.querySelector('.timeline-bar');
     timelineBar.innerHTML = '<div class="timeline-line"></div>';
@@ -329,26 +309,10 @@ function populateTimeline() {
         }
         lastPos = pos;
 
-        // Build the same popup content used on the map marker
-        let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-        if (event.documentNames.length && event.documentLinks.length) {
-            for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-                tooltipContent += `
-                    <div class="document-link">
-                        <img src="icon-document.png" alt="Document">
-                        <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
-                    </div>`;
-            }
-        }
-
         const bubble = document.createElement('div');
         bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
         bubble.style.left = `${pos}px`;
-        bubble.innerHTML = `
-            <span class="event-number">${index + 1}</span>
-            <!-- Hidden by default, shown on hover in CSS -->
-            <div class="bubble-tooltip">${tooltipContent}</div>
-        `;
+        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.addEventListener('click', () => {
             const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
             if (eventItem) expandAndScrollToEvent(eventItem);
@@ -356,6 +320,54 @@ function populateTimeline() {
                 map.setView(event.marker.getLatLng(), 10);
                 event.marker.openPopup();
             }
+        });
+
+        // Add hover event listeners for dynamic tooltip
+        bubble.addEventListener('mouseover', (e) => {
+            const tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
+            if (event.documentNames.length && event.documentLinks.length) {
+                for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
+                    tooltipContent += `
+                        <div class="document-link">
+                            <img src="icon-document.png" alt="Document">
+                            <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
+                        </div>`;
+                }
+            }
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'dynamic-tooltip';
+            tooltip.innerHTML = tooltipContent;
+            document.body.appendChild(tooltip);
+
+            // Position tooltip relative to mouse cursor
+            const mouseX = e.pageX;
+            const mouseY = e.pageY;
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+
+            // Adjust position to keep tooltip within viewport
+            let left = mouseX + 10; // Offset slightly to the right of cursor
+            let top = mouseY - tooltipHeight - 10; // Above cursor
+
+            // Check boundaries
+            if (left + tooltipWidth > window.innerWidth) {
+                left = mouseX - tooltipWidth - 10; // Move to left if too far right
+            }
+            if (top < 0) {
+                top = mouseY + 10; // Move below cursor if too high
+            }
+            if (left < 0) {
+                left = 0; // Ensure it doesn't go off the left edge
+            }
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        });
+
+        bubble.addEventListener('mouseout', () => {
+            const tooltips = document.querySelectorAll('.dynamic-tooltip');
+            tooltips.forEach(tooltip => tooltip.remove());
         });
 
         const label = document.createElement('div');
@@ -381,8 +393,8 @@ function populateTimeline() {
         firstPopulate = false;
     }
 
-    // The user-chosen zoom scale.
-    const userScale = zoomScales[zoomLevel - 1];
+    // Fixed scale since zooming is disabled
+    const userScale = 1;
 
     // Final scale is the product.
     const finalScale = baseScale * userScale;
