@@ -69,55 +69,101 @@ body {
 }
 
 #timeline {
-    height: 120px; /* Increased height */
-    background: #fff;
+    height: 120px;
+    background: #e0e0e0;
     position: relative;
     border-bottom: 1px solid #ddd;
     flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding: 0 20px; /* Add padding on left and right */
 }
 
-#visualization {
-    width: 100%;
+.timeline-bar {
     height: 100%;
+    position: relative;
 }
 
-#visualization .vis-item {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
-    height: 100%; /* Use full height of timeline */
-    line-height: 120px; /* Center content vertically */
-    font-size: 12px;
+#timeline-bar {
+    min-width: 200%;
 }
 
-#visualization .vis-item.has-location {
-    background-color: #2196F3;
-    border-color: #2196F3;
+.timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #666;
+    transform: translateY(-50%);
 }
 
-#visualization .vis-cluster {
-    background-color: #4CAF50;
-    opacity: 0.7;
-    height: 100%; /* Use full height of timeline */
-    line-height: 120px; /* Center content vertically */
+.event-cluster {
+    position: absolute;
+    cursor: pointer;
 }
 
-#visualization .vis-cluster.has-location {
-    background-color: #2196F3;
+.event-line {
+    width: 2px;
+    background: #4CAF50;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-#visualization .vis-item-content {
+.event-line.has-location {
+    background: #2196F3;
+}
+
+.event-line.above {
+    top: 0;
+    height: 50px; /* Line extends from top to middle */
+}
+
+.event-line.below {
+    bottom: 0;
+    height: 50px; /* Line extends from bottom to middle */
+}
+
+.event-number {
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    font-size: 12px;
+    font-weight: bold;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-#visualization .vis-timeline {
-    border: none; /* Remove default border */
+.event-number.has-location {
+    background: #2196F3;
 }
 
-#visualization .vis-labelset {
-    display: none; /* Hide default labels for cleaner look */
+.event-number.above {
+    top: 0;
+}
+
+.event-number.below {
+    bottom: 0;
+}
+
+.event-tooltip {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    font-size: 12px;
+    z-index: 20;
+    pointer-events: none;
+    white-space: normal;
+    width: 200px;
 }
 
 #map {
