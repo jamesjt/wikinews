@@ -69,52 +69,30 @@ body {
 }
 
 #timeline {
-    height: 40px;
-    background: #e0e0e0;
+    height: 40px; /* Adjusted for Vis.js timeline */
+    background: #fff;
     position: relative;
     border-bottom: 1px solid #ddd;
     flex-shrink: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
 }
 
-.timeline-bar {
-    height: 100%;
-    position: relative;
+#visualization .vis-item {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
 }
 
-#timeline-bar {
-    min-width: 200%;
+#visualization .vis-item.has-location {
+    background-color: #2196F3;
+    border-color: #2196F3;
 }
 
-.event-cluster {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    background: #4CAF50;
+#visualization .vis-cluster {
+    background-color: #4CAF50;
     opacity: 0.7;
-    cursor: pointer;
 }
 
-.event-cluster.has-location {
-    background: #2196F3;
-}
-
-.event-cluster:hover {
-    opacity: 1;
-}
-
-.event-label {
-    position: absolute;
-    top: 0;
-    font-size: 10px;
-    color: #333;
-    text-align: center;
-    transform: translateX(-50%);
-    padding: 2px 4px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 3px;
+#visualization .vis-cluster.has-location {
+    background-color: #2196F3;
 }
 
 #map {
