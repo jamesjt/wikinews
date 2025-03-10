@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project 451 / Wikinews</title>
+    <meta name="description" content="An interactive map and timeline displaying events from a Google Sheet, with detailed summaries and document links.">
+    <title>Project 451 / Wikinews - Interactive Map and Timeline</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <!-- Custom CSS -->
@@ -18,9 +19,9 @@
         <nav class="menu">
             <a href="#">Racket Library</a>
         </nav>
-        <div class="login">
+        <!-- <div class="login">
             <button>Login</button>
-        </div>
+        </div> -->
     </header>
     <!-- Main Content -->
     <div id="main-content">
@@ -36,15 +37,14 @@
         </div>
         <!-- Right Content -->
         <div id="right-content">
-            <!-- Timeline -->
-            <div id="timeline">
-                <div class="timeline-bar">
-                    <!-- Timeline content will be added dynamically -->
+            <!-- Map with Timeline Overlay -->
+            <div id="map">
+                <!-- Timeline Overlay -->
+                <div id="timeline">
+                    <div class="timeline-bar">
+                        <!-- Timeline content will be added dynamically -->
+                    </div>
                 </div>
-            </div>
-            <!-- Map Container -->
-            <div id="map-container">
-                <div id="map"></div>
             </div>
         </div>
         <div class="resize-handle"></div>
