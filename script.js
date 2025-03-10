@@ -62,9 +62,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             marker = L.marker(location, { icon: numberedIcon }).addTo(map).bindPopup(popupContent);
                             marker.on('click', () => {
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
-                                if (eventItem) {
-                                    expandAndScrollToEvent(eventItem);
-                                }
+                                if (eventItem) expandAndScrollToEvent(eventItem);
                             });
                             markers.push(marker);
                         }
@@ -212,7 +210,6 @@ function populateTimeline(cursorPos = 0) {
     const totalWidth = zoomLevel === 1 ? totalYears * scale : totalYears * 12 * (zoomLevel === 2 ? scale / 12 : scale / 365);
     timelineBar.style.width = `${totalWidth}px`;
 
-    // Markers
     if (zoomLevel === 1) {
         for (let year = startYear; year <= endYear; year += 10) {
             const pos = ((year - startYear) / totalYears) * totalWidth;
@@ -258,7 +255,6 @@ function populateTimeline(cursorPos = 0) {
         }
     }
 
-    // Events
     events.forEach((event, index) => {
         const dateStr = event.date;
         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
@@ -332,8 +328,8 @@ resizeHandle.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
     e.preventDefault();
-    const containerRect = document.getElementById('container').getBoundingClientRect();
-    const newWidth = Math.max(10, Math.min(50, (e.clientX - containerRect.left) / containerRect.width * 100));
+    const mainContentRect = document.getElementById('main-content').getBoundingClientRect();
+    const newWidth = Math.max(10, Math.min(50, (e.clientX - mainContentRect.left) / mainContentRect.width * 100));
     sidebar.style.flexBasis = `${newWidth}%`;
     map.invalidateSize();
 });
