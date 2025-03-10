@@ -48,19 +48,13 @@ body {
     background: #777;
 }
 
-/* Timeline styling */
-#timeline {
-    height: 120px;
-    background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    padding: 10px 20px;
-    pointer-events: auto; /* Allow interaction with timeline */
-    flex-shrink: 0; /* Prevent timeline from shrinking */
-    display: flex; /* Added for layout */
-    align-items: center; /* Vertically center select and timeline-bar */
-    gap: 15px; /* Space between select and timeline-bar */
+/* Timeline selector container */
+#timeline-selector {
+    background: rgba(248, 248, 248, 0.9); /* Matches timeline background */
+    padding: 10px 0;
+    display: flex;
+    justify-content: center; /* Center the select horizontally */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 /* Timeline selector styling */
@@ -84,13 +78,24 @@ body {
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Timeline styling */
+#timeline {
+    height: 120px;
+    background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding: 10px 20px;
+    pointer-events: auto; /* Allow interaction with timeline */
+    flex-shrink: 0; /* Prevent timeline from shrinking */
+}
+
 /* Ensure timeline content is not clipped by overflow */
 .timeline-bar {
     position: relative;
     height: 100%;
     display: inline-block;
     overflow: visible; /* Ensure bubbles and tooltips are not clipped */
-    flex: 1; /* Allow timeline-bar to take remaining space */
 }
 
 .timeline-line {
@@ -114,7 +119,7 @@ body {
     background: #f9f9f9;
     padding: 15px;
     overflow-y: auto;
-    height: calc(100vh - 180px); /* Adjust for header + timeline height */
+    height: calc(100vh - 210px); /* Adjust for header + selector + timeline height */
 }
 
 #right-content {
