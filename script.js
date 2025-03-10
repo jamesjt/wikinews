@@ -285,8 +285,8 @@ function populateTimeline(cursorPos = 0) {
 
         const label = document.createElement('div');
         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-        label.style.left = `${pos - 16}px`; /* Position to the left of the bubble (16px is bubble width) */
-        label.textContent = `${months[month - 1]} ${getOrdinal(day)}`; // Show only month and day
+        label.style.left = `${pos}px`; /* Centered above the bubble */
+        label.textContent = `${month}/${day}`; // Format as M/D
 
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
