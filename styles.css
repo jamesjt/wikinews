@@ -519,5 +519,5 @@ body {
 }
 
 /* timelineJS styling */
-.t1-attribution{display:none}
-.t1-headline{font-size:18px; margin-top:-5px; line-height:0px;
+.t1-attribution{display:none !important}
+.t1-headline{font-size:18px !important; margin-top:-5px !important; line-height:0px !important;
