@@ -101,7 +101,8 @@ body {
     position: absolute;
     width: 16px;
     height: 16px;
-    background: #4CAF50;
+    background: rgba(76, 175, 80, 0.7); /* Green with 70% opacity */
+    border: 2px solid #4CAF50; /* Solid green border */
     border-radius: 50%;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -109,7 +110,8 @@ body {
 }
 
 .event-bubble.has-location {
-    background: #2196F3;
+    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
+    border: 2px solid #2196F3; /* Solid blue border */
 }
 
 .event-bubble.above {
@@ -194,6 +196,22 @@ body {
 #map {
     flex: 1;
     min-height: 0; /* Prevents overflow */
+}
+
+/* Custom styling for Leaflet numbered markers to match timeline/sidebar */
+.numbered-marker {
+    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
+    border: 2px solid #2196F3; /* Solid blue border */
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: white;
+    text-align: center;
+    line-height: 24px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #fff; /* Add white border on top of blue */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .resize-handle {
@@ -310,7 +328,8 @@ body {
 .event-number-circle {
     width: 20px;
     height: 20px;
-    background: #4CAF50;
+    background: rgba(76, 175, 80, 0.7); /* Green with 70% opacity */
+    border: 2px solid #4CAF50; /* Solid green border */
     border-radius: 50%;
     color: white;
     font-size: 10px;
@@ -323,7 +342,8 @@ body {
 }
 
 .event-number-circle.has-location {
-    background: #2196F3;
+    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
+    border: 2px solid #2196F3; /* Solid blue border */
 }
 
 .icons-container {
@@ -412,20 +432,6 @@ body {
 
 .event-item:hover {
     background-color: #e0e0e0;
-}
-
-.numbered-marker {
-    background-color: #2196F3;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    color: white;
-    text-align: center;
-    line-height: 24px;
-    font-size: 14px;
-    font-weight: bold;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .leaflet-popup-content-wrapper {
