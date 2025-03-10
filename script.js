@@ -1,7 +1,5 @@
 // script.js
 
-const defaultLocation = [50.45, 30.52];
-// Move Leaflet zoom controls to bottom right
 const map = L.map('map', {
     zoomControl: true,
     zoomControlOptions: {
@@ -15,11 +13,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = [];
 let events = [];
 
-// We'll store the initial scale determined after the first population.
 let baseScale = 1;
 let firstPopulate = true;
 
-// For timeline panning.
 let isPanning = false;
 let panStartX = 0;
 
@@ -36,7 +32,10 @@ function getOrdinal(day) {
 }
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
-    .then(response => response.text())
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+    })
     .then(csvText => {
         Papa.parse(csvText, {
             header: true,
@@ -66,7 +65,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Build the same popup content we'll also use for the timeline bubble.
                             let popupContent = `<b>${shortSummary}</b><br>Date: ${dateStr}`;
                             if (documentNames.length && documentLinks.length) {
                                 for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -90,7 +88,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         }
                     }
 
-                    // Only include the event if we can parse a valid mm/dd/yyyy date.
                     const isValidDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr);
                     return {
                         date: dateStr,
@@ -110,7 +107,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 buildSidebar(events);
                 populateTimeline();
 
-                // Add panning to timeline.
                 const timeline = document.getElementById('timeline');
                 timeline.addEventListener('mousedown', (e) => {
                     isPanning = true;
@@ -121,22 +117,20 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     if (!isPanning) return;
                     timeline.scrollLeft = panStartX - e.pageX;
                 });
-                timeline.addEventListener('mouseup', () => {
-                    isPanning = false;
-                });
-                timeline.addEventListener('mouseleave', () => {
-                    isPanning = false;
-                });
+                timeline.addEventListener('mouseup', () => isPanning = false);
+                timeline.addEventListener('mouseleave', () => isPanning = false);
 
-                // Ensure map resizes when sidebar changes
                 window.addEventListener('resize', () => {
                     map.invalidateSize();
-                    populateTimeline(); // Recompute timeline width on resize
+                    populateTimeline();
                 });
             }
         });
     })
-    .catch(error => console.error('Error fetching CSV:', error));
+    .catch(error => {
+        console.error('Error fetching CSV:', error);
+        alert('Failed to load data from Google Sheet. Please try again later.');
+    });
 
 function buildSidebar(events) {
     const groupedEvents = {};
@@ -168,19 +162,17 @@ function buildSidebar(events) {
         if (b === 'Unknown') return -1;
         return parseInt(a) - parseInt(b);
     });
-    const eventList = document.getElementById('event-list');
-    eventList.innerHTML = '';
 
+    let eventListHTML = '';
     sortedDecades.forEach(decade => {
-        const decadeDiv = document.createElement('div');
-        decadeDiv.className = 'decade';
-        const decadeToggle = document.createElement('span');
-        decadeToggle.className = 'toggle';
-        decadeToggle.innerHTML = `<img class="toggle-indicator" src="icon-arrow-accordion.svg" alt="Toggle"> ${decade} <span class="event-count">${Object.values(groupedEvents[decade]).flat().length}</span>`;
-        decadeDiv.appendChild(decadeToggle);
+        eventListHTML += `
+            <div class="decade">
+                <span class="toggle">
+                    <img class="toggle-indicator" src="icon-arrow-accordion.svg" alt="Toggle"> ${decade}
+                    <span class="event-count">${Object.values(groupedEvents[decade]).flat().length}</span>
+                </span>
+                <div class="decade-list">`;
 
-        const yearDiv = document.createElement('div');
-        yearDiv.className = 'decade-list';
         const sortedYears = Object.keys(groupedEvents[decade]).sort((a, b) => {
             if (a === 'Unknown') return 1;
             if (b === 'Unknown') return -1;
@@ -188,68 +180,73 @@ function buildSidebar(events) {
         });
 
         sortedYears.forEach(year => {
-            const yearSection = document.createElement('div');
-            yearSection.className = 'year';
-            yearSection.innerHTML = `<span class="toggle"><img class="toggle-indicator" src="icon-arrow-accordion.svg" alt="Toggle"> ${year} <span class="event-count">${groupedEvents[decade][year].length}</span></span>`;
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'year-list';
+            eventListHTML += `
+                <div class="year">
+                    <span class="toggle">
+                        <img class="toggle-indicator" src="icon-arrow-accordion.svg" alt="Toggle"> ${year}
+                        <span class="event-count">${groupedEvents[decade][year].length}</span>
+                    </span>
+                    <div class="year-list">`;
 
             groupedEvents[decade][year].forEach(event => {
-                const eventItem = document.createElement('div');
-                eventItem.className = 'event-item';
-                eventItem.setAttribute('data-event-index', event.index);
-
-                // Filter out empty or whitespace-only document names
                 const validDocumentNames = event.documentNames.filter(name => name && name.trim() !== '');
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
-                eventItem.innerHTML = `
-                    <div class="event-date">
-                        <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
-                        <span>${event.displayDate}</span>
-                        <div class="icons-container">
-                            ${
-                                hasValidDocuments
-                                    ? `<div class="document-wrapper"><div class="document-icon"><img src="icon-document.png" alt="Document"></div><div class="document-tooltip">${validDocumentNames
-                                          .map(
-                                              (name, i) =>
-                                                  `<div class="doc-entry"><img src="icon-document.png" alt="Document"><a href="${validDocumentLinks[i]}" target="_blank">${name}</a></div>`
-                                          )
-                                          .join('')}</div></div>`
-                                    : ''
-                            }
-                            ${event.location ? `<img class="location-icon" src="icon-location.svg" alt="Location">` : ''}
+                eventListHTML += `
+                    <div class="event-item" data-event-index="${event.index}">
+                        <div class="event-date">
+                            <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
+                            <span>${event.displayDate}</span>
+                            <div class="icons-container">
+                                ${
+                                    hasValidDocuments
+                                        ? `<div class="document-wrapper"><div class="document-icon"><img src="icon-document.png" alt="Document"></div><div class="document-tooltip">${validDocumentNames
+                                              .map(
+                                                  (name, i) =>
+                                                      `<div class="doc-entry"><img src="icon-document.png" alt="Document"><a href="${validDocumentLinks[i]}" target="_blank">${name}</a></div>`
+                                              )
+                                              .join('')}</div></div>`
+                                        : ''
+                                }
+                                ${event.location ? `<img class="location-icon" src="icon-location.svg" alt="Location">` : ''}
+                            </div>
                         </div>
-                    </div>
-                    <div class="event-summary">${event.shortSummary}</div>
-                `;
-                // cycle through shortSummary, summary, blurb on click.
-                eventItem.querySelector('.event-summary').addEventListener('click', () => {
-                    event.summaryState = (event.summaryState + 1) % 3;
-                    eventItem.querySelector('.event-summary').textContent = [event.shortSummary, event.summary, event.blurb][event.summaryState];
-                });
-                if (event.location) {
-                    eventItem.querySelector('.location-icon').addEventListener('click', () => {
-                        map.setView(event.marker.getLatLng(), 10);
-                        event.marker.openPopup();
-                    });
-                }
-                eventDiv.appendChild(eventItem);
+                        <div class="event-summary">${event.shortSummary}</div>
+                    </div>`;
             });
-            yearSection.appendChild(eventDiv);
-            yearDiv.appendChild(yearSection);
+
+            eventListHTML += `</div></div>`;
         });
 
-        decadeDiv.appendChild(yearDiv);
-        eventList.appendChild(decadeDiv);
+        eventListHTML += `</div></div>`;
     });
+
+    document.getElementById('event-list').innerHTML = eventListHTML;
 
     document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const sublist = this.nextElementSibling;
             sublist.classList.toggle('show');
             this.classList.toggle('open');
+        });
+    });
+
+    document.querySelectorAll('.event-summary').forEach((summary, index) => {
+        summary.addEventListener('click', () => {
+            const event = events[index];
+            event.summaryState = (event.summaryState + 1) % 3;
+            summary.textContent = [event.shortSummary, event.summary, event.blurb][event.summaryState];
+        });
+    });
+
+    document.querySelectorAll('.location-icon').forEach((icon, index) => {
+        icon.addEventListener('click', () => {
+            const event = events[index];
+            if (event.marker) {
+                map.setView(event.marker.getLatLng(), 10);
+                event.marker.openPopup();
+            }
         });
     });
 }
@@ -265,15 +262,29 @@ function populateTimeline() {
     const timeRange = maxTime - minTime;
 
     const timelineContainer = document.getElementById('timeline');
-    // We'll allow some padding on sides.
     const containerWidth = timelineContainer.clientWidth - 40;
 
-    // Sort events by timestamp.
     events.sort((a, b) => a.timestamp - b.timestamp);
 
     let lastPos = 0;
 
-    // Add decade markers.
+    addDecadeMarkers(timelineBar, minTime, timeRange, containerWidth);
+    placeEventsOnTimeline(timelineBar, minTime, timeRange, containerWidth);
+
+    const fullWidth = lastPos + 40;
+    timelineBar.style.width = `${fullWidth}px`;
+
+    if (firstPopulate) {
+        baseScale = (fullWidth > containerWidth + 1) ? containerWidth / fullWidth : 1;
+        firstPopulate = false;
+    }
+
+    const finalScale = baseScale * 1; // Fixed scale, no zooming
+    timelineBar.style.transformOrigin = 'left center';
+    timelineBar.style.transform = `scaleX(${finalScale})`;
+}
+
+function addDecadeMarkers(timelineBar, minTime, timeRange, containerWidth) {
     const years = events
         .map(e => {
             const match = e.date.match(/\d{4}/);
@@ -295,18 +306,18 @@ function populateTimeline() {
         marker.textContent = year;
         timelineBar.appendChild(marker);
     }
+}
 
-    // Place events.
+function placeEventsOnTimeline(timelineBar, minTime, timeRange, containerWidth) {
+    let lastPos = 0;
+
     events.forEach((event, index) => {
         const dateStr = event.date;
         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
         const timeOffset = event.timestamp - minTime;
         let pos = (timeOffset / timeRange) * containerWidth;
 
-        // Force min gap of 20 px.
-        if (pos - lastPos < 20) {
-            pos = lastPos + 20;
-        }
+        if (pos - lastPos < 20) pos = lastPos + 20;
         lastPos = pos;
 
         const bubble = document.createElement('div');
@@ -322,9 +333,8 @@ function populateTimeline() {
             }
         });
 
-        // Add hover event listeners for dynamic tooltip
         bubble.addEventListener('mouseover', (e) => {
-            const tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
+            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
             if (event.documentNames.length && event.documentLinks.length) {
                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
                     tooltipContent += `
@@ -340,34 +350,11 @@ function populateTimeline() {
             tooltip.innerHTML = tooltipContent;
             document.body.appendChild(tooltip);
 
-            // Position tooltip relative to mouse cursor
-            const mouseX = e.pageX;
-            const mouseY = e.pageY;
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-
-            // Adjust position to keep tooltip within viewport
-            let left = mouseX + 10; // Offset slightly to the right of cursor
-            let top = mouseY - tooltipHeight - 10; // Above cursor
-
-            // Check boundaries
-            if (left + tooltipWidth > window.innerWidth) {
-                left = mouseX - tooltipWidth - 10; // Move to left if too far right
-            }
-            if (top < 0) {
-                top = mouseY + 10; // Move below cursor if too high
-            }
-            if (left < 0) {
-                left = 0; // Ensure it doesn't go off the left edge
-            }
-
-            tooltip.style.left = `${left}px`;
-            tooltip.style.top = `${top}px`;
+            positionTooltip(tooltip, e.pageX, e.pageY);
         });
 
         bubble.addEventListener('mouseout', () => {
-            const tooltips = document.querySelectorAll('.dynamic-tooltip');
-            tooltips.forEach(tooltip => tooltip.remove());
+            document.querySelectorAll('.dynamic-tooltip').forEach(tooltip => tooltip.remove());
         });
 
         const label = document.createElement('div');
@@ -379,28 +366,24 @@ function populateTimeline() {
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
     });
+}
 
-    const fullWidth = lastPos + 40;
-    timelineBar.style.width = `${fullWidth}px`;
+function positionTooltip(tooltip, mouseX, mouseY) {
+    const tooltipWidth = tooltip.offsetWidth;
+    const tooltipHeight = tooltip.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
 
-    // On first populate, store the scale needed to fit fully in container.
-    if (firstPopulate) {
-        if (fullWidth > containerWidth + 1) {
-            baseScale = containerWidth / fullWidth;
-        } else {
-            baseScale = 1;
-        }
-        firstPopulate = false;
-    }
+    let left = mouseX + 10;
+    let top = mouseY - tooltipHeight - 10;
 
-    // Fixed scale since zooming is disabled
-    const userScale = 1;
+    if (left + tooltipWidth > viewportWidth) left = mouseX - tooltipWidth - 10;
+    if (top < 0) top = mouseY + 10;
+    if (left < 0) left = 0;
+    if (top + tooltipHeight > viewportHeight) top = viewportHeight - tooltipHeight - 10;
 
-    // Final scale is the product.
-    const finalScale = baseScale * userScale;
-
-    timelineBar.style.transformOrigin = 'left center';
-    timelineBar.style.transform = `scaleX(${finalScale})`;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
 }
 
 function expandAndScrollToEvent(eventItem) {
@@ -422,7 +405,6 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// Handle sidebar resize.
 const sidebar = document.getElementById('sidebar');
 const resizeHandle = document.querySelector('.resize-handle');
 let isResizing = false;
@@ -439,9 +421,7 @@ document.addEventListener('mousemove', (e) => {
     const newWidth = Math.max(10, Math.min(50, (e.clientX - mainContentRect.left) / mainContentRect.width * 100));
     sidebar.style.flexBasis = `${newWidth}%`;
     map.invalidateSize();
-    populateTimeline(); // Recompute timeline width on resize
+    populateTimeline();
 });
 
-document.addEventListener('mouseup', () => {
-    isResizing = false;
-});
+document.addEventListener('mouseup', () => isResizing = false);
