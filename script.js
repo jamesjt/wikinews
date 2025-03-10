@@ -7,7 +7,13 @@
 */
 
 const defaultLocation = [50.45, 30.52];
-const map = L.map('map').setView([48.3794, 31.1656], 6);
+// Move Leaflet zoom controls to bottom right
+const map = L.map('map', {
+    zoomControl: true,
+    zoomControlOptions: {
+        position: 'bottomright'
+    }
+}).setView([48.3794, 31.1656], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
