@@ -139,6 +139,12 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 timeline.addEventListener('mouseleave', () => {
                     isPanning = false;
                 });
+
+                // Ensure map resizes when sidebar changes
+                window.addEventListener('resize', () => {
+                    map.invalidateSize();
+                    populateTimeline(); // Recompute timeline width on resize
+                });
             }
         });
     })
@@ -415,6 +421,7 @@ document.addEventListener('mousemove', (e) => {
     const newWidth = Math.max(10, Math.min(50, (e.clientX - mainContentRect.left) / mainContentRect.width * 100));
     sidebar.style.flexBasis = `${newWidth}%`;
     map.invalidateSize();
+    populateTimeline(); // Recompute timeline width on resize
 });
 
 document.addEventListener('mouseup', () => {
