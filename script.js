@@ -306,6 +306,15 @@ function setupTimelineJS(csvText) {
         });
         console.log('TimelineJS initialized');
 
+        // Remove navigation buttons after initialization
+        setTimeout(() => {
+            const goBackButton = document.querySelector('.tl-menubar-button.tl-goback');
+            const goEndButton = document.querySelector('.tl-menubar-button.tl-goend');
+            if (goBackButton) goBackButton.remove();
+            if (goEndButton) goEndButton.remove();
+            console.log('Navigation buttons removed');
+        }, 100); // Delay to ensure DOM is fully rendered
+
         timeline.on('change', (data) => {
             console.log('Timeline event changed:', data);
             const eventId = data.unique_id;
@@ -369,173 +378,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-// /* BEGIN COMMENTED ORIGINAL TIMELINE CODE
-// // We'll store the initial scale determined after the first population.
-// let baseScale = 1;
-// let firstPopulate = true;
-
-// // For timeline panning.
-// let isPanning = false;
-// let panStartX = 0;
-
-// function populateTimeline() {
-//     const timelineBar = document.querySelector('.timeline-bar');
-//     timelineBar.innerHTML = '<div class="timeline-line"></div>';
-
-//     if (!events.length) return;
-
-//     const minTime = Math.min(...events.map(e => e.timestamp));
-//     const maxTime = Math.max(...events.map(e => e.timestamp));
-//     const timeRange = maxTime - minTime;
-
-//     const timelineContainer = document.getElementById('timeline');
-//     const containerWidth = timelineContainer.clientWidth - 40;
-
-//     events.sort((a, b) => a.timestamp - b.timestamp);
-
-//     let lastPos = 0;
-
-//     const years = events
-//         .map(e => {
-//             const match = e.date.match(/\d{4}/);
-//             return match ? parseInt(match[0], 10) : null;
-//         })
-//         .filter(Boolean);
-//     if (!years.length) return;
-
-//     const startYear = Math.min(...years);
-//     const endYear = Math.max(...years);
-
-//     for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
-//         const yearTime = new Date(`01/01/${year}`).getTime();
-//         const timeOffset = yearTime - minTime;
-//         const pos = (timeOffset / timeRange) * containerWidth;
-//         const marker = document.createElement('div');
-//         marker.className = 'marker major';
-//         marker.style.left = `${pos}px`;
-//         marker.textContent = year;
-//         timelineBar.appendChild(marker);
-//     }
-
-//     events.forEach((event, index) => {
-//         const dateStr = event.date;
-//         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-//         const timeOffset = event.timestamp - minTime;
-//         let pos = (timeOffset / timeRange) * containerWidth;
-
-//         if (pos - lastPos < 20) {
-//             pos = lastPos + 20;
-//         }
-//         lastPos = pos;
-
-//         const bubble = document.createElement('div');
-//         bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
-//         bubble.style.left = `${pos}px`;
-//         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
-//         bubble.addEventListener('click', () => {
-//             const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-//             if (eventItem) expandAndScrollToEvent(eventItem);
-//             if (event.marker) {
-//                 map.setView(event.marker.getLatLng(), 10);
-//                 event.marker.openPopup();
-//             }
-//         });
-
-//         bubble.addEventListener('mouseover', (e) => {
-//             let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-//             if (event.documentNames.length && event.documentLinks.length) {
-//                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-//                     tooltipContent += `
-//                         <div class="document-link">
-//                             <img src="icon-document.png" alt="Document">
-//                             <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
-//                         </div>`;
-//                 }
-//             }
-
-//             const tooltip = document.createElement('div');
-//             tooltip.className = 'dynamic-tooltip';
-//             tooltip.innerHTML = tooltipContent;
-//             document.body.appendChild(tooltip);
-
-//             const mouseX = e.pageX;
-//             const mouseY = e.pageY;
-//             const tooltipWidth = tooltip.offsetWidth;
-//             const tooltipHeight = tooltip.offsetHeight;
-
-//             let left = mouseX + 10;
-//             let top = mouseY - tooltipHeight - 10;
-
-//             if (left + tooltipWidth > window.innerWidth) {
-//                 left = mouseX - tooltipWidth - 10;
-//             }
-//             if (top < 0) {
-//                 top = mouseY + 10;
-//             }
-//             if (left < 0) {
-//                 left = 0;
-//             }
-
-//             tooltip.style.left = `${left}px`;
-//             tooltip.style.top = `${top}px`;
-//         });
-
-//         bubble.addEventListener('mouseout', () => {
-//             const tooltips = document.querySelectorAll('.dynamic-tooltip');
-//             tooltips.forEach(tooltip => tooltip.remove());
-//         });
-
-//         const label = document.createElement('div');
-//         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-//         label.style.left = `${pos}px`;
-//         const [month, day] = dateStr.split('/').map(Number);
-//         label.textContent = `${month}/${day}`;
-
-//         timelineBar.appendChild(bubble);
-//         timelineBar.appendChild(label);
-//     });
-
-//     const fullWidth = lastPos + 40;
-//     timelineBar.style.width = `${fullWidth}px`;
-
-//     if (firstPopulate) {
-//         if (fullWidth > containerWidth + 1) {
-//             baseScale = containerWidth / fullWidth;
-//         } else {
-//             baseScale = 1;
-//         }
-//         firstPopulate = false;
-//     }
-
-//     const userScale = 1;
-//     const finalScale = baseScale * userScale;
-
-//     timelineBar.style.transformOrigin = 'left center';
-//     timelineBar.style.transform = `scaleX(${finalScale})`;
-// }
-
-// // Add panning to timeline (inside fetch callback)
-// const timeline = document.getElementById('timeline');
-// timeline.addEventListener('mousedown', (e) => {
-//     isPanning = true;
-//     panStartX = e.pageX + timeline.scrollLeft;
-//     e.preventDefault();
-// });
-// timeline.addEventListener('mousemove', (e) => {
-//     if (!isPanning) return;
-//     timeline.scrollLeft = panStartX - e.pageX;
-// });
-// timeline.addEventListener('mouseup', () => {
-//     isPanning = false;
-// });
-// timeline.addEventListener('mouseleave', () => {
-//     isPanning = false;
-// });
-
-// // Window resize event (inside fetch callback)
-// window.addEventListener('resize', () => {
-//     map.invalidateSize();
-//     populateTimeline();
-// });
-// END COMMENTED ORIGINAL TIMELINE CODE */
