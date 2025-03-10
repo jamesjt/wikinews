@@ -191,8 +191,7 @@ function initializeTimeline() {
 
     const options = {
         width: '100%',
-        height: '120px', // Match container height
-        itemHeight: 120, // Ensure items use full height
+        height: '40px',
         zoomable: true,
         moveable: true,
         cluster: true, // Enable clustering for large datasets
