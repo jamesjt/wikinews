@@ -14,6 +14,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = [];
 let events = [];
 
+// Load TimelineJS library
 const timelineScript = document.createElement('script');
 timelineScript.src = 'https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js';
 timelineScript.onload = () => {
@@ -28,6 +29,7 @@ timelineScript.onload = () => {
 timelineScript.onerror = () => console.error('Failed to load TimelineJS script');
 document.head.appendChild(timelineScript);
 
+// Load TimelineJS CSS
 const timelineCSS = document.createElement('link');
 timelineCSS.rel = 'stylesheet';
 timelineCSS.href = 'https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css';
@@ -39,7 +41,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     .then(response => response.text())
     .then(csvText => {
         console.log('CSV fetched successfully');
-        csvData = csvText;
+        csvData = csvText; // Store CSV for later use
         Papa.parse(csvText, {
             header: true,
             complete: function(results) {
@@ -110,6 +112,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 console.log('Processed events:', events);
                 buildSidebar(events);
+                // Wait for TimelineJS to load before initializing
                 if (window.TL) {
                     console.log('TL available immediately, initializing now');
                     setupTimelineJS(csvData);
@@ -299,10 +302,9 @@ function setupTimelineJS(csvText) {
     console.log('TimelineJS data:', timelineData);
     try {
         const timeline = new TL.Timeline('timeline', timelineData, {
-            height: 150, // Reduced to match CSS
-            marker_height_min: 20, // Smaller markers
-            initial_zoom: 1,
-            scale_factor: 1 // Prevent excessive scaling
+            height: 300, // Match CSS height
+            marker_height_min: 30,
+            initial_zoom: 1
         });
         console.log('TimelineJS initialized');
 
