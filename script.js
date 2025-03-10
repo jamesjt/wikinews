@@ -1,12 +1,9 @@
 // script.js
 
 /*
-============================
-Below are the modifications to provide a timeline that:
- 1) Dynamically fits into the available horizontal space on load.
- 2) Zooms in or out if events are clustered or if the user clicks + or - .
- 3) Allows horizontal scrolling when zoomed in beyond the container’s width.
-============================
+Fixed the invalid regular expression issue by removing extra backslashes.
+We use a simpler syntax: /^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/ is replaced with
+/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test() to avoid the 'Invalid flags' error.
 */
 
 const defaultLocation = [50.45, 30.52];
@@ -21,7 +18,7 @@ let zoomLevel = 1; // Controls scaling factor
 const zoomScales = [1, 1.5, 2]; // Scaling factors for event density adjustment
 
 // Store the current effective scale for the timeline.
-// This will help us ensure the entire timeline is shown at the initial view.
+// This will help ensure the entire timeline is shown at the initial view.
 // On further zooms, the timeline can exceed container width and scroll.
 let timelineScale = 1;
 
@@ -84,7 +81,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                     return {
                         date: dateStr,
-                        timestamp: dateStr.match(/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/) ? new Date(dateStr).getTime() : null,
+                        // Use test() for the date format check, avoiding extra backslash escapes.
+                        timestamp: /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr) ? new Date(dateStr).getTime() : null,
                         shortSummary,
                         summary,
                         blurb,
@@ -114,7 +112,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
 function buildSidebar(events) {
     const groupedEvents = {};
-    const datePattern = /^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/;
+    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
 
     events.forEach(event => {
         const dateStr = event.date;
@@ -126,7 +124,7 @@ function buildSidebar(events) {
             year = yearStr.toString();
             displayDate = `${months[month - 1]} ${getOrdinal(day)}`;
         } else {
-            const yearMatch = dateStr.match(/\\d{4}/);
+            const yearMatch = dateStr.match(/\d{4}/);
             if (yearMatch) year = yearMatch[0];
         }
 
@@ -231,7 +229,7 @@ function populateTimeline() {
     let lastPos = 0;
 
     // Add decade markers.
-    const years = events.map(e => parseInt(e.date.match(/\\d{4}/)?.[0])).filter(y => y);
+    const years = events.map(e => parseInt(e.date.match(/\d{4}/)?.[0])).filter(y => y);
     if (!years.length) return;
 
     const startYear = Math.min(...years);
@@ -252,7 +250,8 @@ function populateTimeline() {
     // Place events.
     events.forEach((event, index) => {
         const dateStr = event.date;
-        if (!/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(dateStr)) return;
+        // Only place if it's a mm/dd/yyyy format.
+        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
         // Position in base coordinate space.
         const timeOffset = event.timestamp - minTime;
         let pos = (timeOffset / timeRange) * containerWidth;
@@ -294,17 +293,12 @@ function populateTimeline() {
     // Decide how much to scale horizontally to:
     // (1) Fit entire timeline in container at default zoom,
     // (2) or apply user zoom if present.
-
-    // If we want to ensure at least the entire timeline is shown at zoom=1:
     let fitScale = 1;
-    if (fullWidth > (containerWidth + 1)) {
-        // Scale down to fit in container if needed at base zoom.
-        fitScale = (containerWidth / fullWidth);
+    if (fullWidth > containerWidth + 1) {
+        fitScale = containerWidth / fullWidth;
     }
 
-    // Then incorporate the user-chosen zoom factor.
     const userScale = zoomScales[zoomLevel - 1];
-
     timelineScale = fitScale * userScale;
 
     // Apply scale.
@@ -350,4 +344,6 @@ document.addEventListener('mousemove', (e) => {
     map.invalidateSize();
 });
 
-document.addEventListener('mouseup', () => isResizing = false);
+document.addEventListener('mouseup', () => {
+    isResizing = false;
+});
