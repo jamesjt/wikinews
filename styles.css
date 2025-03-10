@@ -419,7 +419,7 @@ body {
 .document-tooltip {
     display: none;
     position: absolute;
-    top: -35px;
+    top: -20px;
     left: 50%;
     transform: translateX(-100%);
     max-width:300px;
