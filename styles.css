@@ -115,11 +115,11 @@ body {
 }
 
 .event-bubble.above {
-    top: 20px;
+    top: 40px; /* Adjusted to leave space for date label */
 }
 
 .event-bubble.below {
-    bottom: 20px;
+    bottom: 40px; /* Adjusted to leave space for date label */
 }
 
 .event-bubble:hover {
@@ -148,13 +148,13 @@ body {
 }
 
 .event-label.above {
-    left: calc(50% - 16px); /* Position to the left of the bubble */
-    top: 20px;
+    top: 20px; /* Position higher above the bubble */
+    left: 50%; /* Center above the bubble */
 }
 
 .event-label.below {
-    left: calc(50% - 16px); /* Position to the left of the bubble */
-    bottom: 20px;
+    bottom: 20px; /* Position higher below the bubble */
+    left: 50%; /* Center below the bubble */
 }
 
 .marker {
