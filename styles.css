@@ -388,6 +388,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    font-size: 12px; /* Match TimelineJS slide */
 }
 
 /* Add top border to event-items except the first one in a year-list */
@@ -402,6 +403,7 @@ body {
     align-items: center;
     width: 100%;
     position: relative;
+    font-size: 12px; /* Match TimelineJS slide */
 }
 
 .event-number-circle {
@@ -434,6 +436,7 @@ body {
 
 .event-summary {
     cursor: pointer;
+    font-size: 12px; /* Match TimelineJS slide */
 }
 
 .event-summary:hover {
@@ -516,7 +519,8 @@ body {
 }
 
 .leaflet-popup-content-wrapper {
-    font-size: 14px;
+    font-size: 12px; /* Match TimelineJS slide */
+    padding: 5px; /* Match TimelineJS slide */
 }
 
 .document-link {
