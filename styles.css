@@ -50,8 +50,8 @@ body {
 
 /* Timeline selector container */
 #timeline-selector {
-    background: rgba(248, 248, 248, 0.9); /* Matches timeline background */
-    padding: 10px 0;
+    background: rgba(248, 248, 248, 1); /* Matches timeline background */
+    padding-top: 10px;
     display: flex;
     justify-content: center; /* Center the select horizontally */
     flex-shrink: 0; /* Prevent shrinking */
@@ -59,7 +59,7 @@ body {
 
 /* Timeline selector styling */
 #timeline-select {
-    padding: 8px 12px;
+    padding: 4px 12px;
     font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -517,3 +517,7 @@ body {
 .document-link a:hover {
     text-decoration: underline;
 }
+
+/* timelineJS styling */
+.t1-attribution{display:none}
+.t1-headline{font-size:18px; margin-top:-5px; line-height:0px;
