@@ -1,7 +1,6 @@
 // script.js
 
 const defaultLocation = [50.45, 30.52];
-// Move Leaflet zoom controls to bottom right
 const map = L.map('map', {
     zoomControl: true,
     zoomControlOptions: {
@@ -15,9 +14,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = [];
 let events = [];
 
-// Load TimelineJS library (assuming CDN usage)
+// Load TimelineJS library
 const timelineScript = document.createElement('script');
 timelineScript.src = 'https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js';
+timelineScript.onerror = () => console.error('Failed to load TimelineJS script');
 document.head.appendChild(timelineScript);
 
 // Load TimelineJS CSS
@@ -29,9 +29,11 @@ document.head.appendChild(timelineCSS);
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
     .then(csvText => {
+        console.log('CSV fetched successfully');
         Papa.parse(csvText, {
             header: true,
             complete: function(results) {
+                console.log('Parsed CSV data:', results.data);
                 events = results.data.map((row, index) => {
                     const dateStr = row['Date-MDY']?.trim() || 'Unknown Date';
                     const shortSummary = row['Short Summary - Date']?.trim() || 'No Short Summary';
@@ -96,8 +98,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     };
                 }).filter(event => event.timestamp);
 
+                console.log('Processed events:', events);
                 buildSidebar(events);
-                // Call TimelineJS setup after events are processed
                 setupTimelineJS(csvText);
             }
         });
@@ -248,9 +250,8 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// TimelineJS setup
 function setupTimelineJS(csvText) {
-    // Parse CSV into TimelineJS-compatible JSON
+    console.log('Setting up TimelineJS with CSV:', csvText.substring(0, 100)); // Log first 100 chars of CSV
     const timelineData = {
         events: []
     };
@@ -276,38 +277,44 @@ function setupTimelineJS(csvText) {
                 headline: event.shortSummary,
                 text: text
             },
-            unique_id: `event-${index}` // For event tracking
+            unique_id: `event-${index}`
         });
     });
 
-    // Initialize TimelineJS
-    timelineScript.onload = () => {
-        const timeline = new TL.Timeline('timeline', timelineData, {
-            height: 120,
-            marker_height_min: 30,
-            initial_zoom: 1
-        });
+    console.log('TimelineJS data:', timelineData);
 
-        // Add click event listener for TimelineJS events
-        timeline.on('change', (data) => {
-            const eventId = data.unique_id;
-            if (eventId) {
-                const index = parseInt(eventId.split('-')[1]);
-                const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
-                if (eventItem) {
-                    expandAndScrollToEvent(eventItem);
+    timelineScript.onload = () => {
+        console.log('TimelineJS script loaded');
+        try {
+            const timeline = new TL.Timeline('timeline', timelineData, {
+                height: 120,
+                marker_height_min: 30,
+                initial_zoom: 1
+            });
+            console.log('TimelineJS initialized');
+
+            timeline.on('change', (data) => {
+                console.log('Timeline event changed:', data);
+                const eventId = data.unique_id;
+                if (eventId) {
+                    const index = parseInt(eventId.split('-')[1]);
+                    const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
+                    if (eventItem) {
+                        expandAndScrollToEvent(eventItem);
+                    }
+                    const event = events[index];
+                    if (event && event.marker) {
+                        map.setView(event.marker.getLatLng(), 10);
+                        event.marker.openPopup();
+                    }
                 }
-                const event = events[index];
-                if (event && event.marker) {
-                    map.setView(event.marker.getLatLng(), 10);
-                    event.marker.openPopup();
-                }
-            }
-        });
+            });
+        } catch (e) {
+            console.error('Error initializing TimelineJS:', e);
+        }
     };
 }
 
-// Handle sidebar resize
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const resizeHandle = document.querySelector('.resize-handle');
@@ -332,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newWidth >= minWidth && newWidth <= maxWidth) {
             sidebar.style.flex = `0 0 ${newWidth}px`;
             map.invalidateSize();
-            // TimelineJS will automatically adjust to new width
         }
     });
 
