@@ -83,7 +83,7 @@ body {
     right: 0;
     height: 120px;
     background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
-    z-index: 1000; /* Above map elements but below Leaflet controls (typically z-index 1000+) */
+    z-index: 2000; /* Above map tiles but below custom controls */
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
@@ -91,10 +91,12 @@ body {
     pointer-events: auto; /* Allow interaction with timeline */
 }
 
+/* Ensure timeline content is not clipped by overflow */
 .timeline-bar {
     position: relative;
     height: 100%;
     display: inline-block;
+    overflow: visible; /* Ensure bubbles and tooltips are not clipped */
 }
 
 .timeline-line {
@@ -107,9 +109,18 @@ body {
     transform: translateY(-50%);
 }
 
+/* Move Leaflet zoom controls to bottom right */
+.leaflet-control-zoom {
+    position: absolute !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    left: auto !important;
+    top: auto !important;
+}
+
 /* Ensure Leaflet controls (like zoom buttons) are above the timeline */
 .leaflet-control {
-    z-index: 1001; /* Above timeline */
+    z-index: 2001; /* Above timeline */
 }
 
 /* The bubble used to mark timeline events */
@@ -123,7 +134,7 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease;
     transform: translateX(-50%);
-    z-index: 1001; /* Above timeline container */
+    z-index: 2002; /* Above timeline and map tiles */
 }
 
 .event-bubble.has-location {
@@ -168,7 +179,7 @@ body {
     border-radius: 3px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     white-space: nowrap;
-    z-index: 1002; /* On top of event-bubble */
+    z-index: 2003; /* On top of event-bubble */
 }
 
 .event-bubble:hover .bubble-tooltip {
@@ -233,7 +244,7 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
-    z-index: 1003; /* Above timeline and tooltips */
+    z-index: 2003; /* Above timeline and tooltips */
 }
 
 .zoom-btn:hover {
