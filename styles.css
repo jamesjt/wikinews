@@ -421,7 +421,9 @@ body {
     position: absolute;
     top: -35px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-100%);
+    max-width:300px;
+    width: max-content;
     background-color: white;
     padding: 8px;
     border-radius: 4px;
