@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 451 / Wikinews</title>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Header Section -->
     <header id="header">
         <div class="site-icon">
             <img src="icon-racket-library.webp" alt="Racket Library Logo" width="40" height="40">
@@ -19,7 +22,9 @@
             <button>Login</button>
         </div>
     </header>
+    <!-- Main Content -->
     <div id="main-content">
+        <!-- Sidebar -->
         <div id="sidebar">
             <h2>Stories</h2>
             <div class="story-section">
@@ -29,8 +34,11 @@
             <h2>Commentary</h2>
             <p>Sample commentary linked to events, such as news articles or analyses.</p>
         </div>
+        <!-- Right Content -->
         <div id="right-content">
+            <!-- Map with Timeline Overlay -->
             <div id="map">
+                <!-- Timeline Overlay -->
                 <div id="timeline">
                     <div class="timeline-bar">
                         <!-- Timeline content will be added dynamically -->
@@ -40,8 +48,11 @@
         </div>
         <div class="resize-handle"></div>
     </div>
+    <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Papa Parse for CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- Custom JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
