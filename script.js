@@ -1,11 +1,5 @@
 // script.js
 
-/*
-1) Adds a tooltip to each timeline bubble that duplicates the map popup info:
-   - Event short summary, date, and document links if present.
-2) Creates a DOM element on hover with an absolute position relative to the mouse cursor.
-*/
-
 const defaultLocation = [50.45, 30.52];
 // Move Leaflet zoom controls to bottom right
 const map = L.map('map', {
@@ -204,17 +198,23 @@ function buildSidebar(events) {
                 const eventItem = document.createElement('div');
                 eventItem.className = 'event-item';
                 eventItem.setAttribute('data-event-index', event.index);
+
+                // Filter out empty or whitespace-only document names
+                const validDocumentNames = event.documentNames.filter(name => name && name.trim() !== '');
+                const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
+                const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
+
                 eventItem.innerHTML = `
                     <div class="event-date">
                         <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
                         <span>${event.displayDate}</span>
                         <div class="icons-container">
                             ${
-                                event.documentNames.length
-                                    ? `<div class="document-wrapper"><div class="document-icon"><img src="icon-document.png" alt="Document"></div><div class="document-tooltip">${event.documentNames
+                                hasValidDocuments
+                                    ? `<div class="document-wrapper"><div class="document-icon"><img src="icon-document.png" alt="Document"></div><div class="document-tooltip">${validDocumentNames
                                           .map(
                                               (name, i) =>
-                                                  `<div class="doc-entry"><img src="icon-document.png" alt="Document"><a href="${event.documentLinks[i]}" target="_blank">${name}</a></div>`
+                                                  `<div class="doc-entry"><img src="icon-document.png" alt="Document"><a href="${validDocumentLinks[i]}" target="_blank">${name}</a></div>`
                                           )
                                           .join('')}</div></div>`
                                     : ''
