@@ -84,7 +84,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                     return {
                         date: dateStr,
-                        timestamp: dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/) ? new Date(dateStr).getTime() : null,
+                        timestamp: dateStr.match(/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/) ? new Date(dateStr).getTime() : null,
                         shortSummary,
                         summary,
                         blurb,
@@ -114,7 +114,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
 function buildSidebar(events) {
     const groupedEvents = {};
-    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+    const datePattern = /^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/;
 
     events.forEach(event => {
         const dateStr = event.date;
@@ -126,7 +126,7 @@ function buildSidebar(events) {
             year = yearStr.toString();
             displayDate = `${months[month - 1]} ${getOrdinal(day)}`;
         } else {
-            const yearMatch = dateStr.match(/\d{4}/);
+            const yearMatch = dateStr.match(/\\d{4}/);
             if (yearMatch) year = yearMatch[0];
         }
 
@@ -231,7 +231,7 @@ function populateTimeline() {
     let lastPos = 0;
 
     // Add decade markers.
-    const years = events.map(e => parseInt(e.date.match(/\d{4}/)?.[0])).filter(y => y);
+    const years = events.map(e => parseInt(e.date.match(/\\d{4}/)?.[0])).filter(y => y);
     if (!years.length) return;
 
     const startYear = Math.min(...years);
@@ -252,7 +252,7 @@ function populateTimeline() {
     // Place events.
     events.forEach((event, index) => {
         const dateStr = event.date;
-        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
+        if (!/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(dateStr)) return;
         // Position in base coordinate space.
         const timeOffset = event.timestamp - minTime;
         let pos = (timeOffset / timeRange) * containerWidth;
