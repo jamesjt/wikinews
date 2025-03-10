@@ -180,50 +180,95 @@ function buildSidebar(events) {
 }
 
 function populateTimeline() {
-    const timelineBar = document.getElementById('timeline-bar');
+    const overviewBar = document.getElementById('overview-bar');
+    const detailBar = document.getElementById('detail-bar');
+    const focusWindow = document.getElementById('focus-window');
     const minTime = Math.min(...events.map(e => e.timestamp));
     const maxTime = Math.max(...events.map(e => e.timestamp));
     const timeRange = maxTime - minTime;
-    const timelineWidth = timelineBar.parentElement.clientWidth * 2; // Double width for scrolling
-    timelineBar.style.width = `${timelineWidth}px`;
+    const overviewWidth = overviewBar.parentElement.clientWidth * 2; // Double width for broad range
+    overviewBar.style.width = `${overviewWidth}px`;
 
-    // Aggregate events into clusters based on time proximity
+    // Aggregate events into clusters
     const clusters = {};
-    const clusterInterval = timeRange / 50; // 50 clusters max
+    const clusterWidth = overviewWidth / 50; // 50 clusters max
     events.forEach(event => {
-        const timeDiff = event.timestamp - minTime;
-        const clusterKey = Math.floor(timeDiff / clusterInterval);
+        const pos = ((event.timestamp - minTime) / timeRange) * overviewWidth;
+        const clusterKey = Math.floor(pos / clusterWidth);
         if (!clusters[clusterKey]) clusters[clusterKey] = [];
         clusters[clusterKey].push(event);
     });
 
-    // Render clusters
+    // Render overview clusters
     Object.entries(clusters).forEach(([key, cluster]) => {
-        const clusterStart = (key * clusterInterval) / timeRange * timelineWidth;
-        const clusterWidth = (clusterInterval / timeRange) * timelineWidth;
         const clusterEl = document.createElement('div');
-        clusterEl.className = `event-cluster ${cluster.some(e => e.location) ? 'has-location' : ''}`;
-        clusterEl.style.left = `${clusterStart}px`;
+        clusterEl.className = 'event-cluster';
+        clusterEl.style.left = `${key * clusterWidth}px`;
         clusterEl.style.width = `${clusterWidth}px`;
+        clusterEl.title = `${cluster.length} events`;
+        overviewBar.appendChild(clusterEl);
+    });
 
-        // Add label with the earliest date in the cluster
-        const earliestEvent = cluster.reduce((earliest, e) => e.timestamp < earliest.timestamp ? e : earliest);
-        const label = document.createElement('div');
-        label.className = 'event-label';
-        label.style.left = `${clusterStart + clusterWidth / 2}px`;
-        label.textContent = earliestEvent.date;
-        timelineBar.appendChild(label);
+    // Initial focus window (10% of timeline)
+    const focusWidth = overviewWidth * 0.1;
+    focusWindow.style.width = `${focusWidth}px`;
+    let focusPos = 0;
+    focusWindow.style.left = `${focusPos}px`;
 
-        // Click to expand cluster in sidebar
-        clusterEl.addEventListener('click', () => {
-            cluster.forEach(event => {
+    // Update detail view based on focus
+    function updateDetailView() {
+        detailBar.innerHTML = '';
+        const detailWidth = detailBar.parentElement.clientWidth * 2;
+        detailBar.style.width = `${detailWidth}px`;
+        const focusStart = minTime + (focusPos / overviewWidth) * timeRange;
+        const focusEnd = focusStart + (focusWidth / overviewWidth) * timeRange;
+        const visibleEvents = events.filter(e => e.timestamp >= focusStart && e.timestamp <= focusEnd);
+
+        visibleEvents.forEach((event, idx) => {
+            const pos = ((event.timestamp - focusStart) / (focusEnd - focusStart)) * detailWidth;
+            const eventEl = document.createElement('div');
+            eventEl.className = `event-detail ${event.location ? 'has-location' : ''}`;
+            eventEl.style.left = `${pos}px`;
+            eventEl.style.width = `${Math.max(30, detailWidth / visibleEvents.length)}px`;
+            eventEl.textContent = `${event.index + 1}`;
+            eventEl.addEventListener('click', () => {
                 const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
                 if (eventItem) expandAndScrollToEvent(eventItem);
+                if (event.marker) {
+                    map.setView(event.marker.getLatLng(), 10);
+                    event.marker.openPopup();
+                }
             });
+            eventEl.addEventListener('mouseover', (e) => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'event-tooltip';
+                tooltip.textContent = `${event.date}: ${event.shortSummary}`;
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+                eventEl.addEventListener('mouseout', () => tooltip.remove(), { once: true });
+            });
+            detailBar.appendChild(eventEl);
         });
+    }
 
-        timelineBar.appendChild(clusterEl);
+    // Draggable focus window
+    let isDragging = false;
+    focusWindow.addEventListener('mousedown', () => isDragging = true);
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const overviewRect = overviewBar.parentElement.getBoundingClientRect();
+        focusPos = Math.max(0, Math.min(e.clientX - overviewRect.left, overviewWidth - focusWidth));
+        focusWindow.style.left = `${focusPos}px`;
+        updateDetailView();
     });
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        updateDetailView();
+    });
+
+    // Initial render
+    updateDetailView();
 }
 
 function expandAndScrollToEvent(eventItem) {
