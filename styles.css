@@ -115,11 +115,13 @@ body {
 }
 
 #sidebar {
-    flex: 0 0 20%;
+    flex: 0 0 20%; /* Initial width, can be overridden by JS */
     background: #f9f9f9;
     padding: 15px;
     overflow-y: auto;
     height: calc(100vh - 210px); /* Adjust for header + selector + timeline height */
+    min-width: 150px; /* Minimum width for usability */
+    max-width: 50%; /* Maximum width to prevent over-expansion */
 }
 
 #right-content {
@@ -267,6 +269,7 @@ body {
     width: 5px;
     background: #ccc;
     cursor: col-resize;
+    flex-shrink: 0; /* Prevent handle from shrinking */
 }
 
 .resize-handle:hover {
@@ -359,10 +362,15 @@ body {
 }
 
 .event-item {
-    padding: 5px 0;
+    padding: 10px 0; /* Increased top/bottom padding from 5px to 10px */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+}
+
+/* Add top border to event-items except the first one in a year-list */
+.year-list .event-item:not(:first-child) {
+    border-top: 1px solid #ddd; /* Light, elegant border */
 }
 
 .event-date {
@@ -446,7 +454,7 @@ body {
     top: -20px;
     left: 50%;
     transform: translateX(-100%);
-    max-width:300px;
+    max-width: 300px;
     width: max-content;
     background-color: white;
     padding: 8px;
