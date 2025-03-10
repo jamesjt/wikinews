@@ -80,32 +80,43 @@ body {
 
 /* Timeline styling */
 #timeline {
-    height: 120px;
+    height: 150px; /* Reduced height for TimelineJS */
     background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    padding: 10px 20px;
-    pointer-events: auto; /* Allow interaction with timeline */
     flex-shrink: 0; /* Prevent timeline from shrinking */
 }
 
-/* Ensure timeline content is not clipped by overflow */
-.timeline-bar {
-    position: relative;
-    height: 100%;
-    display: inline-block;
-    overflow: visible; /* Ensure bubbles and tooltips are not clipped */
+/* Override TimelineJS default styles for smaller height */
+.tl-timeline {
+    height: 150px !important; /* Match container height */
 }
 
-.timeline-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #666;
-    transform: translateY(-50%);
+.tl-timemarker {
+    height: 30px !important; /* Smaller markers */
+    width: 30px !important;
+}
+
+.tl-timemarker .tl-timemarker-content-container {
+    font-size: 12px !important; /* Smaller text */
+    padding: 2px !important;
+}
+
+.tl-timeaxis {
+    height: 20px !important; /* Smaller axis */
+    font-size: 10px !important;
+}
+
+.tl-slide {
+    height: 100px !important; /* Smaller slide content area */
+    overflow: hidden !important;
+}
+
+.tl-slide-content-container {
+    font-size: 12px !important;
+    padding: 5px !important;
+}
+
+.tl-headline {
+    font-size: 14px !important; /* Smaller headline */
 }
 
 #main-content {
@@ -119,7 +130,7 @@ body {
     background: #f9f9f9;
     padding: 15px;
     overflow-y: auto;
-    height: calc(100vh - 210px); /* Adjust for header + selector + timeline height */
+    height: calc(100vh - 240px); /* Adjusted: 60px header + 30px selector + 150px timeline */
     min-width: 150px; /* Minimum width for usability */
     max-width: 50%; /* Maximum width to prevent over-expansion */
 }
