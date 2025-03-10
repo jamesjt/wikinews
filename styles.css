@@ -380,6 +380,9 @@ body {
     align-items: center;
     width: 100%;
     position: relative;
+    font-family: 'PT Sans Narrow', sans-serif;
+    text-transform: uppercase;
+
 }
 
 .event-number-circle {
@@ -412,6 +415,7 @@ body {
 
 .event-summary {
     cursor: pointer;
+    font-family: 'PT Serif', serif;
 }
 
 .event-summary:hover {
