@@ -8,8 +8,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const markers = [];
 let events = [];
-let zoomLevel = 1; // 1 = years, 2 = months, 3 = days
-const zoomScales = [50, 600, 7200]; // Pixels per year, month, day
+let zoomLevel = 1; // Controls logarithmic scaling factor
+const zoomScales = [1, 1.5, 2]; // Scaling factors for logarithmic compression
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -70,6 +70,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                     return {
                         date: dateStr,
+                        timestamp: dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/) ? new Date(dateStr).getTime() : null,
                         shortSummary,
                         summary,
                         blurb,
@@ -80,17 +81,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         documentNames,
                         documentLinks
                     };
-                }).filter(event => event);
+                }).filter(event => event.timestamp); // Only include events with valid timestamps
 
                 buildSidebar(events);
                 populateTimeline();
 
                 const timeline = document.getElementById('timeline');
-                document.querySelector('.zoom-in').addEventListener('click', () => zoomTimeline(1, timeline.scrollLeft + timeline.clientWidth / 2));
-                document.querySelector('.zoom-out').addEventListener('click', () => zoomTimeline(-1, timeline.scrollLeft + timeline.clientWidth / 2));
+                document.querySelector('.zoom-in').addEventListener('click', () => zoomTimeline(1));
+                document.querySelector('.zoom-out').addEventListener('click', () => zoomTimeline(-1));
                 timeline.addEventListener('wheel', (e) => {
                     e.preventDefault();
-                    zoomTimeline(e.deltaY < 0 ? 1 : -1, timeline.scrollLeft + e.clientX - timeline.getBoundingClientRect().left);
+                    zoomTimeline(e.deltaY < 0 ? 1 : -1);
                 });
             }
         });
@@ -189,93 +190,70 @@ function buildSidebar(events) {
     });
 }
 
-function zoomTimeline(delta, cursorPos) {
+function zoomTimeline(delta) {
     const oldZoomLevel = zoomLevel;
     zoomLevel = Math.max(1, Math.min(3, zoomLevel + delta));
     if (oldZoomLevel !== zoomLevel) {
-        populateTimeline(cursorPos);
+        populateTimeline();
     }
 }
 
-function populateTimeline(cursorPos = 0) {
+function populateTimeline() {
     const timelineBar = document.querySelector('.timeline-bar');
     timelineBar.innerHTML = '<div class="timeline-line"></div>';
 
+    const minTime = Math.min(...events.map(e => e.timestamp));
+    const maxTime = Math.max(...events.map(e => e.timestamp));
+    const timeRange = maxTime - minTime;
+
+    // Get the visible width of the timeline container
+    const timelineContainer = document.getElementById('timeline');
+    const totalWidth = timelineContainer.clientWidth - 40; // Account for padding (20px left + 20px right)
+
+    // Logarithmic scaling setup
+    const logBase = zoomScales[zoomLevel - 1]; // Adjust logarithmic compression with zoom
+    const minLog = Math.log(1); // Log of 1 to avoid issues with zero
+    const maxLog = Math.log(timeRange + 1); // Add 1 to avoid log(0)
+    const logRange = maxLog - minLog;
+
+    // Add year markers
     const years = events.map(e => parseInt(e.date.match(/\d{4}/)?.[0])).filter(y => y);
     if (!years.length) return;
     const startYear = Math.min(...years);
     const endYear = Math.max(...years);
-    const totalYears = endYear - startYear + 1;
-    const scale = zoomScales[zoomLevel - 1];
-    const totalWidth = zoomLevel === 1 ? totalYears * scale : totalYears * 12 * (zoomLevel === 2 ? scale / 12 : scale / 365);
-    timelineBar.style.width = `${totalWidth}px`;
 
-    if (zoomLevel === 1) {
-        for (let year = startYear; year <= endYear; year += 10) {
-            const pos = ((year - startYear) / totalYears) * totalWidth;
-            const marker = document.createElement('div');
-            marker.className = 'marker major';
-            marker.style.left = `${pos}px`;
-            marker.textContent = year;
-            timelineBar.appendChild(marker);
-        }
-    } else if (zoomLevel === 2) {
-        for (let year = startYear; year <= endYear; year++) {
-            const yearPos = ((year - startYear) / totalYears) * totalWidth;
-            const marker = document.createElement('div');
-            marker.className = 'marker major';
-            marker.style.left = `${yearPos}px`;
-            marker.textContent = year;
-            timelineBar.appendChild(marker);
-            for (let month = 0; month < 12; month++) {
-                const pos = yearPos + (month + 0.5) * (scale / 12);
-                const monthMarker = document.createElement('div');
-                monthMarker.className = 'marker';
-                monthMarker.style.left = `${pos}px`;
-                monthMarker.textContent = months[month].slice(0, 1);
-                timelineBar.appendChild(monthMarker);
-            }
-        }
-    } else {
-        for (let year = startYear; year <= endYear; year++) {
-            const yearPos = ((year - startYear) / totalYears) * totalWidth;
-            const marker = document.createElement('div');
-            marker.className = 'marker major';
-            marker.style.left = `${yearPos}px`;
-            marker.textContent = year;
-            timelineBar.appendChild(marker);
-            for (let month = 0; month < 12; month++) {
-                const monthPos = yearPos + month * (scale / 12);
-                const monthMarker = document.createElement('div');
-                monthMarker.className = 'marker';
-                monthMarker.style.left = `${monthPos}px`;
-                monthMarker.textContent = months[month];
-                timelineBar.appendChild(monthMarker);
-            }
-        }
+    for (let year = startYear; year <= endYear; year += 10) {
+        const yearTime = new Date(`01/01/${year}`).getTime();
+        const timeOffset = yearTime - minTime;
+        const logOffset = Math.log(timeOffset + 1) - minLog;
+        const pos = (logOffset / logRange) * totalWidth;
+        const marker = document.createElement('div');
+        marker.className = 'marker major';
+        marker.style.left = `${pos}px`;
+        marker.textContent = year;
+        timelineBar.appendChild(marker);
     }
 
+    // Sort events by timestamp to ensure correct alternating
+    events.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Add events
     events.forEach((event, index) => {
         const dateStr = event.date;
         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-        const [month, day] = dateStr.split('/').map(Number); // Only month and day
-        const [year] = dateStr.split('/').map(Number).slice(2); // Extract year for positioning
-        const yearOffset = year - startYear;
-        let pos;
-        if (zoomLevel === 1) {
-            pos = (yearOffset / totalYears) * totalWidth;
-        } else if (zoomLevel === 2) {
-            pos = (yearOffset * 12 + (month - 1) + 0.5) * (scale / 12);
-        } else {
-            pos = (yearOffset * 365 + (month - 1) * 30.44 + (day - 1)) * (scale / 365);
-        }
+        const [month, day] = dateStr.split('/').map(Number);
+
+        // Logarithmic position calculation
+        const timeOffset = event.timestamp - minTime;
+        const logOffset = Math.log(timeOffset + 1) - minLog;
+        const pos = (logOffset / logRange) * totalWidth;
 
         const bubble = document.createElement('div');
         bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
         bubble.style.left = `${pos}px`;
         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
         bubble.addEventListener('click', () => {
-            const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
+            const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
             if (eventItem) expandAndScrollToEvent(eventItem);
             if (event.marker) {
                 map.setView(event.marker.getLatLng(), 10);
@@ -285,16 +263,12 @@ function populateTimeline(cursorPos = 0) {
 
         const label = document.createElement('div');
         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-        label.style.left = `${pos}px`; /* Centered above the bubble */
+        label.style.left = `${pos}px`;
         label.textContent = `${month}/${day}`; // Format as M/D
 
         timelineBar.appendChild(bubble);
         timelineBar.appendChild(label);
     });
-
-    const timeline = document.getElementById('timeline');
-    const newScroll = Math.max(0, cursorPos - timeline.clientWidth / 2);
-    timeline.scrollLeft = Math.min(newScroll, totalWidth - timeline.clientWidth);
 }
 
 function expandAndScrollToEvent(eventItem) {
