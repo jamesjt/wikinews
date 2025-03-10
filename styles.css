@@ -68,12 +68,14 @@ body {
     flex-direction: column;
 }
 
+/* IMPORTANT: Give #timeline a high z-index and position for stacking. */
 #timeline {
     height: 120px;
     background: #f8f8f8;
-    position: relative;
+    position: relative; /* create new stacking context */
+    z-index: 3000;      /* higher than the map's index */
     border-bottom: 1px solid #ddd;
-    overflow-x: auto; /* so we can scroll/pan horizontally */
+    overflow-x: auto;   /* so we can scroll/pan horizontally */
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
@@ -96,6 +98,14 @@ body {
     transform: translateY(-50%);
 }
 
+/* Make sure the map is behind #timeline. */
+#map {
+    position: relative;
+    z-index: 1; /* Lower than #timeline’s 3000 */
+    flex: 1;
+    min-height: 0; /* Prevents overflow */
+}
+
 /* The bubble used to mark timeline events */
 .event-bubble {
     position: absolute;
@@ -107,7 +117,7 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease;
     transform: translateX(-50%);
-    z-index: 9999; /* Ensure bubble is above other elements */
+    z-index: 3001; /* Above timeline container */
 }
 
 .event-bubble.has-location {
@@ -152,7 +162,7 @@ body {
     border-radius: 3px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     white-space: nowrap;
-    z-index: 10000; /* Placed higher than bubble, so tooltip is on top */
+    z-index: 3002; /* On top of event-bubble */
 }
 
 .event-bubble:hover .bubble-tooltip {
@@ -168,6 +178,7 @@ body {
     text-decoration: underline;
 }
 
+/* The small date label for each timeline event bubble */
 .event-label {
     position: absolute;
     font-size: 10px;
@@ -231,6 +242,7 @@ body {
     right: 10px;
 }
 
+/* Leaflet’s numbered markers on the map */
 .numbered-marker {
     background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
     border: 2px solid #2196F3; /* Solid blue border */
@@ -244,11 +256,6 @@ body {
     font-weight: bold;
     border: 2px solid #fff; /* White border on top of blue */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-#map {
-    flex: 1;
-    min-height: 0; /* Prevents overflow */
 }
 
 .resize-handle {
@@ -275,6 +282,7 @@ body {
     margin-bottom: 5px;
 }
 
+/* Decade/Year toggles in sidebar */
 #event-list .decade {
     margin-bottom: 8px;
     background-color: #f0f0f0;
