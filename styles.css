@@ -73,7 +73,8 @@ body {
     background: #f8f8f8;
     position: relative;
     border-bottom: 1px solid #ddd;
-    overflow-x: hidden; /* Disable scrolling */
+    /* Instead of hiding overflow, allow horizontal scrolling. */
+    overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
@@ -84,7 +85,7 @@ body {
     position: relative;
     height: 100%;
     display: inline-block;
-    width: 100%; /* Fit to container width */
+    /* We will set width dynamically from script.js */
 }
 
 .timeline-line {
@@ -115,11 +116,11 @@ body {
 }
 
 .event-bubble.above {
-    top: 30px; /* Pushed up by 10px from the original 40px */
+    top: 30px; /* Pushed up from center */
 }
 
 .event-bubble.below {
-    bottom: 30px; /* Pushed up by 10px from the original 40px */
+    bottom: 30px; /* Pushed down from center */
 }
 
 .event-bubble:hover {
@@ -148,13 +149,13 @@ body {
 }
 
 .event-label.above {
-    top: 10px; /* Adjusted to match new bubble position */
-    left: 50%; /* Center above the bubble */
+    top: 10px; /* Matches above bubble position */
+    left: 50%;
 }
 
 .event-label.below {
-    bottom: 10px; /* Adjusted to match new bubble position */
-    left: 50%; /* Center below the bubble */
+    bottom: 10px; /* Matches below bubble position */
+    left: 50%;
 }
 
 .marker {
@@ -204,7 +205,6 @@ body {
     min-height: 0; /* Prevents overflow */
 }
 
-/* Custom styling for Leaflet numbered markers to match timeline/sidebar */
 .numbered-marker {
     background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
     border: 2px solid #2196F3; /* Solid blue border */
@@ -216,7 +216,7 @@ body {
     line-height: 24px;
     font-size: 14px;
     font-weight: bold;
-    border: 2px solid #fff; /* Add white border on top of blue */
+    border: 2px solid #fff; /* White border on top of blue */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -230,7 +230,6 @@ body {
     background: #aaa;
 }
 
-/* Sidebar Styles */
 #sidebar h2 {
     font-size: 1.2em;
     margin-top: 0;
@@ -421,18 +420,18 @@ body {
     margin-bottom: 0;
 }
 
-.document-tooltip img {
+document-tooltip img {
     width: 16px;
     height: 16px;
     margin-right: 4px;
 }
 
-.document-tooltip a {
+document-tooltip a {
     color: #1a73e8;
     text-decoration: none;
 }
 
-.document-tooltip a:hover {
+document-tooltip a:hover {
     text-decoration: underline;
 }
 
@@ -450,17 +449,17 @@ body {
     margin-top: 4px;
 }
 
-.document-link img {
+document-link img {
     width: 16px;
     height: 16px;
     margin-right: 4px;
 }
 
-.document-link a {
+document-link a {
     color: #1a73e8;
     text-decoration: none;
 }
 
-.document-link a:hover {
+document-link a:hover {
     text-decoration: underline;
 }
