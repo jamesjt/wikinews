@@ -81,7 +81,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 }).filter(event => event.timestamp);
 
                 buildSidebar(events);
-                populateTimeline();
+                initializeTimeline();
             }
         });
     })
@@ -179,66 +179,55 @@ function buildSidebar(events) {
     });
 }
 
-function populateTimeline() {
-    const timelineBar = document.getElementById('timeline-bar');
-    timelineBar.innerHTML = '<div class="timeline-line"></div>';
+function initializeTimeline() {
+    const container = document.getElementById('visualization');
+    const items = new vis.DataSet(events.map((event, index) => ({
+        id: index,
+        content: `${index + 1}`, // Event number as content
+        start: event.date, // Use date string directly
+        group: event.location ? 'has-location' : 'no-location', // Group by location status
+        className: event.location ? 'has-location' : '' // Apply class for styling
+    })));
 
-    const minTime = Math.min(...events.map(e => e.timestamp));
-    const maxTime = Math.max(...events.map(e => e.timestamp));
-    const timeRange = maxTime - minTime;
-    const timelineWidth = timelineBar.parentElement.clientWidth * 2;
-    timelineBar.style.width = `${timelineWidth}px`;
+    const options = {
+        width: '100%',
+        height: '120px', // Match container height
+        itemHeight: 120, // Ensure items use full height
+        zoomable: true,
+        moveable: true,
+        cluster: true, // Enable clustering for large datasets
+        clusterMaxItems: 10, // Adjust clustering threshold
+        min: new Date(Math.min(...events.map(e => new Date(e.date).getTime()))), // Set min date
+        max: new Date(Math.max(...events.map(e => new Date(e.date).getTime()))), // Set max date
+        format: {
+            minorLabels: {
+                millisecond: 'SSS [ms]',
+                second: 's [s]',
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                weekday: 'ddd D',
+                day: 'D MMM',
+                week: 'D MMM',
+                month: 'MMM YYYY',
+                year: 'YYYY'
+            }
+        }
+    };
 
-    // Aggregate events into clusters based on time proximity
-    const clusters = {};
-    const clusterInterval = timeRange / 50; // 50 clusters max
-    events.forEach(event => {
-        const timeDiff = event.timestamp - minTime;
-        const clusterKey = Math.floor(timeDiff / clusterInterval);
-        if (!clusters[clusterKey]) clusters[clusterKey] = [];
-        clusters[clusterKey].push(event);
-    });
+    const timeline = new vis.Timeline(container, items, options);
 
-    // Render clusters
-    Object.entries(clusters).forEach(([key, cluster], clusterIndex) => {
-        const clusterStart = (key * clusterInterval) / timeRange * timelineWidth;
-        const clusterWidth = (clusterInterval / timeRange) * timelineWidth;
-
-        const clusterEl = document.createElement('div');
-        clusterEl.className = `event-cluster`;
-        clusterEl.style.left = `${clusterStart}px`;
-        clusterEl.style.width = `${clusterWidth}px`;
-
-        // Add line and number
-        const line = document.createElement('div');
-        line.className = `event-line ${cluster.some(e => e.location) ? 'has-location' : ''} ${clusterIndex % 2 === 0 ? 'above' : 'below'}`;
-        clusterEl.appendChild(line);
-
-        const number = document.createElement('div');
-        number.className = `event-number ${cluster.some(e => e.location) ? 'has-location' : ''} ${clusterIndex % 2 === 0 ? 'above' : 'below'}`;
-        number.textContent = cluster[0].index + 1; // Use the first event's index for display
-        clusterEl.appendChild(number);
-
-        // Add tooltip on hover
-        number.addEventListener('mouseover', (e) => {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'event-tooltip';
-            tooltip.textContent = `${cluster[0].date}: ${cluster[0].shortSummary}`; // Show first event's details
-            tooltip.style.left = `${e.clientX + 10}px`;
-            tooltip.style.top = `${e.clientY + 10}px`;
-            document.body.appendChild(tooltip);
-            number.addEventListener('mouseout', () => tooltip.remove(), { once: true });
-        });
-
-        // Click to expand cluster in sidebar
-        clusterEl.addEventListener('click', () => {
-            cluster.forEach(event => {
-                const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-                if (eventItem) expandAndScrollToEvent(eventItem);
-            });
-        });
-
-        timelineBar.appendChild(clusterEl);
+    // Handle click events to integrate with sidebar and map
+    timeline.on('click', (properties) => {
+        if (properties.item !== null) {
+            const eventIndex = properties.item;
+            const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+            if (eventItem) expandAndScrollToEvent(eventItem);
+            const event = events[eventIndex];
+            if (event.marker) {
+                map.setView(event.marker.getLatLng(), 10);
+                event.marker.openPopup();
+            }
+        }
     });
 }
 
