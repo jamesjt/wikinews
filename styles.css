@@ -73,7 +73,7 @@ body {
     background: #f8f8f8;
     position: relative;
     border-bottom: 1px solid #ddd;
-    overflow-x: auto;
+    overflow-x: hidden; /* Disable scrolling */
     overflow-y: hidden;
     white-space: nowrap;
     padding: 10px 20px;
@@ -84,7 +84,7 @@ body {
     position: relative;
     height: 100%;
     display: inline-block;
-    min-width: 100%;
+    width: 100%; /* Fit to container width */
 }
 
 .timeline-line {
