@@ -10,16 +10,23 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Timeline Section -->
-    <div id="timeline">
-        <div class="timeline-bar">
-            <!-- Timeline content will be added dynamically -->
+    <!-- Header Section -->
+    <header id="header">
+        <div class="site-icon">
+            <img src="site-logo.png" alt="Site Logo" width="40" height="40">
         </div>
-        <button class="zoom-btn zoom-in">+</button>
-        <button class="zoom-btn zoom-out">-</button>
-    </div>
-    <!-- Main Container with Sidebar, Resize Handle, and Map -->
-    <div id="container">
+        <nav class="menu">
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Events</a>
+        </nav>
+        <div class="login">
+            <button>Login</button>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Sidebar -->
         <div id="sidebar">
             <h2>Stories</h2>
             <div class="story-section">
@@ -29,8 +36,20 @@
             <h2>Commentary</h2>
             <p>Sample commentary linked to events, such as news articles or analyses.</p>
         </div>
+        <!-- Right Content -->
+        <div id="right-content">
+            <!-- Timeline -->
+            <div id="timeline">
+                <div class="timeline-bar">
+                    <!-- Timeline content will be added dynamically -->
+                </div>
+                <button class="zoom-btn zoom-in">+</button>
+                <button class="zoom-btn zoom-out">-</button>
+            </div>
+            <!-- Map -->
+            <div id="map"></div>
+        </div>
         <div class="resize-handle"></div>
-        <div id="map"></div>
     </div>
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
