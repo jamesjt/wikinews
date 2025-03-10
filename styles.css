@@ -420,18 +420,18 @@ body {
     margin-bottom: 0;
 }
 
-document-tooltip img {
+.document-tooltip img {
     width: 16px;
     height: 16px;
     margin-right: 4px;
 }
 
-document-tooltip a {
+.document-tooltip a {
     color: #1a73e8;
     text-decoration: none;
 }
 
-document-tooltip a:hover {
+.document-tooltip a:hover {
     text-decoration: underline;
 }
 
@@ -449,17 +449,17 @@ document-tooltip a:hover {
     margin-top: 4px;
 }
 
-document-link img {
+.document-link img {
     width: 16px;
     height: 16px;
     margin-right: 4px;
 }
 
-document-link a {
+.document-link a {
     color: #1a73e8;
     text-decoration: none;
 }
 
-document-link a:hover {
+.document-link a:hover {
     text-decoration: underline;
 }
