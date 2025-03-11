@@ -81,8 +81,8 @@ body {
 /* Sidebar */
 #sidebar {
     flex: 0 0 300px;
-    min-width: 200px;
-    max-width: 500px;
+    min-width: 100px;
+    max-width: 1000px;
     padding: 20px;
     background-color: #f9f9f9;
     overflow-y: auto;
