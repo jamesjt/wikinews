@@ -68,7 +68,11 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             });
 
                             // Updated popup content: date at top, followed by blurb, then document links if present
-                            let popupContent = `<span class="popup-event-date">${dateStr}</span><br>${blurb}`;
+                            let popupContent = `
+                                <span class="popup-event-date">${dateStr}</span><br>
+                                <span class="popup-short-summary">${shortSummary}</span><br>
+                                <span class="popup-blurb">${blurb}</span>
+                                `;
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
                                     popupContent += `
