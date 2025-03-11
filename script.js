@@ -129,7 +129,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     console.log('TimelineJS already loaded, initializing now');
                     setupTimelineJS(csvData);
                 } else {
-                    console.log('Waiting for TimelineJS script to load');
+                    console.log('Waiting for CSV data to initialize timeline');
                 }
                 END COMMENTED TIMELINEJS CODE */
                 setupD3Timeline(); // New call to D3 timeline function
@@ -367,14 +367,12 @@ END COMMENTED TIMELINEJS CODE */
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = ''; // Clear existing content (e.g., .timeline-bar)
+    timelineDiv.innerHTML = '';
 
-    // Dimensions
-    const width = timelineDiv.clientWidth - 40; // Match your CSS padding
-    const height = 120; // Match your #timeline height
+    const width = timelineDiv.clientWidth - 40;
+    const height = 120;
     const margin = { top: 20, right: 20, bottom: 30, left: 20 };
 
-    // Create SVG
     const svg = d3.select('#timeline')
         .append('svg')
         .attr('width', width)
@@ -382,32 +380,29 @@ function setupD3Timeline() {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Time scale
     const minTime = d3.min(events, d => d.timestamp);
     const maxTime = d3.max(events, d => d.timestamp);
     const xScale = d3.scaleTime()
         .domain([minTime, maxTime])
         .range([0, width - margin.left - margin.right]);
 
-    // Axis
     const xAxis = d3.axisBottom(xScale)
-        .ticks(d3.timeYear.every(1)) // Adjust tick frequency as needed
+        .ticks(d3.timeYear.every(1))
         .tickFormat(d3.timeFormat('%Y'));
     svg.append('g')
         .attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
         .call(xAxis);
 
-    // Event circles
     const eventGroup = svg.append('g');
-    eventGroup.selectAll('.event-circle')
+    const circles = eventGroup.selectAll('.event-circle')
         .data(events)
         .enter()
         .append('circle')
         .attr('class', 'event-circle')
         .attr('cx', d => xScale(d.timestamp))
-        .attr('cy', height / 2 - margin.top) // Center vertically
+        .attr('cy', height / 2 - margin.top)
         .attr('r', 8)
-        .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)') // Match your CSS
+        .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
         .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
         .attr('stroke-width', 2)
         .on('click', (event, d) => {
@@ -419,26 +414,27 @@ function setupD3Timeline() {
             }
         })
         .on('mouseover', function(event, d) {
+            d3.select(this).transition().duration(200).attr('r', 10); // Scale up
             const tooltip = d3.select('body')
                 .append('div')
                 .attr('class', 'dynamic-tooltip')
                 .style('position', 'absolute')
                 .html(`<b>${d.shortSummary}</b><br>Date: ${d.date}`)
-                .style('left', `${event.pageX + 10}px`)
-                .style('top', `${event.pageY - 30}px`);
+                .style('left', `${event.pageX + 20}px`)
+                .style('top', `${event.pageY - 50}px`);
         })
         .on('mouseout', function() {
+            d3.select(this).transition().duration(200).attr('r', 8); // Scale back
             d3.selectAll('.dynamic-tooltip').remove();
         });
 
-    // Add event numbers
     eventGroup.selectAll('.event-number')
         .data(events)
         .enter()
         .append('text')
         .attr('class', 'event-number')
         .attr('x', d => xScale(d.timestamp))
-        .attr('y', height / 2 - margin.top + 4) // Center text in circle
+        .attr('y', height / 2 - margin.top + 4)
         .attr('text-anchor', 'middle')
         .attr('fill', 'white')
         .attr('font-size', '10px')
@@ -555,7 +551,7 @@ function populateTimeline() {
 
         bubble.addEventListener('mouseover', (e) => {
             let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-            if (event.documentNames.length && event.documentLinks.length) {
+            if (event.documentNames.length && documentLinks.length) {
                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
                     tooltipContent += `
                         <div class="document-link">
