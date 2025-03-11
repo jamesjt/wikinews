@@ -98,6 +98,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                 console.log('Processed events:', events);
                 buildSidebar(events);
                 setupD3Timeline();
+                setupGraph();
+                setupViewControls();
             }
         });
     })
@@ -259,33 +261,27 @@ function handleEventClick(event) {
 
 function handleLocationClick(event) {
     if (event.marker) {
-        // Set the map view to the marker's location with a higher zoom level
-        map.setView(event.marker.getLatLng(), 14); // Increased from 10 to 14
-
-        // Check if the marker is in a cluster and zoom/spiderfy if necessary
+        map.setView(event.marker.getLatLng(), 14);
         const cluster = markers.getVisibleParent(event.marker);
         if (cluster && !map.getBounds().contains(event.marker.getLatLng())) {
             console.log('Marker is in a cluster, zooming to show layer...');
             markers.zoomToShowLayer(event.marker, () => {
                 console.log('Zoom completed, attempting to open popup for marker', event.index + 1);
-                // Ensure the marker is visible and open the popup
                 if (map.getBounds().contains(event.marker.getLatLng())) {
                     event.marker.openPopup();
                 } else {
                     console.log('Marker still not visible, forcing popup after delay');
-                    setTimeout(() => event.marker.openPopup(), 500); // Fallback delay
+                    setTimeout(() => event.marker.openPopup(), 500);
                 }
             });
         } else {
             console.log('Marker is visible or not in a cluster, opening popup directly');
             event.marker.openPopup();
         }
-
-        // Attempt to force spiderfy if in a cluster (experimental)
         if (cluster) {
             console.log('Attempting to force spiderfy for cluster');
             try {
-                markers._spiderfy(); // Internal method, use with caution
+                markers._spiderfy();
             } catch (e) {
                 console.warn('Spiderfy failed:', e);
             }
@@ -301,13 +297,11 @@ function setupD3Timeline() {
     const height = 120;
     const margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
-    // Create the SVG container
     const svg = d3.select('#timeline')
         .append('svg')
         .attr('width', width)
         .attr('height', height);
 
-    // Add a transparent background rectangle to capture mouse events
     svg.append('rect')
         .attr('class', 'zoom-background')
         .attr('x', margin.left)
@@ -316,14 +310,12 @@ function setupD3Timeline() {
         .attr('height', height)
         .attr('fill', 'transparent');
 
-    // Add a group for all other elements
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const minTime = d3.min(events, d => d.timestamp);
     const maxTime = d3.max(events, d => d.timestamp);
 
-    // Extend the domain by 1 year (365 days in milliseconds) on both ends
     const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
     let xScale = d3.scaleTime()
         .domain([new Date(minTime - oneYearInMs), new Date(maxTime + oneYearInMs)])
@@ -333,7 +325,6 @@ function setupD3Timeline() {
         .ticks(d3.timeYear.every(1))
         .tickFormat(d3.timeFormat('%Y'));
 
-    // Center the axis vertically
     const axisYPosition = (height - margin.top - margin.bottom) / 2;
     const gX = g.append('g')
         .attr('class', 'axis axis--x')
@@ -394,7 +385,6 @@ function setupD3Timeline() {
         .style('pointer-events', 'none')
         .text(d => d.index + 1);
 
-    // Add zoom behavior with extended panning boundaries
     const zoom = d3.zoom()
         .scaleExtent([0.1, 50])
         .translateExtent([[xScale(new Date(minTime - oneYearInMs)) - margin.left, 0], [xScale(new Date(maxTime + oneYearInMs)) + margin.right, height]])
@@ -408,15 +398,135 @@ function setupD3Timeline() {
                 .attr('x', d => newXScale(d.timestamp));
         });
 
-    // Apply zoom to the SVG
     svg.call(zoom)
         .call(zoom.transform, d3.zoomIdentity);
 
-    // Optional: Double-click to reset zoom with smooth transition
     svg.on('dblclick.zoom', null);
     svg.on('dblclick', () => {
         svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
     });
+}
+
+function setupGraph() {
+    const graphDiv = document.getElementById('graph');
+    const width = graphDiv.clientWidth;
+    const height = graphDiv.clientHeight;
+
+    const svg = d3.select('#graph')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    // Sort events by timestamp
+    const sortedEvents = events.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Create a simple linear layout for nodes
+    const xScale = d3.scaleLinear()
+        .domain([0, sortedEvents.length - 1])
+        .range([50, width - 50]);
+    const yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([height / 2 - 50, height / 2 + 50]); // Center vertically with some spread
+
+    // Links between consecutive nodes
+    const links = [];
+    for (let i = 0; i < sortedEvents.length - 1; i++) {
+        links.push({ source: sortedEvents[i], target: sortedEvents[i + 1] });
+    }
+
+    // Add links
+    svg.selectAll('.link')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', 'link')
+        .attr('x1', d => xScale(sortedEvents.indexOf(d.source)))
+        .attr('y1', d => yScale(0.5)) // Center the link vertically
+        .attr('x2', d => xScale(sortedEvents.indexOf(d.target)))
+        .attr('y2', d => yScale(0.5))
+        .attr('stroke', '#999')
+        .attr('stroke-width', 2);
+
+    // Add nodes
+    const nodes = svg.selectAll('.node')
+        .data(sortedEvents)
+        .enter()
+        .append('g')
+        .attr('class', 'node')
+        .attr('transform', d => `translate(${xScale(sortedEvents.indexOf(d))},${yScale(0.5)})`);
+
+    nodes.append('circle')
+        .attr('r', 10)
+        .attr('fill', d => d.location ? '#2196F3' : '#4CAF50')
+        .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
+        .attr('stroke-width', 2)
+        .on('click', (event, d) => {
+            handleEventClick(d);
+        });
+
+    nodes.append('text')
+        .attr('dy', '.35em')
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .text(d => d.index + 1);
+
+    // Add event details as a foreignObject for HTML content
+    nodes.append('foreignObject')
+        .attr('width', 200)
+        .attr('height', 100)
+        .attr('x', 15)
+        .attr('y', -50)
+        .style('display', 'none')
+        .append('xhtml:div')
+        .attr('class', 'node-details')
+        .html(d => `
+            <div class="event-date">
+                <span>${d.displayDate}</span>
+                <div class="icons-container">
+                    ${d.location ? '<img class="location-icon" src="icon-location.svg" alt="Location">' : ''}
+                </div>
+            </div>
+            <div class="event-summary">${d.shortSummary}</div>
+        `);
+
+    // Toggle details on click
+    nodes.on('click', (event, d) => {
+        const details = d3.select(event.currentTarget).select('.node-details');
+        details.style('display', details.style('display') === 'none' ? 'block' : 'none');
+        handleEventClick(d);
+    });
+}
+
+function setupViewControls() {
+    const mapDiv = document.getElementById('map');
+    const graphDiv = document.getElementById('graph');
+    const documentsDiv = document.getElementById('documents');
+
+    document.getElementById('view-map').addEventListener('click', () => {
+        mapDiv.style.display = 'block';
+        graphDiv.style.display = 'none';
+        documentsDiv.style.display = 'none';
+        map.invalidateSize(); // Refresh map size
+    });
+
+    document.getElementById('view-graph').addEventListener('click', () => {
+        mapDiv.style.display = 'none';
+        graphDiv.style.display = 'block';
+        documentsDiv.style.display = 'none';
+    });
+
+    document.getElementById('view-documents').addEventListener('click', () => {
+        mapDiv.style.display = 'none';
+        graphDiv.style.display = 'none';
+        documentsDiv.style.display 'block';
+    });
+
+    // Default to Map view
+    mapDiv.style.display = 'block';
+    graphDiv.style.display = 'none';
+    documentsDiv.style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
