@@ -11,7 +11,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-const markers = [];
+// Replace markers array with MarkerClusterGroup
+const markers = L.markerClusterGroup({
+    spiderfyOnMaxZoom: true, // Spiderfy markers at the same coordinates when zoomed in fully
+    showCoverageOnHover: false, // Disable polygon overlay on hover
+    zoomToBoundsOnClick: true, // Zoom into cluster on click unless at max zoom
+    maxClusterRadius: 40 // Adjust clustering radius (pixels)
+});
+map.addLayer(markers); // Add the cluster group to the map once
+
 let events = [];
 let csvData = null;
 let timelineLoaded = false;
@@ -84,14 +92,15 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             }
 
                             marker = L.marker(location, { icon: numberedIcon })
-                                .addTo(map)
                                 .bindPopup(popupContent);
 
                             marker.on('click', () => {
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
                                 if (eventItem) expandAndScrollToEvent(eventItem);
                             });
-                            markers.push(marker);
+
+                            // Add marker to the cluster group instead of directly to the map
+                            markers.addLayer(marker);
                         }
                     }
 
@@ -313,6 +322,20 @@ function setupTimelineJS(csvText) {
             initial_zoom: 1
         });
         console.log('TimelineJS initialized');
+
+        // Remove the slider section after initialization
+        setTimeout(() => {
+            const storySlider = document.querySelector('.tl-storyslider');
+            if (storySlider) {
+                storySlider.remove();
+                console.log('Story slider removed from DOM');
+            }
+            // Adjust the timenav height to fill the container
+            const timeNav = document.querySelector('.tl-timenav');
+            if (timeNav) {
+                timeNav.style.height = '100%';
+            }
+        }, 100); // Small delay to ensure DOM is fully rendered
 
         timeline.on('change', (data) => {
             console.log('Timeline event changed:', data);
