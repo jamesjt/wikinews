@@ -360,7 +360,7 @@ function setupD3Timeline() {
 
     const width = timelineDiv.clientWidth - 40;
     const height = 120;
-    const margin = { top: 20, right: 20, bottom: 30, left: 20 };
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 }; // Adjusted bottom margin to center axis
 
     // Create the SVG container
     const svg = d3.select('#timeline')
@@ -391,9 +391,11 @@ function setupD3Timeline() {
         .ticks(d3.timeYear.every(1))
         .tickFormat(d3.timeFormat('%Y'));
 
+    // Center the axis vertically
+    const axisYPosition = (height - margin.top - margin.bottom) / 2;
     const gX = g.append('g')
         .attr('class', 'axis axis--x')
-        .attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
+        .attr('transform', `translate(0,${axisYPosition})`)
         .call(xAxis);
 
     const eventGroup = g.append('g')
@@ -405,7 +407,12 @@ function setupD3Timeline() {
         .append('circle')
         .attr('class', 'event-circle')
         .attr('cx', d => xScale(d.timestamp))
-        .attr('cy', height / 2 - margin.top)
+        .attr('cy', (d, i) => {
+            // Alternate above and below the axis based on index
+            return i % 2 === 0
+                ? axisYPosition - 20 // Above the axis
+                : axisYPosition + 20; // Below the axis
+        })
         .attr('r', 8)
         .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
         .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
@@ -439,7 +446,12 @@ function setupD3Timeline() {
         .append('text')
         .attr('class', 'event-number')
         .attr('x', d => xScale(d.timestamp))
-        .attr('y', height / 2 - margin.top + 4)
+        .attr('y', (d, i) => {
+            // Match the circle's position, with a slight offset for text alignment
+            return i % 2 === 0
+                ? axisYPosition - 20 + 4 // Above the axis
+                : axisYPosition + 20 + 4; // Below the axis
+        })
         .attr('text-anchor', 'middle')
         .attr('fill', 'white')
         .attr('font-size', '10px')
@@ -447,10 +459,11 @@ function setupD3Timeline() {
         .style('pointer-events', 'none')
         .text(d => d.index + 1);
 
-    // Add zoom behavior with immediate response
+    // Add zoom behavior with increased zoom capability
     const zoom = d3.zoom()
-        .scaleExtent([0.1, 20]) // Allow zooming out to 10% and in to 2000%
+        .scaleExtent([0.1, 50]) // Increased maximum zoom to 5000%
         .translateExtent([[0, 0], [width, height]]) // Limit panning to SVG bounds
+        .wheelDelta((event) => -event.deltaY * 0.002) // Fine-tune zoom sensitivity
         .on('zoom', (event) => {
             const transform = event.transform;
             const newXScale = transform.rescaleX(xScale);
