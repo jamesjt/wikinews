@@ -138,9 +138,9 @@ body {
 .event-count {
     font-size: 12px;
     color: white;
-    background-color: #444;
+    background-color: #858585;
     padding: 2px 5px;
-    border-radius: 3px;
+    border-radius: 10px;
     margin-left: 5px;
 }
 
@@ -168,27 +168,28 @@ body {
 .state-icons {
     display: flex;
     flex-direction: column;
-    margin-right: 10px;
+    margin-right: 5px;
 }
 
 /* Individual state icon */
 .state-icon {
-    width: 20px;
-    height: 20px;
+    width: 10px;
+    height: 1-px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     cursor: pointer;
     background-color: #e0e0e0;
     opacity: 0.5;
     transition: background-color 0.3s, opacity 0.3s;
+    font-size: 8px
 }
 
 /* Active state icon */
 .state-icon.active {
-    background-color: #007bff;
+    background-color: #000000;
     color: white;
     opacity: 1;
 }
@@ -205,7 +206,13 @@ body {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-family: 'PT Sans Narrow', sans-serif !important;
+    color: #979797;
+    font-weight: bold;
 }
+
 
 .event-number-circle {
     display: inline-flex;
