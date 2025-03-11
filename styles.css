@@ -1,20 +1,25 @@
-/* Reset and Base Styles */
+/* styles.css */
+
+/* Reset default margins and padding */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Body styling */
 body {
     font-family: Arial, sans-serif;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
-/* Header */
+/* Header styling */
 #header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     padding: 10px 20px;
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
@@ -32,90 +37,132 @@ body {
 
 .login button {
     padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
 }
 
-/* Timeline Selector */
+/* Timeline selector */
 #timeline-selector {
-    padding: 10px;
-    background-color: #eee;
-    text-align: center;
+    padding: 10px 20px;
+    background-color: #fafafa;
+    border-bottom: 1px solid #ddd;
 }
 
 #timeline-select {
     padding: 5px;
+    font-size: 14px;
 }
 
-/* Timeline */
+/* Timeline overlay */
 #timeline {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    height: 120px;
+    overflow-x: hidden; /* Prevents default scrollbar */
+    overflow-y: hidden;
     background-color: #fff;
-    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+    position: relative;
 }
 
 .timeline-bar {
-    height: 50px;
-    background-color: #f0f0f0;
+    height: 100%;
+    position: relative;
 }
 
-/* Main Content */
+/* Main content */
 #main-content {
     display: flex;
-    height: calc(100vh - 120px);
+    flex: 1;
+    overflow: hidden;
 }
 
 /* Sidebar */
 #sidebar {
-    width: 300px;
+    flex: 0 0 300px;
+    min-width: 100px;
+    max-width: 1000px;
     padding: 20px;
+    background-color: #f9f9f9;
     overflow-y: auto;
-    background-color: #fafafa;
     border-right: 1px solid #ddd;
 }
 
-.decade, .year {
-    margin-bottom: 10px;
+/* Resize handle */
+.resize-handle {
+    width: 5px;
+    height: 100%; /* Ensure it spans the full height */
+    background-color: #ddd;
+    cursor: col-resize;
+    flex-shrink: 0;
+}
+
+/* Right content */
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Sidebar styles */
+.decade {
+    margin-bottom: 15px;
 }
 
 .toggle {
-    cursor: pointer;
     display: flex;
     align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
 .toggle-indicator {
-    width: 12px;
-    height: 12px;
+    width: 6px; /* Reduced by 50% from 12px */
+    height: 6px; /* Reduced by 50% from 12px */
     margin-right: 5px;
-    transition: transform 0.2s;
+    transform: rotate(-90deg); /* Points right when closed */
+    transition: transform 0.2s ease;
 }
 
 .toggle.open .toggle-indicator {
-    transform: rotate(90deg);
+    transform: rotate(0deg); /* Points down when open */
 }
 
 .event-count {
+    font-size: 12px;
+    color: white;
+    background-color: #444;
+    padding: 2px 5px;
+    border-radius: 3px;
     margin-left: 5px;
-    color: #666;
-    font-size: 0.9em;
 }
 
 .decade-list, .year-list {
-    margin-left: 20px;
     display: none;
+    margin-left: 20px;
 }
 
 .decade-list.show, .year-list.show {
     display: block;
 }
 
-.event-item {
+.year {
     margin: 10px 0;
+}
+
+.event-item {
+    margin: 5px 0;
     padding: 10px;
-    border: 1px solid #eee;
-    border-radius: 5px;
     background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 3px;
 }
 
 .event-date {
@@ -128,59 +175,48 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
+    width: 18px; /* Half of the original 24px */
+    height: 18px; /* Half of the original 24px */
+    background-color: rgba(76, 175, 80, 0.7); /* Green with transparency */
+    border: 1px solid #4CAF50; /* Solid green border */
+    color: white;
     border-radius: 50%;
-    background-color: #28a745;
-    color: #fff;
-    font-size: 12px;
+    margin-right: 10px;
+    font-size: 12px; /* Adjusted for smaller size */
     font-weight: bold;
 }
 
 .event-number-circle.has-location {
-    background-color: #007bff;
-}
-
-.event-summary {
-    cursor: pointer;
-    color: #333;
+    background-color: rgba(33, 150, 243, 0.7); /* Blue with transparency */
+    border: 1px solid #2196F3; /* Solid blue border */
 }
 
 .icons-container {
-    margin-left: auto;
     display: flex;
     align-items: center;
-}
-
-.location-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 10px;
-    cursor: pointer;
+    margin-left: auto;
 }
 
 .document-wrapper {
     position: relative;
-    margin-left: 10px;
+    margin-right: 5px;
 }
 
 .document-icon img {
     width: 16px;
     height: 16px;
-    cursor: pointer;
 }
 
 .document-tooltip {
     display: none;
     position: absolute;
-    top: 20px;
-    left: 0;
+    top: 100%;
+    right: 0;
     background-color: #fff;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     padding: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
 }
 
 .document-wrapper:hover .document-tooltip {
@@ -190,7 +226,7 @@ body {
 .doc-entry {
     display: flex;
     align-items: center;
-    margin: 2px 0;
+    margin: 3px 0;
 }
 
 .doc-entry img {
@@ -202,63 +238,70 @@ body {
 .doc-entry a {
     text-decoration: none;
     color: #007bff;
+    font-size: 12px;
 }
 
-.doc-entry a:hover {
-    text-decoration: underline;
+.location-icon {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
-/* Resize Handle */
-.resize-handle {
-    width: 5px;
-    background-color: #ddd;
-    cursor: ew-resize;
+.event-summary {
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
 }
 
-/* Right Content */
-#right-content {
-    flex-grow: 1;
-}
-
-#map {
-    width: 100%;
-    height: 100%;
-}
-
-/* Numbered Marker */
+/* Numbered marker for Leaflet */
 .numbered-marker {
-    background-color: #28a745;
-    border-radius: 50%;
-    color: #fff;
-    font-weight: bold;
-    text-align: center;
-    line-height: 24px;
-}
-
-/* State Icons Container */
-.state-icons {
     display: flex;
     align-items: center;
-    margin-right: 10px;
-}
-
-/* Individual State Icons */
-.state-icon {
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    background-color: rgba(0,0,0,0.1);
+    width: 24px;
+    height: 24px;
+    background-color: #2196F3;
+    color: white;
     border-radius: 50%;
-    margin-right: 5px;
-    color: #666;
     font-size: 12px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    font-weight: bold;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
-.state-icon.active {
-    background-color: #666;
-    color: #fff;
+/* Tooltip styling */
+.dynamic-tooltip {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 12px;
+    color: #333;
+    pointer-events: none;
+}
+
+/* Document link in popups */
+.document-link {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.document-link img {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}
+
+.document-link a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
+}
+
+/* D3 timeline event circles */
+.event-circle {
+    cursor: pointer;
+    transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
 }
