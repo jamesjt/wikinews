@@ -103,6 +103,133 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
+// Declare global variables for D3 elements
+let svg, g, gX, eventGroup, circles, xScale, height, margin;
+
+function setupD3Timeline() {
+    const timelineDiv = document.getElementById('timeline');
+    timelineDiv.innerHTML = ''; // Clear existing content
+
+    height = 120;
+    margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+    // Create SVG with responsive width
+    svg = d3.select('#timeline')
+        .append('svg')
+        .attr('height', height)
+        .attr('width', '100%'); // Fills container width
+
+    g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const minTime = d3.min(events, d => d.timestamp);
+    const maxTime = d3.max(events, d => d.timestamp);
+    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+
+    // Initial xScale with current container width
+    xScale = d3.scaleTime()
+        .domain([new Date(minTime - oneYearInMs), new Date(maxTime + oneYearInMs)])
+        .range([0, timelineDiv.clientWidth - margin.left - margin.right]);
+
+    const xAxis = d3.axisBottom(xScale)
+        .ticks(d3.timeYear.every(1))
+        .tickFormat(d3.timeFormat('%Y'));
+
+    const axisYPosition = (height - margin.top - margin.bottom) / 2;
+    gX = g.append('g')
+        .attr('class', 'axis axis--x')
+        .attr('transform', `translate(0,${axisYPosition})`)
+        .call(xAxis);
+
+    eventGroup = g.append('g')
+        .attr('class', 'event-group');
+
+    circles = eventGroup.selectAll('.event-circle')
+        .data(events)
+        .enter()
+        .append('circle')
+        .attr('class', 'event-circle')
+        .attr('cx', d => xScale(d.timestamp))
+        .attr('cy', (d, i) => (i % 2 === 0 ? axisYPosition - 20 : axisYPosition + 30))
+        .attr('r', 8)
+        .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
+        .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
+        .attr('stroke-width', 2)
+        .on('click', (event, d) => handleEventClick(d))
+        .on('mouseover', function(event, d) {
+            d3.select(this).transition().duration(200).attr('r', 10);
+            d3.select('body').append('div')
+                .attr('class', 'dynamic-tooltip')
+                .style('position', 'absolute')
+                .html(`<b>${d.shortSummary}</b><br>Date: ${d.date}`)
+                .style('left', `${event.pageX + 20}px`)
+                .style('top', `${event.pageY - 50}px`);
+        })
+        .on('mouseout', function() {
+            d3.select(this).transition().duration(200).attr('r', 8);
+            d3.selectAll('.dynamic-tooltip').remove();
+        });
+
+    eventGroup.selectAll('.event-number')
+        .data(events)
+        .enter()
+        .append('text')
+        .attr('class', 'event-number')
+        .attr('x', d => xScale(d.timestamp))
+        .attr('y', (d, i) => (i % 2 === 0 ? axisYPosition - 16 : axisYPosition + 34))
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .style('pointer-events', 'none')
+        .text(d => d.index + 1);
+
+    // Define zoom behavior
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 50])
+        .translateExtent([[0, 0], [timelineDiv.clientWidth - margin.left - margin.right, height - margin.top - margin.bottom]])
+        .wheelDelta((event) => -event.deltaY * 0.002)
+        .on('zoom', (event) => {
+            const transform = event.transform;
+            const newXScale = transform.rescaleX(xScale);
+            gX.call(xAxis.scale(newXScale));
+            circles.attr('cx', d => newXScale(d.timestamp));
+            eventGroup.selectAll('.event-number').attr('x', d => newXScale(d.timestamp));
+        });
+
+    svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
+    window.zoomBehavior = zoom; // Store for updates
+
+    // Double-click to reset zoom
+    svg.on('dblclick.zoom', null);
+    svg.on('dblclick', () => svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity));
+}
+
+// Function to update timeline on resize
+function updateTimeline() {
+    const timelineDiv = document.getElementById('timeline');
+    const width = timelineDiv.clientWidth;
+
+    // Update xScale range
+    xScale.range([0, width - margin.left - margin.right]);
+
+    // Redraw axis and reposition circles
+    gX.call(d3.axisBottom(xScale));
+    circles.attr('cx', d => xScale(d.timestamp));
+    eventGroup.selectAll('.event-number').attr('x', d => xScale(d.timestamp));
+
+    // Update zoom translate extent
+    window.zoomBehavior.translateExtent([[0, 0], [width - margin.left - margin.right, height - margin.top - margin.bottom]]);
+    svg.call(window.zoomBehavior);
+}
+
+// Initial setup and update
+setupD3Timeline();
+updateTimeline();
+
+// Listen for window resize
+window.addEventListener('resize', updateTimeline);
+
 function buildSidebar(events) {
     const groupedEvents = {};
     const datePattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
@@ -264,132 +391,6 @@ function handleLocationClick(event) {
             event.marker.openPopup();
         });
     }
-}
-
-function setupD3Timeline() {
-    const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = '';
-
-    const width = timelineDiv.clientWidth - 40;
-    const height = 120;
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-
-    // Create the SVG container
-    const svg = d3.select('#timeline')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height);
-
-    // Add a transparent background rectangle to capture mouse events
-    svg.append('rect')
-        .attr('class', 'zoom-background')
-        .attr('x', margin.left)
-        .attr('y', 0)
-        .attr('width', width - margin.left - margin.right)
-        .attr('height', height)
-        .attr('fill', 'transparent');
-
-    // Add a group for all other elements
-    const g = svg.append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    const minTime = d3.min(events, d => d.timestamp);
-    const maxTime = d3.max(events, d => d.timestamp);
-
-    // Extend the domain by 1 year (365 days in milliseconds) on both ends
-    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
-    let xScale = d3.scaleTime()
-        .domain([new Date(minTime - oneYearInMs), new Date(maxTime + oneYearInMs)])
-        .range([0, width - margin.left - margin.right]);
-
-    const xAxis = d3.axisBottom(xScale)
-        .ticks(d3.timeYear.every(1))
-        .tickFormat(d3.timeFormat('%Y'));
-
-    // Center the axis vertically
-    const axisYPosition = (height - margin.top - margin.bottom) / 2;
-    const gX = g.append('g')
-        .attr('class', 'axis axis--x')
-        .attr('transform', `translate(0,${axisYPosition})`)
-        .call(xAxis);
-
-    const eventGroup = g.append('g')
-        .attr('class', 'event-group');
-
-    const circles = eventGroup.selectAll('.event-circle')
-        .data(events)
-        .enter()
-        .append('circle')
-        .attr('class', 'event-circle')
-        .attr('cx', d => xScale(d.timestamp))
-        .attr('cy', (d, i) => {
-            return i % 2 === 0
-                ? axisYPosition - 20
-                : axisYPosition + 30;
-        })
-        .attr('r', 8)
-        .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
-        .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
-        .attr('stroke-width', 2)
-        .on('click', (event, d) => {
-            handleEventClick(d);
-        })
-        .on('mouseover', function(event, d) {
-            d3.select(this).transition().duration(200).attr('r', 10);
-            const tooltip = d3.select('body')
-                .append('div')
-                .attr('class', 'dynamic-tooltip')
-                .style('position', 'absolute')
-                .html(`<b>${d.shortSummary}</b><br>Date: ${d.date}`)
-                .style('left', `${event.pageX + 20}px`)
-                .style('top', `${event.pageY - 50}px`);
-        })
-        .on('mouseout', function() {
-            d3.select(this).transition().duration(200).attr('r', 8);
-            d3.selectAll('.dynamic-tooltip').remove();
-        });
-
-    eventGroup.selectAll('.event-number')
-        .data(events)
-        .enter()
-        .append('text')
-        .attr('class', 'event-number')
-        .attr('x', d => xScale(d.timestamp))
-        .attr('y', (d, i) => {
-            return i % 2 === 0
-                ? axisYPosition - 20 + 4
-                : axisYPosition + 30 + 4;
-        })
-        .attr('text-anchor', 'middle')
-        .attr('fill', 'white')
-        .attr('font-size', '10px')
-        .attr('font-weight', 'bold')
-        .style('pointer-events', 'none')
-        .text(d => d.index + 1);
-
-    // Add zoom behavior with extended panning boundaries
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 50])
-        .translateExtent([[xScale(new Date(minTime - oneYearInMs)) - margin.left, 0], [xScale(new Date(maxTime + oneYearInMs)) + margin.right, height]])
-        .wheelDelta((event) => -event.deltaY * 0.002)
-        .on('zoom', (event) => {
-            const transform = event.transform;
-            const newXScale = transform.rescaleX(xScale);
-            gX.call(xAxis.scale(newXScale));
-            circles.attr('cx', d => newXScale(d.timestamp));
-            eventGroup.selectAll('.event-number')
-                .attr('x', d => newXScale(d.timestamp));
-        });
-
-    // Apply zoom to the SVG
-    svg.call(zoom)
-        .call(zoom.transform, d3.zoomIdentity);
-
-    // Optional: Double-click to reset zoom with smooth transition
-    svg.on('dblclick.zoom', null);
-    svg.on('dblclick', () => {
-        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
-    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
