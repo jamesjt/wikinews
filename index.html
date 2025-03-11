@@ -13,7 +13,7 @@
 </head>
 <body>
     <div id="main-content">
-        <header class="debug-header">
+        <header>
             <h1>Interactive Timeline and Map</h1>
             <div class="controls">
                 <label for="war-selector">War in Ukraine:</label>
@@ -26,11 +26,11 @@
                 <button id="view-documents">Documents</button>
             </div>
         </header>
-        <div class="content-area debug-content-area">
-            <div id="sidebar" class="debug-sidebar">
+        <div class="content-area">
+            <div id="sidebar">
                 <div id="event-list"></div>
             </div>
-            <div class="map-container debug-map-container">
+            <div class="map-container">
                 <div id="map"></div>
                 <div id="graph" style="display: none;"></div>
                 <div id="documents" style="display: none;">
@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div id="timeline" class="debug-timeline"></div>
+        <div id="timeline"></div>
     </div>
     <script src="script.js"></script>
 </body>
