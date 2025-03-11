@@ -277,8 +277,11 @@ function setupD3Timeline() {
 
     const minTime = d3.min(events, d => d.timestamp);
     const maxTime = d3.max(events, d => d.timestamp);
+
+    // Extend the domain by 1 year (365 days in milliseconds) on both ends
+    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
     let xScale = d3.scaleTime()
-        .domain([minTime, maxTime])
+        .domain([new Date(minTime - oneYearInMs), new Date(maxTime + oneYearInMs)])
         .range([0, width - margin.left - margin.right]);
 
     const xAxis = d3.axisBottom(xScale)
@@ -302,10 +305,9 @@ function setupD3Timeline() {
         .attr('class', 'event-circle')
         .attr('cx', d => xScale(d.timestamp))
         .attr('cy', (d, i) => {
-            // Alternate above and below the axis based on index
             return i % 2 === 0
-                ? axisYPosition - 20 // Above the axis (unchanged)
-                : axisYPosition + 30; // Below the axis (increased to 30)
+                ? axisYPosition - 20
+                : axisYPosition + 30;
         })
         .attr('r', 8)
         .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
@@ -341,10 +343,9 @@ function setupD3Timeline() {
         .attr('class', 'event-number')
         .attr('x', d => xScale(d.timestamp))
         .attr('y', (d, i) => {
-            // Match the circle's position, with a slight offset for text alignment
             return i % 2 === 0
-                ? axisYPosition - 20 + 4 // Above the axis
-                : axisYPosition + 30 + 4; // Below the axis (increased to 30)
+                ? axisYPosition - 20 + 4
+                : axisYPosition + 30 + 4;
         })
         .attr('text-anchor', 'middle')
         .attr('fill', 'white')
@@ -353,10 +354,10 @@ function setupD3Timeline() {
         .style('pointer-events', 'none')
         .text(d => d.index + 1);
 
-    // Add zoom behavior with increased zoom capability
+    // Add zoom behavior with extended panning boundaries
     const zoom = d3.zoom()
         .scaleExtent([0.1, 50])
-        .translateExtent([[0, 0], [width, height]])
+        .translateExtent([[xScale(new Date(minTime - oneYearInMs)) - margin.left, 0], [xScale(new Date(maxTime + oneYearInMs)) + margin.right, height]])
         .wheelDelta((event) => -event.deltaY * 0.002)
         .on('zoom', (event) => {
             const transform = event.transform;
