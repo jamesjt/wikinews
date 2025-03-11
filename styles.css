@@ -3,14 +3,13 @@ body {
     margin: 0;
     padding: 0;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden; /* Prevent body scroll */
 }
 
 #main-content {
     display: flex;
-    flex: 1;
-    overflow: hidden;
+    flex-direction: column;
+    height: 100vh; /* Ensure it takes full viewport height */
 }
 
 header {
@@ -20,22 +19,45 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .controls {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 10px;
+}
+
+.controls label {
+    margin-right: 5px;
 }
 
 .controls select, .controls button {
     padding: 5px 10px;
     font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.controls select {
+    background-color: #fff;
+    color: #333;
+}
+
+.controls button {
+    background-color: #555;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.controls button:hover {
+    background-color: #777;
 }
 
 .content-area {
     display: flex;
-    flex: 1;
+    flex: 1; /* Take remaining space */
     overflow: hidden;
 }
 
@@ -151,6 +173,7 @@ header {
 .map-container {
     flex: 1;
     position: relative;
+    overflow: hidden;
 }
 
 #map, #graph, #documents {
@@ -166,6 +189,7 @@ header {
     background-color: #fff;
     border-top: 1px solid #ccc;
     overflow: hidden;
+    flex-shrink: 0; /* Prevent timeline from shrinking */
 }
 
 .resize-handle {
@@ -182,4 +206,36 @@ header {
     padding: 5px;
     z-index: 1000;
     max-width: 200px;
+}
+
+/* Node details in graph */
+.node-details {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 12px;
+    max-width: 180px;
+}
+
+/* Debugging styles */
+.debug-header {
+    border: 1px solid red;
+}
+
+.debug-content-area {
+    border: 1px solid blue;
+}
+
+.debug-sidebar {
+    border: 1px solid green;
+}
+
+.debug-map-container {
+    border: 1px solid purple;
+}
+
+.debug-timeline {
+    border: 1px solid orange;
 }
