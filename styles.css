@@ -137,7 +137,10 @@ body {
 
 .event-count {
     font-size: 12px;
-    color: #666;
+    color: white;
+    background-color: #444;
+    padding: 2px 5px;
+    border-radius: 3px;
     margin-left: 5px;
 }
 
@@ -172,14 +175,14 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 12px; /* Half of the original 24px */
-    height: 12px; /* Half of the original 24px */
+    width: 18px; /* Half of the original 24px */
+    height: 18px; /* Half of the original 24px */
     background-color: rgba(76, 175, 80, 0.7); /* Green with transparency */
     border: 1px solid #4CAF50; /* Solid green border */
     color: white;
     border-radius: 50%;
     margin-right: 10px;
-    font-size: 8px; /* Adjusted for smaller size */
+    font-size: 12px; /* Adjusted for smaller size */
     font-weight: bold;
 }
 
