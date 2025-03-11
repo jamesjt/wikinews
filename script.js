@@ -16,9 +16,7 @@ const markers = L.markerClusterGroup({
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
-    maxClusterRadius: 40,
-    // Enable spiderfying on click for better control
-    spiderfyDistanceMultiplier: 1.5 // Increase spiderfy distance to ensure separation
+    maxClusterRadius: 40
 });
 map.addLayer(markers);
 
@@ -261,52 +259,10 @@ function handleEventClick(event) {
 
 function handleLocationClick(event) {
     if (event.marker) {
-        // Set the map view to the marker's location with an increased zoom level
-        const targetZoom = 16; // Increased from 14 to 16 for better cluster separation
-        map.setView(event.marker.getLatLng(), targetZoom);
-
-        // Check if the marker is in a cluster and zoom/spiderfy if necessary
-        const cluster = markers.getVisibleParent(event.marker);
-        if (cluster && !map.getBounds().contains(event.marker.getLatLng())) {
-            console.log('Marker is in a cluster, zooming to show layer...', {
-                markerIndex: event.index + 1,
-                currentZoom: map.getZoom(),
-                targetZoom: targetZoom,
-                boundsContains: map.getBounds().contains(event.marker.getLatLng())
-            });
-            markers.zoomToShowLayer(event.marker, () => {
-                console.log('Zoom completed, checking marker visibility for marker', event.index + 1, {
-                    currentZoom: map.getZoom(),
-                    boundsContains: map.getBounds().contains(event.marker.getLatLng())
-                });
-                // Ensure the marker is visible and open the popup
-                if (map.getBounds().contains(event.marker.getLatLng())) {
-                    console.log('Marker is visible, opening popup for marker', event.index + 1);
-                    event.marker.openPopup();
-                } else {
-                    console.log('Marker still not visible, forcing popup after delay for marker', event.index + 1);
-                    setTimeout(() => {
-                        event.marker.openPopup();
-                        console.log('Forced popup attempt completed for marker', event.index + 1);
-                    }, 1000); // Increased delay to 1000ms
-                }
-            });
-        } else {
-            console.log('Marker is visible or not in a cluster, opening popup directly for marker', event.index + 1);
+        map.setView(event.marker.getLatLng(), 14);
+        markers.zoomToShowLayer(event.marker, () => {
             event.marker.openPopup();
-        }
-
-        // Attempt to force spiderfy if in a cluster (replaced with zoom check)
-        if (cluster) {
-            console.log('Cluster detected, ensuring zoom level is sufficient for spiderfying', {
-                currentZoom: map.getZoom(),
-                requiredZoom: targetZoom
-            });
-            if (map.getZoom() < targetZoom) {
-                map.setZoom(targetZoom, { animate: true });
-            }
-            // Note: _spiderfy() is unreliable; relying on zoomToShowLayer instead
-        }
+        });
     }
 }
 
