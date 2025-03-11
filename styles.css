@@ -59,7 +59,7 @@ body {
 /* Timeline overlay */
 #timeline {
     height: 120px;
-    overflow-x: auto;
+    overflow-x: hidden; /* Prevents default scrollbar */
     overflow-y: hidden;
     background-color: #fff;
     border-bottom: 1px solid #ddd;
