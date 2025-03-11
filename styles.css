@@ -83,7 +83,7 @@ body {
     flex: 0 0 300px;
     min-width: 100px;
     max-width: 1000px;
-    padding: 20px;
+    padding: 10px;
     background-color: #f9f9f9;
     overflow-y: auto;
     border-right: 1px solid #ddd;
@@ -146,7 +146,7 @@ body {
 
 .decade-list, .year-list {
     display: none;
-    margin-left: 20px;
+    margin-left: 10px;
 }
 
 .decade-list.show, .year-list.show {
