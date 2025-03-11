@@ -102,14 +102,15 @@ body {
 }
 
 .toggle-indicator {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
-    transition: transform 0.2s ease;
+    width: 6px;           /* Reduced by 50% from 12px */
+    height: 6px;          /* Reduced by 50% from 12px */
+    margin-right: 5px;    /* Unchanged spacing */
+    transform: rotate(-90deg); /* Points right when closed */
+    transition: transform 0.2s ease; /* Smooth rotation */
 }
 
 .toggle.open .toggle-indicator {
-    transform: rotate(90deg);
+    transform: rotate(0deg); /* Points down when open */
 }
 
 .event-count {
