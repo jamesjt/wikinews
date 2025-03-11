@@ -525,3 +525,14 @@ body {
 /* timelineJS styling */
 .t1-attribution {display:none !important}
 .t1-headline {font-size:18px !important; margin-top:-5px !important; line-height:0px !important;}
+
+
+/* D3 timeline event circles */
+.event-circle {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.event-circle:hover {
+    transform: scale(1.2);
+}
