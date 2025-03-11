@@ -22,8 +22,9 @@ map.addLayer(markers); // Add the cluster group to the map once
 
 let events = [];
 let csvData = null;
-let timelineLoaded = false;
+// let timelineLoaded = false; // Commented out for TimelineJS
 
+/* BEGIN COMMENTED TIMELINEJS CODE
 // Load TimelineJS library
 const timelineScript = document.createElement('script');
 timelineScript.src = 'https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js';
@@ -45,6 +46,7 @@ const timelineCSS = document.createElement('link');
 timelineCSS.rel = 'stylesheet';
 timelineCSS.href = 'https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css';
 document.head.appendChild(timelineCSS);
+END COMMENTED TIMELINEJS CODE */
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -122,12 +124,15 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 console.log('Processed events:', events);
                 buildSidebar(events);
+                /* BEGIN COMMENTED TIMELINEJS CODE
                 if (timelineLoaded) {
                     console.log('TimelineJS already loaded, initializing now');
                     setupTimelineJS(csvData);
                 } else {
                     console.log('Waiting for TimelineJS script to load');
                 }
+                END COMMENTED TIMELINEJS CODE */
+                setupD3Timeline(); // New call to D3 timeline function
             }
         });
     })
@@ -277,6 +282,7 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+/* BEGIN COMMENTED TIMELINEJS CODE
 function setupTimelineJS(csvText) {
     console.log('Setting up TimelineJS with CSV:', csvText.substring(0, 100)); // Log first 100 chars of CSV
     const timelineData = {
@@ -357,6 +363,88 @@ function setupTimelineJS(csvText) {
         console.error('Error initializing TimelineJS:', e);
     }
 }
+END COMMENTED TIMELINEJS CODE */
+
+function setupD3Timeline() {
+    const timelineDiv = document.getElementById('timeline');
+    timelineDiv.innerHTML = ''; // Clear existing content (e.g., .timeline-bar)
+
+    // Dimensions
+    const width = timelineDiv.clientWidth - 40; // Match your CSS padding
+    const height = 120; // Match your #timeline height
+    const margin = { top: 20, right: 20, bottom: 30, left: 20 };
+
+    // Create SVG
+    const svg = d3.select('#timeline')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Time scale
+    const minTime = d3.min(events, d => d.timestamp);
+    const maxTime = d3.max(events, d => d.timestamp);
+    const xScale = d3.scaleTime()
+        .domain([minTime, maxTime])
+        .range([0, width - margin.left - margin.right]);
+
+    // Axis
+    const xAxis = d3.axisBottom(xScale)
+        .ticks(d3.timeYear.every(1)) // Adjust tick frequency as needed
+        .tickFormat(d3.timeFormat('%Y'));
+    svg.append('g')
+        .attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
+        .call(xAxis);
+
+    // Event circles
+    const eventGroup = svg.append('g');
+    eventGroup.selectAll('.event-circle')
+        .data(events)
+        .enter()
+        .append('circle')
+        .attr('class', 'event-circle')
+        .attr('cx', d => xScale(d.timestamp))
+        .attr('cy', height / 2 - margin.top) // Center vertically
+        .attr('r', 8)
+        .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)') // Match your CSS
+        .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
+        .attr('stroke-width', 2)
+        .on('click', (event, d) => {
+            const eventItem = document.querySelector(`.event-item[data-event-index="${d.index}"]`);
+            if (eventItem) expandAndScrollToEvent(eventItem);
+            if (d.marker) {
+                map.setView(d.marker.getLatLng(), 10);
+                d.marker.openPopup();
+            }
+        })
+        .on('mouseover', function(event, d) {
+            const tooltip = d3.select('body')
+                .append('div')
+                .attr('class', 'dynamic-tooltip')
+                .style('position', 'absolute')
+                .html(`<b>${d.shortSummary}</b><br>Date: ${d.date}`)
+                .style('left', `${event.pageX + 10}px`)
+                .style('top', `${event.pageY - 30}px`);
+        })
+        .on('mouseout', function() {
+            d3.selectAll('.dynamic-tooltip').remove();
+        });
+
+    // Add event numbers
+    eventGroup.selectAll('.event-number')
+        .data(events)
+        .enter()
+        .append('text')
+        .attr('class', 'event-number')
+        .attr('x', d => xScale(d.timestamp))
+        .attr('y', height / 2 - margin.top + 4) // Center text in circle
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .text(d => d.index + 1);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
@@ -393,172 +481,172 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// /* BEGIN COMMENTED ORIGINAL TIMELINE CODE
-// // We'll store the initial scale determined after the first population.
-// let baseScale = 1;
-// let firstPopulate = true;
+/* BEGIN COMMENTED ORIGINAL TIMELINE CODE
+// We'll store the initial scale determined after the first population.
+let baseScale = 1;
+let firstPopulate = true;
 
-// // For timeline panning.
-// let isPanning = false;
-// let panStartX = 0;
+// For timeline panning.
+let isPanning = false;
+let panStartX = 0;
 
-// function populateTimeline() {
-//     const timelineBar = document.querySelector('.timeline-bar');
-//     timelineBar.innerHTML = '<div class="timeline-line"></div>';
+function populateTimeline() {
+    const timelineBar = document.querySelector('.timeline-bar');
+    timelineBar.innerHTML = '<div class="timeline-line"></div>';
 
-//     if (!events.length) return;
+    if (!events.length) return;
 
-//     const minTime = Math.min(...events.map(e => e.timestamp));
-//     const maxTime = Math.max(...events.map(e => e.timestamp));
-//     const timeRange = maxTime - minTime;
+    const minTime = Math.min(...events.map(e => e.timestamp));
+    const maxTime = Math.max(...events.map(e => e.timestamp));
+    const timeRange = maxTime - minTime;
 
-//     const timelineContainer = document.getElementById('timeline');
-//     const containerWidth = timelineContainer.clientWidth - 40;
+    const timelineContainer = document.getElementById('timeline');
+    const containerWidth = timelineContainer.clientWidth - 40;
 
-//     events.sort((a, b) => a.timestamp - b.timestamp);
+    events.sort((a, b) => a.timestamp - b.timestamp);
 
-//     let lastPos = 0;
+    let lastPos = 0;
 
-//     const years = events
-//         .map(e => {
-//             const match = e.date.match(/\d{4}/);
-//             return match ? parseInt(match[0], 10) : null;
-//         })
-//         .filter(Boolean);
-//     if (!years.length) return;
+    const years = events
+        .map(e => {
+            const match = e.date.match(/\d{4}/);
+            return match ? parseInt(match[0], 10) : null;
+        })
+        .filter(Boolean);
+    if (!years.length) return;
 
-//     const startYear = Math.min(...years);
-//     const endYear = Math.max(...years);
+    const startYear = Math.min(...years);
+    const endYear = Math.max(...years);
 
-//     for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
-//         const yearTime = new Date(`01/01/${year}`).getTime();
-//         const timeOffset = yearTime - minTime;
-//         const pos = (timeOffset / timeRange) * containerWidth;
-//         const marker = document.createElement('div');
-//         marker.className = 'marker major';
-//         marker.style.left = `${pos}px`;
-//         marker.textContent = year;
-//         timelineBar.appendChild(marker);
-//     }
+    for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
+        const yearTime = new Date(`01/01/${year}`).getTime();
+        const timeOffset = yearTime - minTime;
+        const pos = (timeOffset / timeRange) * containerWidth;
+        const marker = document.createElement('div');
+        marker.className = 'marker major';
+        marker.style.left = `${pos}px`;
+        marker.textContent = year;
+        timelineBar.appendChild(marker);
+    }
 
-//     events.forEach((event, index) => {
-//         const dateStr = event.date;
-//         if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-//         const timeOffset = event.timestamp - minTime;
-//         let pos = (timeOffset / timeRange) * containerWidth;
+    events.forEach((event, index) => {
+        const dateStr = event.date;
+        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
+        const timeOffset = event.timestamp - minTime;
+        let pos = (timeOffset / timeRange) * containerWidth;
 
-//         if (pos - lastPos < 20) {
-//             pos = lastPos + 20;
-//         }
-//         lastPos = pos;
+        if (pos - lastPos < 20) {
+            pos = lastPos + 20;
+        }
+        lastPos = pos;
 
-//         const bubble = document.createElement('div');
-//         bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
-//         bubble.style.left = `${pos}px`;
-//         bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
-//         bubble.addEventListener('click', () => {
-//             const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-//             if (eventItem) expandAndScrollToEvent(eventItem);
-//             if (event.marker) {
-//                 map.setView(event.marker.getLatLng(), 10);
-//                 event.marker.openPopup();
-//             }
-//         });
+        const bubble = document.createElement('div');
+        bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
+        bubble.style.left = `${pos}px`;
+        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
+        bubble.addEventListener('click', () => {
+            const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
+            if (eventItem) expandAndScrollToEvent(eventItem);
+            if (event.marker) {
+                map.setView(event.marker.getLatLng(), 10);
+                event.marker.openPopup();
+            }
+        });
 
-//         bubble.addEventListener('mouseover', (e) => {
-//             let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-//             if (event.documentNames.length && event.documentLinks.length) {
-//                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-//                     tooltipContent += `
-//                         <div class="document-link">
-//                             <img src="icon-document.png" alt="Document">
-//                             <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
-//                         </div>`;
-//                 }
-//             }
+        bubble.addEventListener('mouseover', (e) => {
+            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
+            if (event.documentNames.length && event.documentLinks.length) {
+                for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
+                    tooltipContent += `
+                        <div class="document-link">
+                            <img src="icon-document.png" alt="Document">
+                            <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
+                        </div>`;
+                }
+            }
 
-//             const tooltip = document.createElement('div');
-//             tooltip.className = 'dynamic-tooltip';
-//             tooltip.innerHTML = tooltipContent;
-//             document.body.appendChild(tooltip);
+            const tooltip = document.createElement('div');
+            tooltip.className = 'dynamic-tooltip';
+            tooltip.innerHTML = tooltipContent;
+            document.body.appendChild(tooltip);
 
-//             const mouseX = e.pageX;
-//             const mouseY = e.pageY;
-//             const tooltipWidth = tooltip.offsetWidth;
-//             const tooltipHeight = tooltip.offsetHeight;
+            const mouseX = e.pageX;
+            const mouseY = e.pageY;
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
 
-//             let left = mouseX + 10;
-//             let top = mouseY - tooltipHeight - 10;
+            let left = mouseX + 10;
+            let top = mouseY - tooltipHeight - 10;
 
-//             if (left + tooltipWidth > window.innerWidth) {
-//                 left = mouseX - tooltipWidth - 10;
-//             }
-//             if (top < 0) {
-//                 top = mouseY + 10;
-//             }
-//             if (left < 0) {
-//                 left = 0;
-//             }
+            if (left + tooltipWidth > window.innerWidth) {
+                left = mouseX - tooltipWidth - 10;
+            }
+            if (top < 0) {
+                top = mouseY + 10;
+            }
+            if (left < 0) {
+                left = 0;
+            }
 
-//             tooltip.style.left = `${left}px`;
-//             tooltip.style.top = `${top}px`;
-//         });
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        });
 
-//         bubble.addEventListener('mouseout', () => {
-//             const tooltips = document.querySelectorAll('.dynamic-tooltip');
-//             tooltips.forEach(tooltip => tooltip.remove());
-//         });
+        bubble.addEventListener('mouseout', () => {
+            const tooltips = document.querySelectorAll('.dynamic-tooltip');
+            tooltips.forEach(tooltip => tooltip.remove());
+        });
 
-//         const label = document.createElement('div');
-//         label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-//         label.style.left = `${pos}px`;
-//         const [month, day] = dateStr.split('/').map(Number);
-//         label.textContent = `${month}/${day}`;
+        const label = document.createElement('div');
+        label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
+        label.style.left = `${pos}px`;
+        const [month, day] = dateStr.split('/').map(Number);
+        label.textContent = `${month}/${day}`;
 
-//         timelineBar.appendChild(bubble);
-//         timelineBar.appendChild(label);
-//     });
+        timelineBar.appendChild(bubble);
+        timelineBar.appendChild(label);
+    });
 
-//     const fullWidth = lastPos + 40;
-//     timelineBar.style.width = `${fullWidth}px`;
+    const fullWidth = lastPos + 40;
+    timelineBar.style.width = `${fullWidth}px`;
 
-//     if (firstPopulate) {
-//         if (fullWidth > containerWidth + 1) {
-//             baseScale = containerWidth / fullWidth;
-//         } else {
-//             baseScale = 1;
-//         }
-//         firstPopulate = false;
-//     }
+    if (firstPopulate) {
+        if (fullWidth > containerWidth + 1) {
+            baseScale = containerWidth / fullWidth;
+        } else {
+            baseScale = 1;
+        }
+        firstPopulate = false;
+    }
 
-//     const userScale = 1;
-//     const finalScale = baseScale * userScale;
+    const userScale = 1;
+    const finalScale = baseScale * userScale;
 
-//     timelineBar.style.transformOrigin = 'left center';
-//     timelineBar.style.transform = `scaleX(${finalScale})`;
-// }
+    timelineBar.style.transformOrigin = 'left center';
+    timelineBar.style.transform = `scaleX(${finalScale})`;
+}
 
-// // Add panning to timeline (inside fetch callback)
-// const timeline = document.getElementById('timeline');
-// timeline.addEventListener('mousedown', (e) => {
-//     isPanning = true;
-//     panStartX = e.pageX + timeline.scrollLeft;
-//     e.preventDefault();
-// });
-// timeline.addEventListener('mousemove', (e) => {
-//     if (!isPanning) return;
-//     timeline.scrollLeft = panStartX - e.pageX;
-// });
-// timeline.addEventListener('mouseup', () => {
-//     isPanning = false;
-// });
-// timeline.addEventListener('mouseleave', () => {
-//     isPanning = false;
-// });
+// Add panning to timeline (inside fetch callback)
+const timeline = document.getElementById('timeline');
+timeline.addEventListener('mousedown', (e) => {
+    isPanning = true;
+    panStartX = e.pageX + timeline.scrollLeft;
+    e.preventDefault();
+});
+timeline.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    timeline.scrollLeft = panStartX - e.pageX;
+});
+timeline.addEventListener('mouseup', () => {
+    isPanning = false;
+});
+timeline.addEventListener('mouseleave', () => {
+    isPanning = false;
+});
 
-// // Window resize event (inside fetch callback)
-// window.addEventListener('resize', () => {
-//     map.invalidateSize();
-//     populateTimeline();
-// });
-// END COMMENTED ORIGINAL TIMELINE CODE */
+// Window resize event (inside fetch callback)
+window.addEventListener('resize', () => {
+    map.invalidateSize();
+    populateTimeline();
+});
+END COMMENTED ORIGINAL TIMELINE CODE */
