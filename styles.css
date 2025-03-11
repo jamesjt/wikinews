@@ -89,6 +89,28 @@ body {
     border-right: 1px solid #ddd;
 }
 
+/* Resize handle */
+.resize-handle {
+    width: 5px;
+    height: 100%; /* Ensure it spans the full height */
+    background-color: #ddd;
+    cursor: col-resize;
+    flex-shrink: 0;
+}
+
+/* Right content */
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Sidebar styles */
 .decade {
     margin-bottom: 15px;
 }
@@ -102,11 +124,11 @@ body {
 }
 
 .toggle-indicator {
-    width: 6px;           /* Reduced by 50% from 12px */
-    height: 6px;          /* Reduced by 50% from 12px */
-    margin-right: 5px;    /* Unchanged spacing */
+    width: 6px; /* Reduced by 50% from 12px */
+    height: 6px; /* Reduced by 50% from 12px */
+    margin-right: 5px;
     transform: rotate(-90deg); /* Points right when closed */
-    transition: transform 0.2s ease; /* Smooth rotation */
+    transition: transform 0.2s ease;
 }
 
 .toggle.open .toggle-indicator {
@@ -224,26 +246,6 @@ body {
     font-size: 14px;
     color: #333;
     cursor: pointer;
-}
-
-/* Right content */
-#right-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-#map {
-    flex: 1;
-    min-height: 0;
-}
-
-/* Resize handle */
-.resize-handle {
-    width: 5px;
-    background-color: #ddd;
-    cursor: col-resize;
-    flex-shrink: 0;
 }
 
 /* Numbered marker for Leaflet */
