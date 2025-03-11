@@ -22,31 +22,6 @@ map.addLayer(markers);
 
 let events = [];
 let csvData = null;
-// let timelineLoaded = false; // Commented out for TimelineJS
-
-/* BEGIN COMMENTED TIMELINEJS CODE
-// Load TimelineJS library
-const timelineScript = document.createElement('script');
-timelineScript.src = 'https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js';
-timelineScript.onload = () => {
-    console.log('TimelineJS script loaded');
-    timelineLoaded = true;
-    if (csvData) {
-        console.log('CSV data already available, initializing timeline');
-        setupTimelineJS(csvData);
-    } else {
-        console.log('Waiting for CSV data to initialize timeline');
-    }
-};
-timelineScript.onerror = () => console.error('Failed to load TimelineJS script');
-document.head.appendChild(timelineScript);
-
-// Load TimelineJS CSS
-const timelineCSS = document.createElement('link');
-timelineCSS.rel = 'stylesheet';
-timelineCSS.href = 'https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css';
-document.head.appendChild(timelineCSS);
-END COMMENTED TIMELINEJS CODE */
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -273,94 +248,13 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-/* BEGIN COMMENTED TIMELINEJS CODE
-function setupTimelineJS(csvText) {
-    console.log('Setting up TimelineJS with CSV:', csvText.substring(0, 100));
-    const timelineData = {
-        events: []
-    };
-
-    events.forEach((event, index) => {
-        const [month, day, year] = event.date.split('/').map(num => parseInt(num, 10));
-        let text = `<p>${event.summary}</p>`;
-        if (event.documentNames.length && event.documentLinks.length) {
-            text += '<div>';
-            for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-                text += `<div class="document-link"><a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a></div>`;
-            }
-            text += '</div>';
-        }
-
-        timelineData.events.push({
-            start_date: {
-                month: month.toString(),
-                day: day.toString(),
-                year: year.toString()
-            },
-            text: {
-                headline: event.shortSummary,
-                text: text
-            },
-            unique_id: `event-${index}`
-        });
-    });
-
-    console.log('TimelineJS data:', timelineData);
-
-    if (typeof TL === 'undefined') {
-        console.error('TimelineJS library not loaded yet');
-        return;
-    }
-
-    try {
-        const timeline = new TL.Timeline('timeline', timelineData, {
-            height: 120,
-            marker_height_min: 30,
-            initial_zoom: 1
-        });
-        console.log('TimelineJS initialized');
-
-        setTimeout(() => {
-            const storySlider = document.querySelector('.tl-storyslider');
-            if (storySlider) {
-                storySlider.remove();
-                console.log('Story slider removed from DOM');
-            }
-            const timeNav = document.querySelector('.tl-timenav');
-            if (timeNav) {
-                timeNav.style.height = '100%';
-            }
-        }, 100);
-
-        timeline.on('change', (data) => {
-            console.log('Timeline event changed:', data);
-            const eventId = data.unique_id;
-            if (eventId) {
-                const index = parseInt(eventId.split('-')[1]);
-                const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
-                if (eventItem) {
-                    expandAndScrollToEvent(eventItem);
-                }
-                const event = events[index];
-                if (event && event.marker) {
-                    map.setView(event.marker.getLatLng(), 10);
-                    event.marker.openPopup();
-                }
-            }
-        });
-    } catch (e) {
-        console.error('Error initializing TimelineJS:', e);
-    }
-}
-END COMMENTED TIMELINEJS CODE */
-
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
     timelineDiv.innerHTML = '';
 
     const width = timelineDiv.clientWidth - 40;
     const height = 120;
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 }; // Adjusted bottom margin to center axis
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
     // Create the SVG container
     const svg = d3.select('#timeline')
@@ -410,8 +304,8 @@ function setupD3Timeline() {
         .attr('cy', (d, i) => {
             // Alternate above and below the axis based on index
             return i % 2 === 0
-                ? axisYPosition - 20 // Above the axis
-                : axisYPosition + 20; // Below the axis
+                ? axisYPosition - 20 // Above the axis (unchanged)
+                : axisYPosition + 30; // Below the axis (increased to 30)
         })
         .attr('r', 8)
         .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
@@ -450,7 +344,7 @@ function setupD3Timeline() {
             // Match the circle's position, with a slight offset for text alignment
             return i % 2 === 0
                 ? axisYPosition - 20 + 4 // Above the axis
-                : axisYPosition + 20 + 4; // Below the axis
+                : axisYPosition + 30 + 4; // Below the axis (increased to 30)
         })
         .attr('text-anchor', 'middle')
         .attr('fill', 'white')
@@ -461,9 +355,9 @@ function setupD3Timeline() {
 
     // Add zoom behavior with increased zoom capability
     const zoom = d3.zoom()
-        .scaleExtent([0.1, 50]) // Increased maximum zoom to 5000%
-        .translateExtent([[0, 0], [width, height]]) // Limit panning to SVG bounds
-        .wheelDelta((event) => -event.deltaY * 0.002) // Fine-tune zoom sensitivity
+        .scaleExtent([0.1, 50])
+        .translateExtent([[0, 0], [width, height]])
+        .wheelDelta((event) => -event.deltaY * 0.002)
         .on('zoom', (event) => {
             const transform = event.transform;
             const newXScale = transform.rescaleX(xScale);
@@ -475,10 +369,10 @@ function setupD3Timeline() {
 
     // Apply zoom to the SVG
     svg.call(zoom)
-        .call(zoom.transform, d3.zoomIdentity); // Start at initial scale (1)
+        .call(zoom.transform, d3.zoomIdentity);
 
     // Optional: Double-click to reset zoom with smooth transition
-    svg.on('dblclick.zoom', null); // Disable default double-click zoom
+    svg.on('dblclick.zoom', null);
     svg.on('dblclick', () => {
         svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
     });
@@ -518,173 +412,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-/* BEGIN COMMENTED ORIGINAL TIMELINE CODE
-// We'll store the initial scale determined after the first population.
-let baseScale = 1;
-let firstPopulate = true;
-
-// For timeline panning.
-let isPanning = false;
-let panStartX = 0;
-
-function populateTimeline() {
-    const timelineBar = document.querySelector('.timeline-bar');
-    timelineBar.innerHTML = '<div class="timeline-line"></div>';
-
-    if (!events.length) return;
-
-    const minTime = Math.min(...events.map(e => e.timestamp));
-    const maxTime = Math.max(...events.map(e => e.timestamp));
-    const timeRange = maxTime - minTime;
-
-    const timelineContainer = document.getElementById('timeline');
-    const containerWidth = timelineContainer.clientWidth - 40;
-
-    events.sort((a, b) => a.timestamp - b.timestamp);
-
-    let lastPos = 0;
-
-    const years = events
-        .map(e => {
-            const match = e.date.match(/\d{4}/);
-            return match ? parseInt(match[0], 10) : null;
-        })
-        .filter(Boolean);
-    if (!years.length) return;
-
-    const startYear = Math.min(...years);
-    const endYear = Math.max(...years);
-
-    for (let year = Math.floor(startYear / 10) * 10; year <= endYear; year += 10) {
-        const yearTime = new Date(`01/01/${year}`).getTime();
-        const timeOffset = yearTime - minTime;
-        const pos = (timeOffset / timeRange) * containerWidth;
-        const marker = document.createElement('div');
-        marker.className = 'marker major';
-        marker.style.left = `${pos}px`;
-        marker.textContent = year;
-        timelineBar.appendChild(marker);
-    }
-
-    events.forEach((event, index) => {
-        const dateStr = event.date;
-        if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return;
-        const timeOffset = event.timestamp - minTime;
-        let pos = (timeOffset / timeRange) * containerWidth;
-
-        if (pos - lastPos < 20) {
-            pos = lastPos + 20;
-        }
-        lastPos = pos;
-
-        const bubble = document.createElement('div');
-        bubble.className = `event-bubble ${event.location ? 'has-location' : ''} ${index % 2 === 0 ? 'above' : 'below'}`;
-        bubble.style.left = `${pos}px`;
-        bubble.innerHTML = `<span class="event-number">${index + 1}</span>`;
-        bubble.addEventListener('click', () => {
-            const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-            if (eventItem) expandAndScrollToEvent(eventItem);
-            if (event.marker) {
-                map.setView(event.marker.getLatLng(), 10);
-                event.marker.openPopup();
-            }
-        });
-
-        bubble.addEventListener('mouseover', (e) => {
-            let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-            if (event.documentNames.length && event.documentLinks.length) {
-                for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
-                    tooltipContent += `
-                        <div class="document-link">
-                            <img src="icon-document.png" alt="Document">
-                            <a href="${event.documentLinks[i]}" target="_blank">${event.documentNames[i]}</a>
-                        </div>`;
-                }
-            }
-
-            const tooltip = document.createElement('div');
-            tooltip.className = 'dynamic-tooltip';
-            tooltip.innerHTML = tooltipContent;
-            document.body.appendChild(tooltip);
-
-            const mouseX = e.pageX;
-            const mouseY = e.pageY;
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-
-            let left = mouseX + 10;
-            let top = mouseY - tooltipHeight - 10;
-
-            if (left + tooltipWidth > window.innerWidth) {
-                left = mouseX - tooltipWidth - 10;
-            }
-            if (top < 0) {
-                top = mouseY + 10;
-            }
-            if (left < 0) {
-                left = 0;
-            }
-
-            tooltip.style.left = `${left}px`;
-            tooltip.style.top = `${top}px`;
-        });
-
-        bubble.addEventListener('mouseout', () => {
-            const tooltips = document.querySelectorAll('.dynamic-tooltip');
-            tooltips.forEach(tooltip => tooltip.remove());
-        });
-
-        const label = document.createElement('div');
-        label.className = `event-label ${index % 2 === 0 ? 'above' : 'below'}`;
-        label.style.left = `${pos}px`;
-        const [month, day] = dateStr.split('/').map(Number);
-        label.textContent = `${month}/${day}`;
-
-        timelineBar.appendChild(bubble);
-        timelineBar.appendChild(label);
-    });
-
-    const fullWidth = lastPos + 40;
-    timelineBar.style.width = `${fullWidth}px`;
-
-    if (firstPopulate) {
-        if (fullWidth > containerWidth + 1) {
-            baseScale = containerWidth / fullWidth;
-        } else {
-            baseScale = 1;
-        }
-        firstPopulate = false;
-    }
-
-    const userScale = 1;
-    const finalScale = baseScale * userScale;
-
-    timelineBar.style.transformOrigin = 'left center';
-    timelineBar.style.transform = `scaleX(${finalScale})`;
-}
-
-// Add panning to timeline (inside fetch callback)
-const timeline = document.getElementById('timeline');
-timeline.addEventListener('mousedown', (e) => {
-    isPanning = true;
-    panStartX = e.pageX + timeline.scrollLeft;
-    e.preventDefault();
-});
-timeline.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    timeline.scrollLeft = panStartX - e.pageX;
-});
-timeline.addEventListener('mouseup', () => {
-    isPanning = false;
-});
-timeline.addEventListener('mouseleave', () => {
-    isPanning = false;
-});
-
-// Window resize event (inside fetch callback)
-window.addEventListener('resize', () => {
-    map.invalidateSize();
-    populateTimeline();
-});
-END COMMENTED ORIGINAL TIMELINE CODE */
