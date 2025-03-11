@@ -41,6 +41,16 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
 
+                    // Create an array of valid document pairs
+                    const validDocuments = [];
+                    for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
+                        const name = documentNames[i];
+                        const link = documentLinks[i];
+                        if (name && name.trim() !== '' && link && link.trim() !== '') {
+                            validDocuments.push({ name, link });
+                        }
+                    }
+
                     let location = null;
                     let marker = null;
                     if (locationStr) {
@@ -57,15 +67,16 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
+                            // Build popup content, adding document links only if validDocuments exist
                             let popupContent = `<b>${shortSummary}</b><br>Date: ${dateStr}`;
-                            if (documentNames.length && documentLinks.length) {
-                                for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
+                            if (validDocuments.length > 0) {
+                                validDocuments.forEach(doc => {
                                     popupContent += `
                                         <div class="document-link">
                                             <img src="icon-document.png" alt="Document">
-                                            <a href="${documentLinks[i]}" target="_blank">${documentNames[i]}</a>
+                                            <a href="${doc.link}" target="_blank">${doc.name}</a>
                                         </div>`;
-                                }
+                                });
                             }
 
                             marker = L.marker(location, { icon: numberedIcon })
