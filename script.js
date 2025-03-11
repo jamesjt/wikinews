@@ -439,6 +439,7 @@ function setupD3Timeline() {
         .attr('fill', 'white')
         .attr('font-size', '10px')
         .attr('font-weight', 'bold')
+        .style('pointer-events', 'none') // Prevent text from blocking circle events
         .text(d => d.index + 1);
 }
 
@@ -551,7 +552,7 @@ function populateTimeline() {
 
         bubble.addEventListener('mouseover', (e) => {
             let tooltipContent = `<b>${event.shortSummary}</b><br>Date: ${dateStr}`;
-            if (event.documentNames.length && documentLinks.length) {
+            if (event.documentNames.length && event.documentLinks.length) {
                 for (let i = 0; i < Math.min(event.documentNames.length, event.documentLinks.length); i++) {
                     tooltipContent += `
                         <div class="document-link">
