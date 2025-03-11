@@ -13,12 +13,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Replace markers array with MarkerClusterGroup
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true, // Spiderfy markers at the same coordinates when zoomed in fully
-    showCoverageOnHover: false, // Disable polygon overlay on hover
-    zoomToBoundsOnClick: true, // Zoom into cluster on click unless at max zoom
-    maxClusterRadius: 40 // Adjust clustering radius (pixels)
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    maxClusterRadius: 40
 });
-map.addLayer(markers); // Add the cluster group to the map once
+map.addLayer(markers);
 
 let events = [];
 let csvData = null;
@@ -101,7 +101,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 if (eventItem) expandAndScrollToEvent(eventItem);
                             });
 
-                            // Add marker to the cluster group instead of directly to the map
                             markers.addLayer(marker);
                         }
                     }
@@ -124,15 +123,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                 console.log('Processed events:', events);
                 buildSidebar(events);
-                /* BEGIN COMMENTED TIMELINEJS CODE
-                if (timelineLoaded) {
-                    console.log('TimelineJS already loaded, initializing now');
-                    setupTimelineJS(csvData);
-                } else {
-                    console.log('Waiting for CSV data to initialize timeline');
-                }
-                END COMMENTED TIMELINEJS CODE */
-                setupD3Timeline(); // New call to D3 timeline function
+                setupD3Timeline();
             }
         });
     })
@@ -284,7 +275,7 @@ function expandAndScrollToEvent(eventItem) {
 
 /* BEGIN COMMENTED TIMELINEJS CODE
 function setupTimelineJS(csvText) {
-    console.log('Setting up TimelineJS with CSV:', csvText.substring(0, 100)); // Log first 100 chars of CSV
+    console.log('Setting up TimelineJS with CSV:', csvText.substring(0, 100));
     const timelineData = {
         events: []
     };
@@ -329,19 +320,17 @@ function setupTimelineJS(csvText) {
         });
         console.log('TimelineJS initialized');
 
-        // Remove the slider section after initialization
         setTimeout(() => {
             const storySlider = document.querySelector('.tl-storyslider');
             if (storySlider) {
                 storySlider.remove();
                 console.log('Story slider removed from DOM');
             }
-            // Adjust the timenav height to fill the container
             const timeNav = document.querySelector('.tl-timenav');
             if (timeNav) {
                 timeNav.style.height = '100%';
             }
-        }, 100); // Small delay to ensure DOM is fully rendered
+        }, 100);
 
         timeline.on('change', (data) => {
             console.log('Timeline event changed:', data);
@@ -382,18 +371,22 @@ function setupD3Timeline() {
 
     const minTime = d3.min(events, d => d.timestamp);
     const maxTime = d3.max(events, d => d.timestamp);
-    const xScale = d3.scaleTime()
+    let xScale = d3.scaleTime()
         .domain([minTime, maxTime])
         .range([0, width - margin.left - margin.right]);
 
     const xAxis = d3.axisBottom(xScale)
         .ticks(d3.timeYear.every(1))
         .tickFormat(d3.timeFormat('%Y'));
-    svg.append('g')
+
+    const gX = svg.append('g')
+        .attr('class', 'axis axis--x')
         .attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
         .call(xAxis);
 
-    const eventGroup = svg.append('g');
+    const eventGroup = svg.append('g')
+        .attr('class', 'event-group');
+
     const circles = eventGroup.selectAll('.event-circle')
         .data(events)
         .enter()
@@ -414,7 +407,7 @@ function setupD3Timeline() {
             }
         })
         .on('mouseover', function(event, d) {
-            d3.select(this).transition().duration(200).attr('r', 10); // Scale up
+            d3.select(this).transition().duration(200).attr('r', 10);
             const tooltip = d3.select('body')
                 .append('div')
                 .attr('class', 'dynamic-tooltip')
@@ -424,7 +417,7 @@ function setupD3Timeline() {
                 .style('top', `${event.pageY - 50}px`);
         })
         .on('mouseout', function() {
-            d3.select(this).transition().duration(200).attr('r', 8); // Scale back
+            d3.select(this).transition().duration(200).attr('r', 8);
             d3.selectAll('.dynamic-tooltip').remove();
         });
 
@@ -439,8 +432,29 @@ function setupD3Timeline() {
         .attr('fill', 'white')
         .attr('font-size', '10px')
         .attr('font-weight', 'bold')
-        .style('pointer-events', 'none') // Prevent text from blocking circle events
+        .style('pointer-events', 'none')
         .text(d => d.index + 1);
+
+    // Add zoom behavior
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 10]) // Minimum and maximum zoom levels
+        .on('zoom', (event) => {
+            const transform = event.transform;
+            const newXScale = transform.rescaleX(xScale);
+            gX.call(xAxis.scale(newXScale));
+            circles.attr('cx', d => newXScale(d.timestamp));
+            eventGroup.selectAll('.event-number')
+                .attr('x', d => newXScale(d.timestamp));
+        });
+
+    // Apply zoom to the SVG
+    svg.call(zoom);
+
+    // Optional: Double-click to reset zoom
+    svg.on('dblclick.zoom', null); // Disable default double-click zoom
+    svg.on('dblclick', () => {
+        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
