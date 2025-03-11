@@ -362,11 +362,23 @@ function setupD3Timeline() {
     const height = 120;
     const margin = { top: 20, right: 20, bottom: 30, left: 20 };
 
+    // Create the SVG container
     const svg = d3.select('#timeline')
         .append('svg')
         .attr('width', width)
+        .attr('height', height);
+
+    // Add a transparent background rectangle to capture mouse events
+    svg.append('rect')
+        .attr('class', 'zoom-background')
+        .attr('x', margin.left)
+        .attr('y', 0)
+        .attr('width', width - margin.left - margin.right)
         .attr('height', height)
-        .append('g')
+        .attr('fill', 'transparent');
+
+    // Add a group for all other elements
+    const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const minTime = d3.min(events, d => d.timestamp);
@@ -379,12 +391,12 @@ function setupD3Timeline() {
         .ticks(d3.timeYear.every(1))
         .tickFormat(d3.timeFormat('%Y'));
 
-    const gX = svg.append('g')
+    const gX = g.append('g')
         .attr('class', 'axis axis--x')
         .attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
         .call(xAxis);
 
-    const eventGroup = svg.append('g')
+    const eventGroup = g.append('g')
         .attr('class', 'event-group');
 
     const circles = eventGroup.selectAll('.event-circle')
