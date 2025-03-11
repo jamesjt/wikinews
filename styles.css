@@ -1,24 +1,28 @@
 /* styles.css */
 
-body {
+/* Reset default margins and padding */
+* {
     margin: 0;
-    font-family: Arial, sans-serif;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
 }
 
+/* Body styling */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header styling */
 #header {
-    height: 60px;
-    background: #f5f5f5; /* Slightly off-white */
-    color: #333; /* Darker text for contrast */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    position: static;
-    flex-shrink: 0;
-    border-bottom: 1px solid #ccc; /* Slightly darker grey border */
+    padding: 10px 20px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
 }
 
 .site-icon img {
@@ -26,400 +30,187 @@ body {
 }
 
 .menu a {
-    color: #333; /* Match text color to header */
     text-decoration: none;
-    margin: 0 15px;
-}
-
-.menu a:hover {
-    text-decoration: underline;
+    color: #333;
+    font-weight: bold;
 }
 
 .login button {
-    background: #555;
+    padding: 5px 10px;
+    background-color: #007bff;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
 }
 
-.login button:hover {
-    background: #777;
-}
-
-/* Timeline selector container */
+/* Timeline selector */
 #timeline-selector {
-    background: rgba(248, 248, 248, 1); /* Matches timeline background */
-    padding-top: 10px;
-    display: flex;
-    justify-content: center; /* Center the select horizontally */
-    flex-shrink: 0; /* Prevent shrinking */
+    padding: 10px 20px;
+    background-color: #fafafa;
+    border-bottom: 1px solid #ddd;
 }
 
-/* Timeline selector styling */
 #timeline-select {
-    padding: 4px 12px;
+    padding: 5px;
     font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    min-width: 150px; /* Ensure it doesn't shrink too much */
 }
 
-#timeline-select:hover {
-    border-color: #999;
-}
-
-#timeline-select:focus {
-    outline: none;
-    border-color: #666;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-}
-
-/* Timeline styling */
+/* Timeline overlay */
 #timeline {
     height: 120px;
-    background: rgba(248, 248, 248, 0.9); /* Slightly transparent background */
     overflow-x: auto;
     overflow-y: hidden;
-    white-space: nowrap;
-    padding: 10px 20px;
-    pointer-events: auto; /* Allow interaction with timeline */
-    flex-shrink: 0; /* Prevent timeline from shrinking */
-}
-
-/* Ensure timeline content is not clipped by overflow */
-.timeline-bar {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
     position: relative;
+}
+
+.timeline-bar {
     height: 100%;
-    display: inline-block;
-    overflow: visible; /* Ensure bubbles and tooltips are not clipped */
+    position: relative;
 }
 
-.timeline-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #666;
-    transform: translateY(-50%);
-}
-
+/* Main content */
 #main-content {
-    flex: 1;
     display: flex;
+    flex: 1;
     overflow: hidden;
 }
 
+/* Sidebar */
 #sidebar {
-    flex: 0 0 20%; /* Initial width, can be overridden by JS */
-    background: #f9f9f9;
-    padding: 15px;
+    flex: 0 0 300px;
+    min-width: 200px;
+    max-width: 500px;
+    padding: 20px;
+    background-color: #f9f9f9;
     overflow-y: auto;
-    height: calc(100vh - 210px); /* Adjust for header + selector + timeline height */
-    min-width: 150px; /* Minimum width for usability */
-    max-width: 50%; /* Maximum width to prevent over-expansion */
+    border-right: 1px solid #ddd;
 }
 
-#right-content {
-    flex: 1;
+.decade {
+    margin-bottom: 15px;
+}
+
+.toggle {
     display: flex;
-    flex-direction: column;
-}
-
-#map {
-    flex: 1;
-    min-height: 0; /* Prevents overflow */
-}
-
-/* Move Leaflet zoom controls to bottom right */
-.leaflet-control-zoom {
-    position: absolute !important;
-    bottom: 10px !important;
-    right: 10px !important;
-    left: auto !important;
-    top: auto !important;
-}
-
-/* Ensure Leaflet controls (like zoom buttons) are above other elements */
-.leaflet-control {
-    z-index: 2001; /* Above other elements */
-}
-
-/* The bubble used to mark timeline events */
-.event-bubble {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: rgba(76, 175, 80, 0.7); /* Green with 70% opacity */
-    border: 2px solid #4CAF50; /* Solid green border */
-    border-radius: 50%;
+    align-items: center;
     cursor: pointer;
-    transition: transform 0.2s ease;
-    transform: translateX(-50%);
-    z-index: 2002; /* Above timeline and map tiles */
-}
-
-.event-bubble.has-location {
-    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
-    border: 2px solid #2196F3; /* Solid blue border */
-}
-
-.event-bubble.above {
-    top: 30px; /* Pushed up from center */
-}
-
-.event-bubble.below {
-    bottom: 30px; /* Pushed down from center */
-}
-
-.event-bubble:hover {
-    transform: translateX(-50%) scale(1.2);
-}
-
-.event-number {
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* Dynamically created tooltip styling */
-.dynamic-tooltip {
-    position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 6px;
-    font-size: 12px;
-    line-height: 1.4;
-    border-radius: 3px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
-    z-index: 2003; /* On top of event-bubble */
-    pointer-events: none; /* Prevent tooltip from interfering with mouse events */
-}
-
-/* The small date label for each timeline event bubble */
-.event-label {
-    position: absolute;
-    font-size: 10px;
-    color: #333;
-    text-align: center;
-    transform: translateX(-50%);
-    padding: 2px 4px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 3px;
-}
-
-.event-label.above {
-    top: 10px;
-    left: 50%;
-}
-
-.event-label.below {
-    bottom: 10px;
-    left: 50%;
-}
-
-.marker {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 12px;
-    color: #555;
-    background: #f8f8f8; /* same as timeline background */
-    border: 1px solid #000; /* black border */
-    padding: 0 4px;
-    border-radius: 3px;
-}
-
-.marker.major {
-    font-weight: bold;
-    font-size: 14px;
-}
-
-/* Remove zoom-btn styles since buttons are removed */
-.zoom-btn {
-    display: none; /* Hide the buttons */
-}
-
-/* Leaflet’s numbered markers on the map */
-.numbered-marker {
-    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
-    border: 2px solid #2196F3; /* Solid blue border */
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    color: white;
-    text-align: center;
-    line-height: 24px;
-    font-size: 14px;
-    font-weight: bold;
-    border: 2px solid #fff; /* White border on top of blue */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.resize-handle {
-    width: 5px;
-    background: #ccc;
-    cursor: col-resize;
-    flex-shrink: 0; /* Prevent handle from shrinking */
-}
-
-.resize-handle:hover {
-    background: #aaa;
-}
-
-#sidebar h2 {
-    font-size: 1.2em;
-    margin-top: 0;
-}
-
-.story-section {
-    margin-bottom: 10px;
-}
-
-.story-title {
     font-weight: bold;
     margin-bottom: 5px;
 }
 
-/* Decade/Year toggles in sidebar */
-#event-list .decade {
-    margin-bottom: 8px;
-    background-color: #f0f0f0;
-    padding: 5px;
-}
-
-#event-list .decade-list {
-    display: none;
-    margin-left: 10px;
-}
-
-#event-list .year {
-    margin-bottom: 8px;
-    background-color: #fafafa;
-    padding: 5px;
-}
-
-#event-list .year-list {
-    display: none;
-    margin-left: 10px;
-}
-
-#event-list .show {
-    display: block;
-}
-
-.toggle {
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-}
-
 .toggle-indicator {
-    width: 8px;
-    height: 8px;
-    margin-right: 8px;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
     transition: transform 0.2s ease;
 }
 
-.toggle .toggle-indicator {
-    transform: rotate(-90deg);
-}
-
-.toggle.open {
-    background-color: #d3d3d3;
-    color: #666;
-}
-
 .toggle.open .toggle-indicator {
-    transform: rotate(0deg);
+    transform: rotate(90deg);
 }
 
 .event-count {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: 20px;
-    height: 20px;
+    font-size: 12px;
+    color: #666;
     margin-left: 5px;
-    background-color: #d3d3d3;
-    border-radius: 50%;
-    font-size: 14px;
 }
 
-.toggle.open .event-count {
-    color: #666;
+.decade-list, .year-list {
+    display: none;
+    margin-left: 20px;
+}
+
+.decade-list.show, .year-list.show {
+    display: block;
+}
+
+.year {
+    margin: 10px 0;
 }
 
 .event-item {
-    padding: 10px 0; /* Increased top/bottom padding from 5px to 10px */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-/* Add top border to event-items except the first one in a year-list */
-.year-list .event-item:not(:first-child) {
-    border-top: 1px solid #ddd; /* Light, elegant border */
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 3px;
 }
 
 .event-date {
-    font-weight: bold;
-    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    width: 100%;
-    position: relative;
-    font-family: 'PT Sans Narrow', sans-serif;
-    text-transform: uppercase;
-
+    margin-bottom: 5px;
 }
 
 .event-number-circle {
-    width: 20px;
-    height: 20px;
-    background: rgba(76, 175, 80, 0.7); /* Green with 70% opacity */
-    border: 2px solid #4CAF50; /* Solid green border */
-    border-radius: 50%;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 3px;
-    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    margin-right: 10px;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .event-number-circle.has-location {
-    background: rgba(33, 150, 243, 0.7); /* Blue with 70% opacity */
-    border: 2px solid #2196F3; /* Solid blue border */
+    background-color: #2196F3;
 }
 
 .icons-container {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-left: auto;
 }
 
-.event-summary {
-    cursor: pointer;
-    font-family: 'PT Serif', serif;
+.document-wrapper {
+    position: relative;
+    margin-right: 5px;
 }
 
-.event-summary:hover {
-    text-decoration: underline;
+.document-icon img {
+    width: 16px;
+    height: 16px;
+}
+
+.document-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.document-wrapper:hover .document-tooltip {
+    display: block;
+}
+
+.doc-entry {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+}
+
+.doc-entry img {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}
+
+.doc-entry a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
 }
 
 .location-icon {
@@ -428,111 +219,81 @@ body {
     cursor: pointer;
 }
 
-.location-icon:hover {
-    opacity: 0.7;
-}
-
-.document-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-.document-icon {
-    width: 16px;
-    height: 16px;
+.event-summary {
+    font-size: 14px;
+    color: #333;
     cursor: pointer;
 }
 
-.document-icon img {
-    width: 100%;
-    height: 100%;
+/* Right content */
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.document-wrapper:hover .document-tooltip {
-    display: block;
+#map {
+    flex: 1;
+    min-height: 0;
 }
 
-.document-tooltip {
-    display: none;
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-100%);
-    max-width: 300px;
-    width: max-content;
-    background-color: white;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    z-index: 2000;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+/* Resize handle */
+.resize-handle {
+    width: 5px;
+    background-color: #ddd;
+    cursor: col-resize;
+    flex-shrink: 0;
 }
 
-.document-tooltip .doc-entry {
+/* Numbered marker for Leaflet */
+.numbered-marker {
     display: flex;
     align-items: center;
-    margin-bottom: 4px;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #2196F3;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
-.document-tooltip .doc-entry:last-child {
-    margin-bottom: 0;
+/* Tooltip styling */
+.dynamic-tooltip {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 12px;
+    color: #333;
+    pointer-events: none;
 }
 
-.document-tooltip img {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-}
-
-.document-tooltip a {
-    color: #1a73e8;
-    text-decoration: none;
-}
-
-.document-tooltip a:hover {
-    text-decoration: underline;
-}
-
-.event-item:hover {
-    background-color: #e0e0e0;
-}
-
-.leaflet-popup-content-wrapper {
-    font-size: 14px;
-}
-
+/* Document link in popups */
 .document-link {
     display: flex;
     align-items: center;
-    margin-top: 4px;
+    margin: 5px 0;
 }
 
 .document-link img {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
 }
 
 .document-link a {
-    color: #1a73e8;
     text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
 }
-
-.document-link a:hover {
-    text-decoration: underline;
-}
-
-/* timelineJS styling */
-.t1-attribution {display:none !important}
-.t1-headline {font-size:18px !important; margin-top:-5px !important; line-height:0px !important;}
-
 
 /* D3 timeline event circles */
 .event-circle {
     cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.event-circle:hover {
-    transform: scale(1.2);
+    transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
 }
