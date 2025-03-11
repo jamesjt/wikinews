@@ -157,8 +157,44 @@ body {
     margin: 10px 0;
 }
 
-.event-item {
+/* Event container to hold state icons and event item */
+.event-container {
+    display: flex;
+    align-items: flex-start;
     margin: 5px 0;
+}
+
+/* State icons container */
+.state-icons {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+}
+
+/* Individual state icon */
+.state-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+    cursor: pointer;
+    background-color: #e0e0e0;
+    opacity: 0.5;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+/* Active state icon */
+.state-icon.active {
+    background-color: #007bff;
+    color: white;
+    opacity: 1;
+}
+
+.event-item {
+    flex: 1;
     padding: 10px;
     background-color: #fff;
     border: 1px solid #eee;
