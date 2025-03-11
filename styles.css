@@ -1,119 +1,162 @@
-body {
-    font-family: Arial, sans-serif;
+/* styles.css */
+
+/* Reset default margins and padding */
+* {
     margin: 0;
     padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    box-sizing: border-box;
 }
 
+/* Body styling */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header styling */
+#header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.site-icon img {
+    vertical-align: middle;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.login button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+/* Timeline selector */
+#timeline-selector {
+    padding: 10px 20px;
+    background-color: #fafafa;
+    border-bottom: 1px solid #ddd;
+}
+
+#timeline-select {
+    padding: 5px;
+    font-size: 14px;
+}
+
+/* Timeline overlay */
+#timeline {
+    height: 120px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+.timeline-bar {
+    height: 100%;
+    position: relative;
+}
+
+/* Main content */
 #main-content {
     display: flex;
     flex: 1;
     overflow: hidden;
 }
 
-header {
-    background-color: #333;
-    color: white;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.controls select {
-    padding: 5px 10px;
-    font-size: 14px;
-}
-
-.content-area {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
+/* Sidebar */
 #sidebar {
-    width: 300px;
-    min-width: 200px;
-    max-width: 400px;
-    background-color: #f4f4f4;
-    overflow-y: auto;
-    border-right: 1px solid #ccc;
-    padding: 10px;
     flex: 0 0 300px;
+    min-width: 200px;
+    max-width: 500px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+    border-right: 1px solid #ddd;
 }
 
-#event-list .decade {
-    margin-bottom: 10px;
+.decade {
+    margin-bottom: 15px;
 }
 
-#event-list .toggle {
+.toggle {
+    display: flex;
+    align-items: center;
     cursor: pointer;
     font-weight: bold;
-    padding: 5px;
-    background-color: #ddd;
-    display: block;
+    margin-bottom: 5px;
 }
 
-/* Default state: arrow points right (closed) */
 .toggle-indicator {
-    width: 16px;
-    height: 16px;
-    transform: rotate(-90deg) scale(0.5); /* Point right and scale down 50% */
-    transition: transform 0.3s ease; /* Smooth transition for rotation */
-    vertical-align: middle;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    transition: transform 0.2s ease;
 }
 
-/* Open state: arrow points down */
-#event-list .toggle.open .toggle-indicator {
-    transform: rotate(0deg) scale(0.5); /* Point down and maintain scale */
+.toggle.open .toggle-indicator {
+    transform: rotate(90deg);
 }
 
-#event-list .decade-list, #event-list .year-list {
+.event-count {
+    font-size: 12px;
+    color: #666;
+    margin-left: 5px;
+}
+
+.decade-list, .year-list {
     display: none;
-}
-
-#event-list .decade-list.show, #event-list .year-list.show {
-    display: block;
-}
-
-#event-list .year {
     margin-left: 20px;
 }
 
-.event-item {
-    padding: 5px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
+.decade-list.show, .year-list.show {
+    display: block;
 }
 
-.event-item:hover {
-    background-color: #e0e0e0;
+.year {
+    margin: 10px 0;
+}
+
+.event-item {
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 3px;
 }
 
 .event-date {
     display: flex;
     align-items: center;
-    gap: 10px;
+    margin-bottom: 5px;
 }
 
 .event-number-circle {
-    width: 20px;
-    height: 20px;
-    background-color: #4CAF50;
-    border-radius: 50%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #4CAF50;
     color: white;
+    border-radius: 50%;
+    margin-right: 10px;
     font-size: 12px;
+    font-weight: bold;
 }
 
 .event-number-circle.has-location {
@@ -122,34 +165,52 @@ header {
 
 .icons-container {
     display: flex;
-    gap: 5px;
+    align-items: center;
+    margin-left: auto;
 }
 
 .document-wrapper {
     position: relative;
+    margin-right: 5px;
 }
 
 .document-icon img {
     width: 16px;
     height: 16px;
-    cursor: pointer;
 }
 
 .document-tooltip {
     display: none;
     position: absolute;
-    background-color: white;
-    border: 1px solid #ccc;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
     padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
-    max-width: 200px;
-    top: -100%;
-    left: 50%;
-    transform: translateX(-50%);
 }
 
 .document-wrapper:hover .document-tooltip {
     display: block;
+}
+
+.doc-entry {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+}
+
+.doc-entry img {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}
+
+.doc-entry a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
 }
 
 .location-icon {
@@ -158,29 +219,81 @@ header {
     cursor: pointer;
 }
 
+.event-summary {
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+/* Right content */
+#right-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 #map {
     flex: 1;
+    min-height: 0;
 }
 
-#timeline {
-    height: 120px;
-    background-color: #fff;
-    border-top: 1px solid #ccc;
-    overflow: hidden;
-}
-
+/* Resize handle */
 .resize-handle {
     width: 5px;
-    background-color: #ccc;
+    background-color: #ddd;
     cursor: col-resize;
-    height: 100%;
+    flex-shrink: 0;
 }
 
+/* Numbered marker for Leaflet */
+.numbered-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #2196F3;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+/* Tooltip styling */
 .dynamic-tooltip {
-    position: absolute;
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 5px;
-    z-index: 1000;
-    max-width: 200px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 12px;
+    color: #333;
+    pointer-events: none;
+}
+
+/* Document link in popups */
+.document-link {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.document-link img {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}
+
+.document-link a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
+}
+
+/* D3 timeline event circles */
+.event-circle {
+    cursor: pointer;
+    transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
 }
