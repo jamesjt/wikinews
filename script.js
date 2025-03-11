@@ -72,8 +72,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 .bindPopup(popupContent);
 
                             marker.on('click', () => {
-                                const eventItem = document.querySelector(`.event-item[data-event-index="${index}"]`);
-                                if (eventItem) expandAndScrollToEvent(eventItem);
+                                marker.openPopup();
                             });
 
                             markers.addLayer(marker);
@@ -206,10 +205,12 @@ function buildSidebar(events) {
                 });
                 if (event.location) {
                     eventItem.querySelector('.location-icon').addEventListener('click', () => {
-                        map.setView(event.marker.getLatLng(), 10);
-                        event.marker.openPopup();
+                        handleLocationClick(event);
                     });
                 }
+                eventItem.addEventListener('click', () => {
+                    handleEventClick(event);
+                });
                 eventDiv.appendChild(eventItem);
             });
             yearSection.appendChild(eventDiv);
@@ -246,6 +247,34 @@ function expandAndScrollToEvent(eventItem) {
         yearToggle.classList.add('open');
     }
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function handleEventClick(event) {
+    const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
+    if (eventItem) expandAndScrollToEvent(eventItem);
+    if (event.marker) {
+        handleLocationClick(event);
+    }
+}
+
+function handleLocationClick(event) {
+    if (event.marker) {
+        // Set the map view to the marker's location
+        map.setView(event.marker.getLatLng(), 10);
+
+        // Check if the marker is in a cluster and zoom/spiderfy if necessary
+        const cluster = markers.getVisibleParent(event.marker);
+        if (cluster && !map.getBounds().contains(event.marker.getLatLng())) {
+            // If the marker is part of a cluster and not visible, zoom to the cluster bounds
+            markers.zoomToShowLayer(event.marker, () => {
+                // After zooming, open the popup
+                event.marker.openPopup();
+            });
+        } else {
+            // If the marker is visible or not in a cluster, open the popup directly
+            event.marker.openPopup();
+        }
+    }
 }
 
 function setupD3Timeline() {
@@ -314,12 +343,7 @@ function setupD3Timeline() {
         .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
         .attr('stroke-width', 2)
         .on('click', (event, d) => {
-            const eventItem = document.querySelector(`.event-item[data-event-index="${d.index}"]`);
-            if (eventItem) expandAndScrollToEvent(eventItem);
-            if (d.marker) {
-                map.setView(d.marker.getLatLng(), 10);
-                d.marker.openPopup();
-            }
+            handleEventClick(d);
         })
         .on('mouseover', function(event, d) {
             d3.select(this).transition().duration(200).attr('r', 10);
