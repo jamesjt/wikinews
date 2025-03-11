@@ -259,20 +259,36 @@ function handleEventClick(event) {
 
 function handleLocationClick(event) {
     if (event.marker) {
-        // Set the map view to the marker's location
-        map.setView(event.marker.getLatLng(), 10);
+        // Set the map view to the marker's location with a higher zoom level
+        map.setView(event.marker.getLatLng(), 14); // Increased from 10 to 14
 
         // Check if the marker is in a cluster and zoom/spiderfy if necessary
         const cluster = markers.getVisibleParent(event.marker);
         if (cluster && !map.getBounds().contains(event.marker.getLatLng())) {
-            // If the marker is part of a cluster and not visible, zoom to the cluster bounds
+            console.log('Marker is in a cluster, zooming to show layer...');
             markers.zoomToShowLayer(event.marker, () => {
-                // After zooming, open the popup
-                event.marker.openPopup();
+                console.log('Zoom completed, attempting to open popup for marker', event.index + 1);
+                // Ensure the marker is visible and open the popup
+                if (map.getBounds().contains(event.marker.getLatLng())) {
+                    event.marker.openPopup();
+                } else {
+                    console.log('Marker still not visible, forcing popup after delay');
+                    setTimeout(() => event.marker.openPopup(), 500); // Fallback delay
+                }
             });
         } else {
-            // If the marker is visible or not in a cluster, open the popup directly
+            console.log('Marker is visible or not in a cluster, opening popup directly');
             event.marker.openPopup();
+        }
+
+        // Attempt to force spiderfy if in a cluster (experimental)
+        if (cluster) {
+            console.log('Attempting to force spiderfy for cluster');
+            try {
+                markers._spiderfy(); // Internal method, use with caution
+            } catch (e) {
+                console.warn('Spiderfy failed:', e);
+            }
         }
     }
 }
