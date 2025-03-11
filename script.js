@@ -67,8 +67,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Build popup content, adding document links only if validDocuments exist
-                            let popupContent = `<b>${shortSummary}</b><br>Date: ${dateStr}`;
+                            // Updated popup content: date at top, followed by blurb, then document links if present
+                            let popupContent = `<span class="popup-event-date">${dateStr}</span><br>${blurb}`;
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
                                     popupContent += `
