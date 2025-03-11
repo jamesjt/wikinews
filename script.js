@@ -298,6 +298,28 @@ function buildSidebar(events) {
             eventDiv.className = 'year-list';
 
             groupedEvents[decade][year].forEach(event => {
+                const eventContainer = document.createElement('div');
+                eventContainer.className = 'event-container';
+
+                // State icons
+                const stateIcons = document.createElement('div');
+                stateIcons.className = 'state-icons';
+                const icons = ['–', '☰', '¶']; // Short summary, longer summary, blurb
+                icons.forEach((icon, idx) => {
+                    const stateIcon = document.createElement('div');
+                    stateIcon.className = `state-icon ${event.summaryState === idx ? 'active' : ''}`;
+                    stateIcon.textContent = icon;
+                    stateIcon.addEventListener('click', () => {
+                        event.summaryState = idx;
+                        const eventItem = eventContainer.querySelector('.event-item');
+                        eventItem.querySelector('.event-summary').textContent = [event.shortSummary, event.summary, event.blurb][idx];
+                        stateIcons.querySelectorAll('.state-icon').forEach((si, i) => {
+                            si.classList.toggle('active', i === idx);
+                        });
+                    });
+                    stateIcons.appendChild(stateIcon);
+                });
+
                 const eventItem = document.createElement('div');
                 eventItem.className = 'event-item';
                 eventItem.setAttribute('data-event-index', event.index);
@@ -324,12 +346,17 @@ function buildSidebar(events) {
                             ${event.location ? `<img class="location-icon" src="icon-location.svg" alt="Location">` : ''}
                         </div>
                     </div>
-                    <div class="event-summary">${event.shortSummary}</div>
+                    <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
                 `;
+
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
                     event.summaryState = (event.summaryState + 1) % 3;
                     eventItem.querySelector('.event-summary').textContent = [event.shortSummary, event.summary, event.blurb][event.summaryState];
+                    stateIcons.querySelectorAll('.state-icon').forEach((si, i) => {
+                        si.classList.toggle('active', i === event.summaryState);
+                    });
                 });
+
                 if (event.location) {
                     eventItem.querySelector('.location-icon').addEventListener('click', () => {
                         handleLocationClick(event);
@@ -338,7 +365,10 @@ function buildSidebar(events) {
                 eventItem.addEventListener('click', () => {
                     handleEventClick(event);
                 });
-                eventDiv.appendChild(eventItem);
+
+                eventContainer.appendChild(stateIcons);
+                eventContainer.appendChild(eventItem);
+                eventDiv.appendChild(eventContainer);
             });
             yearSection.appendChild(eventDiv);
             yearDiv.appendChild(yearSection);
