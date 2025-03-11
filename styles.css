@@ -348,3 +348,11 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
 }
+
+.popup-event-date {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-family: 'PT Sans Narrow', sans-serif !important;
+    color: #979797;
+    font-weight: bold;
+}
