@@ -42,7 +42,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
                     const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
-                    const imageUrls = row['Image']?.split(',').map(url => url.trim()).filter(url => url) || []; // Parse image URLs
+                    const imageUrl = row['Image']?.trim() || ''; // Single image URL per event
 
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -81,15 +81,14 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Construct popup content with images above videos
+                            // Construct popup content with image above videos
                             let popupContent = `
                                 <span class="popup-event-date">${dateStr}</span><br>
                                 <span class="popup-short-summary">${shortSummary}</span><br>
                                 <span class="popup-blurb">${blurb}</span>
                             `;
-                            if (imageUrls.length > 0) {
-                                const imageHtml = imageUrls.map(url => `<img src="${url}" class="clickable-image" alt="Event Image">`).join('');
-                                popupContent += `<br>${imageHtml}`;
+                            if (imageUrl) {
+                                popupContent += `<br><img src="${imageUrl}" class="clickable-image" alt="Event Image">`;
                             }
                             if (videoEmbeds.length > 0) {
                                 const videoHtml = videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('');
@@ -146,7 +145,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         documentNames,
                         documentLinks,
                         videoEmbeds,
-                        imageUrls // Store image URLs in the event object
+                        imageUrl // Store single image URL
                     };
                 }).filter(event => event.timestamp);
 
@@ -372,10 +371,8 @@ function buildSidebar(events) {
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
-                // Generate image HTML if there are image URLs
-                const imageHtml = event.imageUrls && event.imageUrls.length > 0
-                    ? event.imageUrls.map(url => `<img src="${url}" class="clickable-image" alt="Event Image">`).join('')
-                    : '';
+                // Generate image HTML if there is an image URL
+                const imageHtml = event.imageUrl ? `<img src="${event.imageUrl}" class="clickable-image" alt="Event Image">` : '';
 
                 // Generate video HTML if there are embeds
                 const videoHtml = event.videoEmbeds && event.videoEmbeds.length > 0
@@ -401,8 +398,8 @@ function buildSidebar(events) {
                         </div>
                     </div>
                     <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
-                    ${imageHtml} <!-- Add images above videos -->
-                    ${videoHtml} <!-- Videos below images -->
+                    ${imageHtml} <!-- Add image above videos -->
+                    ${videoHtml} <!-- Videos below image -->
                 `;
 
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
