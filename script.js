@@ -610,25 +610,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // View switching logic
+    // Initialize view buttons
     const mapBtn = document.getElementById('map-btn');
     const graphBtn = document.getElementById('graph-btn');
     const documentsBtn = document.getElementById('documents-btn');
-    const mapView = document.getElementById('map');
-    const graphView = document.getElementById('graph');
-    const documentsView = document.getElementById('documents');
+    const mapDiv = document.getElementById('map');
+    const graphDiv = document.getElementById('graph');
+    let graphRendered = false;
 
-    function setActiveView(viewElement, button) {
-        [mapView, graphView, documentsView].forEach(view => view.classList.remove('active'));
-        [mapBtn, graphBtn, documentsBtn].forEach(btn => btn.classList.remove('active'));
-        viewElement.classList.add('active');
-        button.classList.add('active');
-        if (viewElement === mapView) map.invalidateSize();
-    }
+    mapBtn.classList.add('active'); // Set Map as default view
 
-    mapBtn.addEventListener('click', () => setActiveView(mapView, mapBtn));
-    graphBtn.addEventListener('click', () => setActiveView(graphView, graphBtn));
-    documentsBtn.addEventListener('click', () => setActiveView(documentsView, documentsBtn));
+    mapBtn.addEventListener('click', () => {
+        mapDiv.style.display = 'block';
+        graphDiv.style.display = 'none';
+        mapBtn.classList.add('active');
+        graphBtn.classList.remove('active');
+        documentsBtn.classList.remove('active');
+        map.invalidateSize();
+    });
+
+    graphBtn.addEventListener('click', () => {
+        mapDiv.style.display = 'none';
+        graphDiv.style.display = 'block';
+        mapBtn.classList.remove('active');
+        graphBtn.classList.add('active');
+        documentsBtn.classList.remove('active');
+        if (!graphRendered) {
+            renderGraph();
+            graphRendered = true;
+        }
+    });
+
+    documentsBtn.addEventListener('click', () => {
+        // Placeholder for Documents view
+        mapDiv.style.display = 'none';
+        graphDiv.style.display = 'none';
+        mapBtn.classList.remove('active');
+        graphBtn.classList.remove('active');
+        documentsBtn.classList.add('active');
+    });
 });
 
 function highlightTimelineBubble(eventIndex, highlight) {
@@ -642,3 +662,227 @@ document.addEventListener('click', function(event) {
         event.target.classList.toggle('enlarged');
     }
 });
+
+// Graph rendering function
+function renderGraph() {
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const mainX = 1000; // Center of canvas width
+    const mainSpacing = 400; // Vertical spacing between main nodes
+    const subSpacing = 60; // Vertical spacing between sub-nodes
+
+    const typeOffsets = {
+        'newscast': 200,
+        'picture': 400,
+        'document': 600,
+        'article': 800,
+        'forum': -200,
+        'twitter': -400
+    };
+
+    const typeColors = {
+        'newscast': 'orange',
+        'picture': 'purple',
+        'document': 'teal',
+        'article': 'blue',
+        'forum': 'green',
+        'twitter': 'deepskyblue'
+    };
+
+    // Prepare main nodes
+    const mainNodes = events.map((event, index) => ({
+        type: 'main',
+        id: `main-${index}`,
+        eventIndex: index,
+        text: `Event ${index + 1}\n${event.date}\n${event.location ? event.location.join(', ') : 'No Location'}\n${event.blurb}`,
+        width: 300,
+        height: 200
+    }));
+
+    // Prepare sub-nodes
+    const subNodes = [];
+    events.forEach((event, index) => {
+        const mainId = `main-${index}`;
+
+        event.videoEmbeds.forEach((embed, i) => {
+            subNodes.push({
+                type: 'newscast',
+                id: `video-${index}-${i}`,
+                mainId: mainId,
+                embed: embed,
+                width: 200,
+                height: 50
+            });
+        });
+
+        if (event.imageUrl) {
+            subNodes.push({
+                type: 'picture',
+                id: `picture-${index}`,
+                mainId: mainId,
+                imageUrl: event.imageUrl,
+                width: 200,
+                height: 50
+            });
+        }
+
+        event.validDocuments.forEach((doc, i) => {
+            subNodes.push({
+                type: 'document',
+                id: `document-${index}-${i}`,
+                mainId: mainId,
+                text: doc.name,
+                link: doc.link,
+                width: 200,
+                height: 50
+            });
+        });
+
+        event.validLinks.forEach((linkObj, i) => {
+            subNodes.push({
+                type: 'article',
+                id: `article-${index}-${i}`,
+                mainId: mainId,
+                text: linkObj.name,
+                link: linkObj.link,
+                width: 200,
+                height: 50
+            });
+        });
+
+        ['forum', 'twitter'].forEach(type => {
+            subNodes.push({
+                type: type,
+                id: `${type}-${index}`,
+                mainId: mainId,
+                text: `${type.charAt(0).toUpperCase() + type.slice(1)} Post`,
+                width: 200,
+                height: 50
+            });
+        });
+    });
+
+    // Position main nodes
+    let currentY = 100;
+    mainNodes.forEach(node => {
+        node.x = mainX - node.width / 2;
+        node.y = currentY;
+        currentY += node.height + mainSpacing;
+    });
+
+    // Position sub-nodes
+    subNodes.forEach(subNode => {
+        const mainNode = mainNodes.find(n => n.id === subNode.mainId);
+        const type = subNode.type;
+        const offset = typeOffsets[type];
+        const sameTypeSubNodes = subNodes.filter(sn => sn.mainId === subNode.mainId && sn.type === type);
+        const index = sameTypeSubNodes.indexOf(subNode);
+        subNode.x = mainX + offset - subNode.width / 2;
+        subNode.y = mainNode.y + index * subSpacing;
+    });
+
+    // Draw connections
+    ctx.strokeStyle = 'darkgray';
+    ctx.lineWidth = 2;
+
+    // Connect main nodes vertically
+    for (let i = 0; i < mainNodes.length - 1; i++) {
+        const n1 = mainNodes[i];
+        const n2 = mainNodes[i + 1];
+        ctx.beginPath();
+        ctx.moveTo(n1.x + n1.width / 2, n1.y + n1.height);
+        ctx.lineTo(n2.x + n2.width / 2, n2.y);
+        ctx.stroke();
+    }
+
+    // Connect main nodes to sub-nodes and between sub-nodes
+    mainNodes.forEach(mainNode => {
+        const mainId = mainNode.id;
+        const typeGroups = {};
+        subNodes.forEach(subNode => {
+            if (subNode.mainId === mainId) {
+                if (!typeGroups[subNode.type]) typeGroups[subNode.type] = [];
+                typeGroups[subNode.type].push(subNode);
+            }
+        });
+
+        Object.values(typeGroups).forEach(group => {
+            if (group.length > 0) {
+                const firstSub = group[0];
+                ctx.beginPath();
+                ctx.moveTo(mainNode.x + mainNode.width / 2, mainNode.y + mainNode.height / 2);
+                ctx.lineTo(firstSub.x + firstSub.width / 2, firstSub.y + firstSub.height / 2);
+                ctx.stroke();
+
+                for (let i = 0; i < group.length - 1; i++) {
+                    const s1 = group[i];
+                    const s2 = group[i + 1];
+                    ctx.beginPath();
+                    ctx.moveTo(s1.x + s1.width / 2, s1.y + s1.height / 2);
+                    ctx.lineTo(s2.x + s2.width / 2, s2.y + s2.height / 2);
+                    ctx.stroke();
+                }
+            }
+        });
+    });
+
+    // Draw main nodes
+    mainNodes.forEach(node => {
+        ctx.fillStyle = 'lightgray';
+        ctx.fillRect(node.x, node.y, node.width, node.height);
+        ctx.strokeStyle = 'darkgray';
+        ctx.strokeRect(node.x, node.y, node.width, node.height);
+        ctx.fillStyle = 'black';
+        ctx.font = '14px Arial';
+        const lines = node.text.split('\n');
+        lines.forEach((line, i) => {
+            ctx.fillText(line, node.x + 10, node.y + 20 + i * 20);
+        });
+    });
+
+    // Draw sub-nodes
+    subNodes.forEach(subNode => {
+        const color = typeColors[subNode.type] || 'gray';
+        ctx.strokeStyle = color;
+        ctx.strokeRect(subNode.x, subNode.y, subNode.width, subNode.height);
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        if (subNode.text) {
+            ctx.fillText(subNode.text, subNode.x + 10, subNode.y + 25);
+        } else if (subNode.type === 'newscast') {
+            ctx.fillText('Video', subNode.x + 10, subNode.y + 25);
+        } else if (subNode.type === 'picture') {
+            ctx.fillText('Image', subNode.x + 10, subNode.y + 25);
+        }
+    });
+
+    // Store positions for interactivity
+    window.graphNodes = [...mainNodes, ...subNodes];
+
+    // Add click event listener to canvas
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        window.graphNodes.forEach(node => {
+            if (clickX >= node.x && clickX <= node.x + node.width &&
+                clickY >= node.y && clickY <= node.y + node.height) {
+                if (node.type === 'main') {
+                    const eventItem = document.querySelector(`.event-item[data-event-index="${node.eventIndex}"]`);
+                    if (eventItem) {
+                        expandAndScrollToEvent(eventItem);
+                    }
+                } else if (node.link) {
+                    window.open(node.link, '_blank');
+                } else if (node.type === 'newscast') {
+                    alert('Open video: ' + node.embed);
+                } else if (node.type === 'picture') {
+                    alert('Show image: ' + node.imageUrl);
+                }
+            }
+        });
+    });
+}
