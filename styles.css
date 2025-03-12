@@ -351,8 +351,14 @@ body {
 
 .popup-event-date {
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 13px;
     font-family: 'PT Sans Narrow', sans-serif !important;
     color: #979797;
     font-weight: bold;
+}
+.popup-short-summary {
+    font-weight: bold;
+    text-transfomr: uppercase;
+    font-family: 'PT Sans Narrow', sans-serif !important;
+    font-size:16px;
 }
