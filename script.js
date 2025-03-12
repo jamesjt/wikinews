@@ -41,7 +41,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const locationStr = row['Location']?.trim() || '';
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
-                    const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || []; // Split and clean video links
+                    const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
+                    const imageUrls = row['Image']?.split(',').map(url => url.trim()).filter(url => url) || []; // Parse image URLs
 
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -52,20 +53,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         }
                     }
 
-                    // Generate embed codes for each video link
                     const videoEmbeds = videoLinks.map(link => {
                         if (link.includes('embed/')) {
-                            // Use embed URL directly
                             return `<iframe width="280" height="157" src="${link}" frameborder="0" allowfullscreen></iframe>`;
                         } else if (link.includes('youtube.com') || link.includes('youtu.be')) {
-                            // Extract video ID from watch or short URL
                             const videoId = link.split('v=')[1]?.split('&')[0] || link.split('/').pop();
                             if (videoId) {
                                 return `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
                             }
                         }
-                        return ''; // Skip invalid links
-                    }).filter(embed => embed); // Remove empty embeds
+                        return '';
+                    }).filter(embed => embed);
 
                     let location = null;
                     let marker = null;
@@ -83,15 +81,19 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Construct popup content with multiple video embeds
+                            // Construct popup content with images above videos
                             let popupContent = `
                                 <span class="popup-event-date">${dateStr}</span><br>
                                 <span class="popup-short-summary">${shortSummary}</span><br>
                                 <span class="popup-blurb">${blurb}</span>
                             `;
+                            if (imageUrls.length > 0) {
+                                const imageHtml = imageUrls.map(url => `<img src="${url}" class="clickable-image" alt="Event Image">`).join('');
+                                popupContent += `<br>${imageHtml}`;
+                            }
                             if (videoEmbeds.length > 0) {
                                 const videoHtml = videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('');
-                                popupContent += `<br>${videoHtml}`;
+                                popupContent += `${videoHtml}`;
                             }
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
@@ -105,7 +107,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                             marker = L.marker(location, { icon: numberedIcon });
                             marker.eventIndex = index;
-                            marker.bindPopup(popupContent, { maxWidth: 320 }); // Increased maxWidth to 320px
+                            marker.bindPopup(popupContent, { maxWidth: 320 });
 
                             marker.on('popupopen', () => {
                                 const eventIndex = marker.eventIndex;
@@ -143,7 +145,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         summaryState: 0,
                         documentNames,
                         documentLinks,
-                        videoEmbeds // Store video embeds in the event object
+                        videoEmbeds,
+                        imageUrls // Store image URLs in the event object
                     };
                 }).filter(event => event.timestamp);
 
@@ -369,6 +372,11 @@ function buildSidebar(events) {
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
+                // Generate image HTML if there are image URLs
+                const imageHtml = event.imageUrls && event.imageUrls.length > 0
+                    ? event.imageUrls.map(url => `<img src="${url}" class="clickable-image" alt="Event Image">`).join('')
+                    : '';
+
                 // Generate video HTML if there are embeds
                 const videoHtml = event.videoEmbeds && event.videoEmbeds.length > 0
                     ? event.videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('')
@@ -393,7 +401,8 @@ function buildSidebar(events) {
                         </div>
                     </div>
                     <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
-                    ${videoHtml} <!-- Add video embeds here -->
+                    ${imageHtml} <!-- Add images above videos -->
+                    ${videoHtml} <!-- Videos below images -->
                 `;
 
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
@@ -534,3 +543,10 @@ function highlightTimelineBubble(eventIndex, highlight) {
         .filter(d => d.index === eventIndex)
         .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
+
+// Add event listener for click-to-enlarge functionality on images
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('clickable-image')) {
+        event.target.classList.toggle('enlarged');
+    }
+});
