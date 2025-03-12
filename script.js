@@ -619,13 +619,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const documentsView = document.getElementById('documents');
 
     function setActiveView(viewElement, button) {
+        // Remove active class from all views and buttons
         [mapView, graphView, documentsView].forEach(view => view.classList.remove('active'));
         [mapBtn, graphBtn, documentsBtn].forEach(btn => btn.classList.remove('active'));
+        // Add active class to the selected view and button
         viewElement.classList.add('active');
         button.classList.add('active');
         if (viewElement === mapView) map.invalidateSize();
     }
 
+    // Set default view to map on load
+    setActiveView(mapView, mapBtn);
+
+    // Add event listeners for view switching
     mapBtn.addEventListener('click', () => setActiveView(mapView, mapBtn));
     graphBtn.addEventListener('click', () => setActiveView(graphView, graphBtn));
     documentsBtn.addEventListener('click', () => setActiveView(documentsView, documentsBtn));
