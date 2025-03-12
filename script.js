@@ -39,7 +39,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const locationStr = row['Location']?.trim() || '';
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
-                    const videoLink = row['Video']?.trim() || ''; // Extract video link from "Video" column
+                    const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || []; // Split and clean video links
 
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -50,20 +50,20 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         }
                     }
 
-                    // Enhanced video embedding logic
-                    let videoEmbed = '';
-                    if (videoLink) {
-                        if (videoLink.includes('embed/')) {
-                            // Use the embed URL directly
-                            videoEmbed = `<iframe width="280" height="157" src="${videoLink}" frameborder="0" allowfullscreen></iframe>`;
-                        } else if (videoLink.includes('youtube.com') || videoLink.includes('youtu.be')) {
-                            // Extract video ID from watch or short URLs
-                            const videoId = videoLink.split('v=')[1]?.split('&')[0] || videoLink.split('/').pop();
+                    // Generate embed codes for each video link
+                    const videoEmbeds = videoLinks.map(link => {
+                        if (link.includes('embed/')) {
+                            // Use embed URL directly
+                            return `<iframe width="280" height="157" src="${link}" frameborder="0" allowfullscreen></iframe>`;
+                        } else if (link.includes('youtube.com') || link.includes('youtu.be')) {
+                            // Extract video ID from watch or short URL
+                            const videoId = link.split('v=')[1]?.split('&')[0] || link.split('/').pop();
                             if (videoId) {
-                                videoEmbed = `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                                return `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
                             }
                         }
-                    }
+                        return ''; // Skip invalid links
+                    }).filter(embed => embed); // Remove empty embeds
 
                     let location = null;
                     let marker = null;
@@ -81,14 +81,15 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Construct popup content with video embed
+                            // Construct popup content with multiple video embeds
                             let popupContent = `
                                 <span class="popup-event-date">${dateStr}</span><br>
                                 <span class="popup-short-summary">${shortSummary}</span><br>
                                 <span class="popup-blurb">${blurb}</span>
                             `;
-                            if (videoEmbed) {
-                                popupContent += `<br><div class="video-container">${videoEmbed}</div>`;
+                            if (videoEmbeds.length > 0) {
+                                const videoHtml = videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('');
+                                popupContent += `<br>${videoHtml}`;
                             }
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
@@ -102,7 +103,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                             marker = L.marker(location, { icon: numberedIcon });
                             marker.eventIndex = index;
-                            marker.bindPopup(popupContent, { maxWidth: 300 }); // Set maxWidth to fit video
+                            marker.bindPopup(popupContent, { maxWidth: 320 }); // Increased maxWidth to 320px
 
                             marker.on('popupopen', () => {
                                 const eventIndex = marker.eventIndex;
