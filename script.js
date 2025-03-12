@@ -13,78 +13,16 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // MarkerClusterGroup with custom behavior
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: 40,
-    disableClusteringAtZoom: 15
+    spiderfyOnMaxZoom: true,         // Spiderfies markers at max zoom if still clustered
+    showCoverageOnHover: false,      // Disables polygon preview on hover
+    zoomToBoundsOnClick: true,       // Zooms to cluster bounds on click
+    maxClusterRadius: 40,            // Clustering distance in pixels
+    disableClusteringAtZoom: 15      // Clusters separate at zoom level 15
 });
 map.addLayer(markers);
 
 let events = [];
 let csvData = null;
-
-// Sub-node colors
-const subNodeColors = {
-    'Newscasts': '#FF5733', // Orange
-    'Live footage': '#C70039', // Red
-    'Podcasts': '#900C3F', // Dark red
-    'Other audio files': '#581845', // Dark purple
-    'Downloadable documents': '#FFC107', // Yellow
-    'News articles': '#28A745', // Green
-    'Pictures': '#17A2B8', // Cyan
-    'Forum posts': '#007BFF', // Blue
-    'Twitter feeds': '#6F42C1', // Purple
-    'Book recommendations': '#FD7E14' // Orange
-};
-
-// View state
-let currentView = 'map';
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Set Map button as active on load
-    const mapButton = document.getElementById('map-button');
-    const graphButton = document.getElementById('graph-button');
-    const documentsButton = document.getElementById('documents-button');
-    mapButton.classList.add('active');
-
-    mapButton.addEventListener('click', () => switchView('map'));
-    graphButton.addEventListener('click', () => switchView('graph'));
-    documentsButton.addEventListener('click', () => switchView('documents'));
-});
-
-function switchView(view) {
-    const mapDiv = document.getElementById('map');
-    const graphDiv = document.getElementById('graph');
-    const mapButton = document.getElementById('map-button');
-    const graphButton = document.getElementById('graph-button');
-    const documentsButton = document.getElementById('documents-button');
-
-    // Remove active class from all buttons
-    mapButton.classList.remove('active');
-    graphButton.classList.remove('active');
-    documentsButton.classList.remove('active');
-
-    // Hide all views
-    mapDiv.style.display = 'none';
-    graphDiv.style.display = 'none';
-
-    // Show selected view and set active button
-    if (view === 'map') {
-        mapDiv.style.display = 'block';
-        mapButton.classList.add('active');
-        map.invalidateSize();
-    } else if (view === 'graph') {
-        graphDiv.style.display = 'block';
-        graphButton.classList.add('active');
-        setupGraph();
-    } else if (view === 'documents') {
-        documentsButton.classList.add('active');
-        // Placeholder for documents view
-    }
-
-    currentView = view;
-}
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -154,6 +92,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
+                            // Popup content with image above videos
                             let popupContent = `
                                 <div class="popup-text">
                                     <span class="popup-event-date">${dateStr}</span><br>
@@ -201,7 +140,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
                                     expandAndScrollToEvent(eventItem);
-                                    eventItem.style.border = '5px solid #f9e9c3';
+                                    eventItem.style.border = '5px solid #f9e9c3'; // Highlight with border
                                 }
                                 highlightTimelineBubble(eventIndex, true);
                             });
@@ -210,7 +149,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    eventItem.style.border = '1px solid #eee';
+                                    eventItem.style.border = '1px solid #eee'; // Reset border
                                 }
                                 highlightTimelineBubble(eventIndex, false);
                             });
@@ -226,7 +165,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         shortSummary,
                         summary,
                         blurb,
-                        location: location ? locationStr : 'Unknown Location',
+                        location,
                         marker,
                         index,
                         summaryState: 0,
@@ -247,267 +186,12 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
-// Graph setup
-function setupGraph() {
-    const graphDiv = document.getElementById('graph');
-    graphDiv.innerHTML = ''; // Clear existing content
-
-    const width = graphDiv.clientWidth;
-    const height = events.length * 200; // Adjust height based on number of events
-
-    const svg = d3.select('#graph')
-        .append('svg')
-        .attr('width', '100%')
-        .attr('height', height);
-
-    const g = svg.append('g')
-        .attr('transform', 'translate(50, 50)');
-
-    // Prepare data for main nodes
-    const nodeData = events.map((event, i) => {
-        const content = [
-            `Event ${event.index + 1}`,
-            event.date,
-            event.location,
-            event.blurb
-        ];
-
-        // Calculate node dimensions dynamically
-        const maxLineLength = Math.max(...content.map(line => line.length));
-        const width = Math.max(200, maxLineLength * 8); // Approximate width based on text length
-        const height = content.length * 20 + 20; // Height based on number of lines
-
-        return {
-            ...event,
-            x: width, // Center horizontally
-            y: i * 200 + 100, // Stack vertically
-            width,
-            height,
-            content
-        };
-    });
-
-    // Draw main nodes
-    const mainNodes = g.selectAll('.main-node')
-        .data(nodeData)
-        .enter()
-        .append('rect')
-        .attr('class', 'main-node')
-        .attr('x', d => d.x - d.width / 2)
-        .attr('y', d => d.y - d.height / 2)
-        .attr('width', d => d.width)
-        .attr('height', d => d.height);
-
-    // Add text to main nodes
-    nodeData.forEach((d, i) => {
-        const nodeGroup = g.append('g')
-            .attr('transform', `translate(${d.x - d.width / 2 + 10}, ${d.y - d.height / 2 + 10})`);
-
-        d.content.forEach((line, j) => {
-            nodeGroup.append('text')
-                .attr('class', `main-node-text ${j === 0 ? 'event-number' : ''}`)
-                .attr('x', 0)
-                .attr('y', j * 20 + 15)
-                .text(line);
-        });
-    });
-
-    // Draw lines between main nodes
-    const nodeLines = [];
-    for (let i = 0; i < nodeData.length - 1; i++) {
-        nodeLines.push({
-            x1: nodeData[i].x,
-            y1: nodeData[i].y + nodeData[i].height / 2,
-            x2: nodeData[i + 1].x,
-            y2: nodeData[i + 1].y - nodeData[i + 1].height / 2
-        });
-    }
-
-    g.selectAll('.node-line')
-        .data(nodeLines)
-        .enter()
-        .append('line')
-        .attr('class', 'node-line')
-        .attr('x1', d => d.x1)
-        .attr('y1', d => d.y1)
-        .attr('x2', d => d.x2)
-        .attr('y2', d => d.y2);
-
-    // Sub-nodes
-    const subNodes = [];
-    const subNodeLines = [];
-
-    nodeData.forEach((node, nodeIndex) => {
-        // Discussion sub-nodes (left side)
-        const discussionNodes = [
-            { type: 'Forum posts', content: 'Reddit Discussion', purpose: 'discussion' },
-            { type: 'Twitter feeds', content: 'X Thread', purpose: 'discussion' }
-        ];
-
-        discussionNodes.forEach((sub, i) => {
-            const angle = -Math.PI / 4 + (i * Math.PI / 2); // 45 degrees left, spaced
-            const distance = 150 + i * 100; // Distance from main node
-            const subX = node.x + Math.cos(angle) * distance;
-            const subY = node.y + Math.sin(angle) * distance;
-            const subWidth = sub.content.length * 8 + 20;
-            const subHeight = 30;
-
-            subNodes.push({
-                x: subX,
-                y: subY,
-                width: subWidth,
-                height: subHeight,
-                type: sub.type,
-                content: sub.content,
-                purpose: sub.purpose,
-                parentX: node.x - node.width / 2,
-                parentY: node.y
-            });
-
-            subNodeLines.push({
-                x1: node.x - node.width / 2,
-                y1: node.y,
-                x2: subX + (subWidth / 2) * Math.cos(angle + Math.PI),
-                y2: subY + (subHeight / 2) * Math.sin(angle + Math.PI),
-                type: sub.type
-            });
-
-            // If there are multiple of the same type, continue the path
-            if (i > 0 && discussionNodes[i - 1].type === sub.type) {
-                subNodeLines.push({
-                    x1: subNodes[subNodes.length - 2].x + subNodes[subNodes.length - 2].width / 2 * Math.cos(angle + Math.PI),
-                    y1: subNodes[subNodes.length - 2].y + subNodes[subNodes.length - 2].height / 2 * Math.sin(angle + Math.PI),
-                    x2: subX + (subWidth / 2) * Math.cos(angle + Math.PI),
-                    y2: subY + (subHeight / 2) * Math.sin(angle + Math.PI),
-                    type: sub.type
-                });
-            }
-        });
-
-        // Evidence sub-nodes (right side)
-        const evidenceNodes = [];
-
-        // Add documents
-        node.validDocuments.forEach(doc => {
-            evidenceNodes.push({
-                type: 'Downloadable documents',
-                content: `<a href="${doc.link}" target="_blank">${doc.name}</a>`,
-                purpose: 'evidence'
-            });
-        });
-
-        // Add news articles
-        node.validLinks.forEach(link => {
-            evidenceNodes.push({
-                type: 'News articles',
-                content: `<a href="${link.link}" target="_blank">${link.name}</a>`,
-                purpose: 'evidence'
-            });
-        });
-
-        // Add videos
-        node.videoEmbeds.forEach(embed => {
-            evidenceNodes.push({
-                type: 'Newscasts',
-                content: embed,
-                purpose: 'evidence'
-            });
-        });
-
-        evidenceNodes.forEach((sub, i) => {
-            const angle = Math.PI / 4 + (i * Math.PI / 4); // 45 degrees right, spaced
-            const distance = 150 + i * 100;
-            const subX = node.x + Math.cos(angle) * distance;
-            const subY = node.y + Math.sin(angle) * distance;
-            const subWidth = sub.type === 'Newscasts' ? 300 : sub.content.length * 8 + 20;
-            const subHeight = sub.type === 'Newscasts' ? 167 : 30;
-
-            subNodes.push({
-                x: subX,
-                y: subY,
-                width: subWidth,
-                height: subHeight,
-                type: sub.type,
-                content: sub.content,
-                purpose: sub.purpose,
-                parentX: node.x + node.width / 2,
-                parentY: node.y
-            });
-
-            subNodeLines.push({
-                x1: node.x + node.width / 2,
-                y1: node.y,
-                x2: subX + (subWidth / 2) * Math.cos(angle + Math.PI),
-                y2: subY + (subHeight / 2) * Math.sin(angle + Math.PI),
-                type: sub.type
-            });
-
-            // If there are multiple of the same type, continue the path
-            if (i > 0 && evidenceNodes[i - 1].type === sub.type) {
-                subNodeLines.push({
-                    x1: subNodes[subNodes.length - 2].x + subNodes[subNodes.length - 2].width / 2 * Math.cos(angle + Math.PI),
-                    y1: subNodes[subNodes.length - 2].y + subNodes[subNodes.length - 2].height / 2 * Math.sin(angle + Math.PI),
-                    x2: subX + (subWidth / 2) * Math.cos(angle + Math.PI),
-                    y2: subY + (subHeight / 2) * Math.sin(angle + Math.PI),
-                    type: sub.type
-                });
-            }
-        });
-    });
-
-    // Draw sub-nodes
-    const subNodeGroups = g.selectAll('.sub-node')
-        .data(subNodes)
-        .enter()
-        .append('g');
-
-    subNodeGroups.append('rect')
-        .attr('class', 'sub-node')
-        .attr('x', d => d.x - d.width / 2)
-        .attr('y', d => d.y - d.height / 2)
-        .attr('width', d => d.width)
-        .attr('height', d => d.height)
-        .attr('stroke', d => subNodeColors[d.type]);
-
-    subNodeGroups.each(function(d) {
-        if (d.type === 'Newscasts') {
-            d3.select(this)
-                .append('foreignObject')
-                .attr('x', d.x - d.width / 2)
-                .attr('y', d.y - d.height / 2)
-                .attr('width', d.width)
-                .attr('height', d.height)
-                .html(d.content);
-        } else {
-            d3.select(this)
-                .append('foreignObject')
-                .attr('x', d.x - d.width / 2)
-                .attr('y', d.y - d.height / 2)
-                .attr('width', d.width)
-                .attr('height', d.height)
-                .html(`<div style="text-align: center; padding-top: 5px;">${d.content}</div>`);
-        }
-    });
-
-    // Draw sub-node lines
-    g.selectAll('.sub-node-line')
-        .data(subNodeLines)
-        .enter()
-        .append('line')
-        .attr('class', 'sub-node-line')
-        .attr('x1', d => d.x1)
-        .attr('y1', d => d.y1)
-        .attr('x2', d => d.x2)
-        .attr('y2', d => d.y2)
-        .attr('stroke', d => subNodeColors[d.type]);
-}
-
 // D3 timeline global variables
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = '';
+    timelineDiv.innerHTML = ''; // Clear existing content
 
     height = 120;
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -769,6 +453,7 @@ function buildSidebar(events) {
                     ${videoHtml}
                 `;
 
+                // Tooltip event listeners
                 const linkWrapper = eventItem.querySelector('.link-wrapper');
                 const documentWrapper = eventItem.querySelector('.document-wrapper');
 
@@ -829,6 +514,7 @@ function buildSidebar(events) {
         });
     });
 
+    // Intersection Observer for sticky year toggles
     const sidebar = document.getElementById('sidebar');
     const observer = new IntersectionObserver(
         (entries) => {
@@ -882,7 +568,11 @@ function handleEventClick(event) {
 function handleLocationClick(event) {
     if (event.marker) {
         const latLng = event.marker.getLatLng();
+        
+        // Pan to the location without changing zoom
         map.panTo(latLng);
+        
+        // Handle clustered markers
         if (markers.hasLayer(event.marker)) {
             markers.zoomToShowLayer(event.marker, () => {
                 event.marker.openPopup();
@@ -913,10 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const minWidth = parseInt(getComputedStyle(sidebar).minWidth);
         const maxWidth = parseInt(getComputedStyle(sidebar).maxWidth);
-
+        
         if (newWidth >= minWidth && newWidth <= maxWidth) {
             sidebar.style.flex = `0 0 ${newWidth}px`;
-            if (currentView === 'map') map.invalidateSize();
+            map.invalidateSize();
         }
     });
 
@@ -934,6 +624,7 @@ function highlightTimelineBubble(eventIndex, highlight) {
         .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
 
+// Click-to-enlarge functionality for images
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('clickable-image')) {
         event.target.classList.toggle('enlarged');
