@@ -145,7 +145,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         documentNames,
                         documentLinks,
                         videoEmbeds,
-                        imageUrl // Store single image URL
+                        imageUrl, // Store single image URL
+                        validDocuments // Added to track valid document pairs
                     };
                 }).filter(event => event.timestamp);
 
@@ -210,10 +211,27 @@ function setupD3Timeline() {
         .on('click', (event, d) => handleEventClick(d))
         .on('mouseover', function(event, d) {
             d3.select(this).transition().duration(200).attr('r', 10);
+
+            // Build icons HTML based on event properties
+            let iconsHtml = '';
+            if (d.imageUrl) {
+                iconsHtml += `<img src="icon-picture.png" alt="Image" width="16" height="16">`;
+            }
+            if (d.videoEmbeds.length > 0) {
+                iconsHtml += `<img src="icon-video.png" alt="Video" width="16" height="16">`;
+            }
+            if (d.validDocuments.length > 0) {
+                iconsHtml += `<img src="icon-link.png" alt="Links" width="16" height="16">`;
+            }
+            if (d.validDocuments.length > 0) {
+                iconsHtml += `<img src="icon-document.png" alt="Document" width="16" height="16">`;
+            }
+
+            // Update tooltip content without "Date:" label
             d3.select('body').append('div')
                 .attr('class', 'dynamic-tooltip')
                 .style('position', 'absolute')
-                .html(`<b>${d.shortSummary}</b><br>Date: ${d.date}`)
+                .html(`<b>${d.shortSummary}</b><br>${d.date}<br><div class="icons">${iconsHtml}</div>`)
                 .style('left', `${event.pageX + 20}px`)
                 .style('top', `${event.pageY - 50}px`);
         })
