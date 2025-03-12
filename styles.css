@@ -272,7 +272,7 @@ body {
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
-    width: 350px; /* Constrain to event-item width */
+    max-width: 350px; /* Constrain to event-item width */
     width: auto; /* Adjust to content */
     white-space: normal; /* Allow text wrapping */
 }
@@ -291,7 +291,6 @@ body {
     z-index: 1000;
     max-width: 350px; /* Constrain to event-item width */
     width: auto; /* Adjust to content */
-    white-space: normal; /* Allow text wrapping */
 }
 
 /* Ensure natural text case for links */
