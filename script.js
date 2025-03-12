@@ -568,17 +568,17 @@ function handleEventClick(event) {
 function handleLocationClick(event) {
     if (event.marker) {
         const latLng = event.marker.getLatLng();
-        
-        // Pan to the location without changing zoom
-        map.panTo(latLng);
-        
-        // Handle clustered markers
-        if (markers.hasLayer(event.marker)) {
-            markers.zoomToShowLayer(event.marker, () => {
-                event.marker.openPopup();
-            });
-        } else {
+        map.panTo(latLng);  // Pan to the marker's location without zooming
+
+        // Check if the marker is clustered
+        const visibleParent = markers.getVisibleParent(event.marker);
+        if (visibleParent === event.marker) {
+            // Marker is not clustered, open its popup directly
             event.marker.openPopup();
+        } else {
+            // Marker is clustered, just pan to its location without zooming
+            // The specific marker's popup won't open unless declustered
+            map.panTo(latLng);  // Already panned, reinforcing the action
         }
     }
 }
