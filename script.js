@@ -21,12 +21,20 @@ const markers = L.markerClusterGroup({
 });
 map.addLayer(markers);
 
-// Graph container
+// Graph container (now using HTML div instead of SVG for nodes)
+const graph = document.getElementById('graph');
 const graphContainer = d3.select('#graph')
+    .append('div')
+    .attr('class', 'graph-container');
+
+// SVG for lines only
+const graphSvg = d3.select('#graph')
     .append('svg')
-    .attr('class', 'graph-container')
-    .attr('width', '100%')
-    .attr('height', '100%');
+    .attr('class', 'graph-lines')
+    .style('position', 'absolute')
+    .style('top', '0')
+    .style('left', '0')
+    .style('pointer-events', 'none');
 
 let events = [];
 let csvData = null;
@@ -667,16 +675,18 @@ const subNodeColors = {
 // Render graph function
 function renderGraph() {
     graphContainer.selectAll('*').remove();
+    graphSvg.selectAll('*').remove();
 
-    const nodeWidth = 300;
+    const nodeWidth = 500;
     const padding = 20;
+    const verticalSpacing = 1000;
     let currentY = padding;
     const nodes = [];
     const links = [];
 
     events.forEach((event, index) => {
         const blurbLines = event.blurb.split('\n').length;
-        const height = Math.max(100, 50 + blurbLines * 20);
+        const height = Math.max(100, 50 + blurbLines * 20); // Dynamic height based on content
 
         const mainNode = {
             id: `main-${index}`,
@@ -705,7 +715,7 @@ function renderGraph() {
             const subNode = {
                 id: `sub-${index}-discussion-${i}`,
                 x: discussionX,
-                y: currentY + height / 2 + i * 40 - 20,
+                y: currentY + height / 2 + i * 40 - 15,
                 width: 120,
                 height: 30,
                 type: sub.type,
@@ -721,7 +731,7 @@ function renderGraph() {
 
         // Evidence sub-nodes (right side)
         const evidenceNodes = [];
-        event.validDocuments.forEach((doc, i) => {
+        event.validDocuments.forEach((doc) => {
             evidenceNodes.push({
                 type: 'Downloadable documents',
                 content: `<a href="${doc.link}" target="_blank">${doc.name}</a>`
@@ -760,14 +770,15 @@ function renderGraph() {
             }
         });
 
-        currentY += height + padding;
+        currentY += verticalSpacing;
     });
 
     const maxX = d3.max(nodes, d => d.x + d.width) + 1000;
     const maxY = d3.max(nodes, d => d.y + d.height) + 1000;
-    graphContainer.attr('width', maxX).attr('height', maxY);
+    graphSvg.attr('width', maxX).attr('height', maxY);
 
-    graphContainer.selectAll('.connection-line')
+    // Draw lines
+    graphSvg.selectAll('.connection-line')
         .data(links)
         .enter()
         .append('line')
@@ -777,51 +788,36 @@ function renderGraph() {
         .attr('x2', d => nodes.find(n => n.id === d.target).x + nodes.find(n => n.id === d.target).width / 2)
         .attr('y2', d => nodes.find(n => n.id === d.target).y + nodes.find(n => n.id === d.target).height / 2);
 
-    const nodeGroups = graphContainer.selectAll('.node')
+    // Draw nodes as divs
+    graphContainer.selectAll('.node')
         .data(nodes)
         .enter()
-        .append('g')
+        .append('div')
         .attr('class', d => d.type ? 'sub-node' : 'main-node')
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+        .style('position', 'absolute')
+        .style('left', d => `${d.x}px`)
+        .style('top', d => `${d.y}px`)
+        .style('width', d => `${d.width}px`)
+        .style('height', d => `${d.height}px`)
+        .style('border', d => d.type ? `2px solid ${subNodeColors[d.type]}` : '2px solid #666')
+        .style('background-color', d => d.type ? 'transparent' : '#f0f0f0')
+        .style('padding', '10px')
+        .style('word-wrap', 'break-word')
+        .style('overflow-wrap', 'break-word')
+        .html(d => {
+            if (d.type) {
+                return `<div style="color: ${subNodeColors[d.type]}; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">${d.content}</div>`;
+            } else {
+                return `
+                    <div class="event-number" style="font-weight: bold;">Event ${d.data.index + 1}</div>
+                    <div>${d.data.date}</div>
+                    <div>${d.data.location ? d.data.location.join(', ') : 'No Location'}</div>
+                    <div>${d.data.blurb}</div>
+                `;
+            }
+        });
 
-    nodeGroups.each(function(d) {
-        const group = d3.select(this);
-        if (d.type) {
-            group.append('rect')
-                .attr('width', d.width)
-                .attr('height', d.height)
-                .attr('stroke', subNodeColors[d.type])
-                .attr('fill', 'none');
-            group.append('foreignObject')
-                .attr('width', d.width)
-                .attr('height', d.height)
-                .html(`<div style="color: ${subNodeColors[d.type]}; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">${d.content}</div>`);
-        } else {
-            group.append('rect')
-                .attr('width', d.width)
-                .attr('height', d.height);
-            group.append('text')
-                .attr('x', 5)
-                .attr('y', 20)
-                .attr('class', 'event-number')
-                .text(`Event ${d.data.index + 1}`);
-            group.append('text')
-                .attr('x', 5)
-                .attr('y', 40)
-                .text(d.data.date);
-            group.append('text')
-                .attr('x', 5)
-                .attr('y', 60)
-                .text(d.data.location ? d.data.location.join(', ') : 'No Location');
-            group.append('text')
-                .attr('x', 5)
-                .attr('y', 80)
-                .attr('width', d.width - 10)
-                .call(wrapText, d.width - 10)
-                .text(d.data.blurb);
-        }
-    });
-
+    // Panning functionality
     let isDragging = false;
     let startX, startY;
 
@@ -836,10 +832,11 @@ function renderGraph() {
             if (!isDragging) return;
             const dx = event.clientX - startX;
             const dy = event.clientY - startY;
-            const transform = d3.zoomTransform(this);
-            const newX = Math.min(0, Math.max(transform.x + dx, -maxX + graph.offsetWidth + 1000));
-            const newY = Math.min(0, Math.max(transform.y + dy, -maxY + graph.offsetHeight + 1000));
-            d3.select(this).call(zoom.transform, d3.zoomIdentity.translate(newX, newY));
+            const currentTransform = d3.zoomTransform(graphContainer.node());
+            const newX = Math.min(0, Math.max(currentTransform.x + dx, -maxX + graph.offsetWidth + 1000));
+            const newY = Math.min(0, Math.max(currentTransform.y + dy, -maxY + graph.offsetHeight + 1000));
+            graphContainer.style('transform', `translate(${newX}px, ${newY}px)`);
+            graphSvg.style('transform', `translate(${newX}px, ${newY}px)`);
             startX = event.clientX;
             startY = event.clientY;
         })
@@ -848,44 +845,18 @@ function renderGraph() {
             d3.select(this).classed('dragging', false);
         });
 
-    const zoom = d3.zoom()
-        .on('zoom', (event) => {
-            graphContainer.attr('transform', event.transform);
-        });
-    graphContainer.call(zoom).call(zoom.transform, d3.zoomIdentity);
-}
-
-// Text wrapping function
-function wrapText(text, width) {
-    text.each(function() {
-        const text = d3.select(this);
-        const words = text.text().split(/\s+/).reverse();
-        let word;
-        let line = [];
-        let lineNumber = 0;
-        const lineHeight = 1.1;
-        const y = text.attr('y');
-        const dy = 0;
-
-        let tspan = text.text(null)
-            .append('tspan')
-            .attr('x', 5)
-            .attr('y', y)
-            .attr('dy', dy + 'em');
-
-        while (word = words.pop()) {
-            line.push(word);
-            tspan.text(line.join(' '));
-            if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(' '));
-                line = [word];
-                tspan = text.append('tspan')
-                    .attr('x', 5)
-                    .attr('y', y)
-                    .attr('dy', ++lineNumber * lineHeight + dy + 'em')
-                    .text(word);
-            }
+    // Ensure mouseup outside the container stops dragging
+    d3.select(document).on('mouseup.global', () => {
+        if (isDragging) {
+            isDragging = false;
+            graphContainer.classed('dragging', false);
         }
     });
+
+    const zoom = d3.zoom()
+        .on('zoom', (event) => {
+            graphContainer.style('transform', event.transform.toString());
+            graphSvg.style('transform', event.transform.toString());
+        });
+    graphContainer.call(zoom).call(zoom.transform, d3.zoomIdentity);
 }
