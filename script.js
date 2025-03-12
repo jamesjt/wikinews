@@ -39,6 +39,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const locationStr = row['Location']?.trim() || '';
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
+                    const videoLink = row['Video']?.trim() || ''; // Extract video link from "Video" column
 
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -46,6 +47,17 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         const link = documentLinks[i];
                         if (name && name.trim() !== '' && link && link.trim() !== '') {
                             validDocuments.push({ name, link });
+                        }
+                    }
+
+                    // Generate video embed code for YouTube links
+                    let videoEmbed = '';
+                    if (videoLink) {
+                        if (videoLink.includes('youtube.com') || videoLink.includes('youtu.be')) {
+                            const videoId = videoLink.split('v=')[1]?.split('&')[0] || videoLink.split('/').pop();
+                            if (videoId) {
+                                videoEmbed = `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                            }
                         }
                     }
 
@@ -65,11 +77,15 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
+                            // Construct popup content with video embed
                             let popupContent = `
                                 <span class="popup-event-date">${dateStr}</span><br>
                                 <span class="popup-short-summary">${shortSummary}</span><br>
                                 <span class="popup-blurb">${blurb}</span>
                             `;
+                            if (videoEmbed) {
+                                popupContent += `<br><div class="video-container">${videoEmbed}</div>`;
+                            }
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
                                     popupContent += `
@@ -81,14 +97,14 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             }
 
                             marker = L.marker(location, { icon: numberedIcon });
-                            marker.eventIndex = index; // Store the event index
-                            marker.bindPopup(popupContent);
+                            marker.eventIndex = index;
+                            marker.bindPopup(popupContent, { maxWidth: 300 }); // Set maxWidth to fit video
 
                             marker.on('popupopen', () => {
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    expandAndScrollToEvent(eventItem); // Updated to use expandAndScrollToEvent
+                                    expandAndScrollToEvent(eventItem);
                                     eventItem.style.backgroundColor = '#f9e9c3';
                                 }
                                 highlightTimelineBubble(eventIndex, true);
@@ -131,11 +147,12 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
+// Declare global variables for D3 elements
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = '';
+    timelineDiv.innerHTML = ''; // Clear existing content
 
     height = 120;
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
