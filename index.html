@@ -29,10 +29,10 @@
             <option value="timeline2">Timeline 2</option>
             <option value="timeline3">Timeline 3</option>
         </select>
-        <div>
-            <button>Map</button>
-            <button>Graph</button>
-            <button>Documents</button>
+        <div class="view-buttons">
+            <button id="map-button">Map</button>
+            <button id="graph-button">Graph</button>
+            <button id="documents-button">Documents</button>
         </div>
     </div>
     <!-- Timeline Overlay -->
@@ -53,6 +53,8 @@
         <div id="right-content">
             <!-- Map -->
             <div id="map"></div>
+            <!-- Graph -->
+            <div id="graph" style="display: none;"></div>
         </div>
     </div>
     <!-- Leaflet JavaScript -->
