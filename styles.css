@@ -19,7 +19,7 @@ body {
 #header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center; /* Center the header content */
     padding: 10px 20px;
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
@@ -46,6 +46,9 @@ body {
 
 /* Timeline selector */
 #timeline-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the timeline selector and buttons */
     padding: 10px 20px;
     background-color: #fafafa;
     border-bottom: 1px solid #ddd;
@@ -54,6 +57,78 @@ body {
 #timeline-select {
     padding: 5px;
     font-size: 14px;
+    margin-bottom: 10px; /* Space between selector and buttons */
+}
+
+.view-buttons {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
+
+.view-buttons button {
+    padding: 5px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 3px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.view-buttons button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.view-buttons button:hover:not(.active) {
+    background-color: #f0f0f0;
+}
+
+/* Graph container */
+#graph {
+    flex: 1;
+    min-height: 0;
+    overflow: auto; /* Scrollable both horizontally and vertically */
+}
+
+/* Graph nodes */
+.main-node {
+    fill: #e0e0e0; /* Light grey background */
+    stroke: #666; /* Dark grey border */
+    stroke-width: 2px;
+    rx: 5; /* Slightly rounded corners */
+    ry: 5;
+}
+
+.main-node-text {
+    font-size: 14px;
+    fill: #333;
+}
+
+.main-node-text.event-number {
+    font-weight: bold;
+}
+
+.sub-node {
+    fill: none;
+    stroke-width: 2px;
+    rx: 5;
+    ry: 5;
+}
+
+.sub-node-text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.node-line {
+    stroke: #666; /* Same as main node border */
+    stroke-width: 2px;
+}
+
+.sub-node-line {
+    stroke-width: 1px;
 }
 
 /* Timeline overlay */
@@ -268,7 +343,7 @@ body {
     right: 0;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius:8px;
+    border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
@@ -283,7 +358,7 @@ body {
     right: 0;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius:8px;
+    border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
