@@ -216,8 +216,6 @@ function initGraph() {
         .attr('width', width)
         .attr('height', height);
 
-    const g = svg.append('g'); // Container group for all graph elements
-
     const nodes = [];
     const links = [];
 
@@ -252,22 +250,15 @@ function initGraph() {
         .force('charge', d3.forceManyBody().strength(-200))
         .force('center', d3.forceCenter(width / 2, height / 2));
 
-    // Enable panning (dragging the graph)
-    const zoom = d3.zoom()
-        .scaleExtent([1, 1])  // Disable zooming, only panning
-        .on('zoom', (event) => {
-            g.attr('transform', event.transform); // Update the container group's position
-        });
-    svg.call(zoom);
-
-    const link = g.append('g')
+    const link = svg.append('g')
         .selectAll('line')
         .data(links)
         .enter().append('line')
         .attr('stroke', d => d.type === 'main' ? '#000' : '#999')
         .attr('stroke-width', d => d.type === 'main' ? 3 : 1);
 
-    const node = g.selectAll('.node')
+    const node = svg.append('g')
+        .selectAll('g')
         .data(nodes)
         .enter().append('g')
         .attr('class', 'node')
@@ -278,29 +269,20 @@ function initGraph() {
             }
         });
 
-    // Add rounded rectangle for nodes
-    node.append('rect')
-        .attr('width', 100)  // Width of the node
-        .attr('height', 50)  // Height of the node
-        .attr('rx', 10)      // Horizontal radius for rounded corners
-        .attr('ry', 10)      // Vertical radius for rounded corners
-        .attr('fill', d => d.type === 'event' ? '#007bff' : '#ccc'); // Color based on node type
-
-    // Add text inside the rectangle
+    node.append('circle')
+        .attr('r', 10)
+        .attr('fill', d => d.type === 'event' ? '#007bff' : '#ccc');
     node.append('text')
-        .attr('x', 50)              // Center horizontally
-        .attr('y', 25)              // Center vertically
-        .attr('text-anchor', 'middle')        // Align text to center
-        .attr('dominant-baseline', 'central') // Vertically center text
-        .attr('fill', 'white')      // Text color
-        .text(d => d.label);        // Display node content (e.g., event date)
+        .attr('dy', -15)
+        .attr('text-anchor', 'middle')
+        .text(d => d.label);
 
     simulation.on('tick', () => {
         link.attr('x1', d => d.source.x)
             .attr('y1', d => d.source.y)
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
-        node.attr('transform', d => `translate(${d.x - 50}, ${d.y - 25})`); // Center the 100x50 rectangle
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
 }
 
