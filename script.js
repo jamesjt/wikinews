@@ -50,10 +50,14 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         }
                     }
 
-                    // Generate video embed code for YouTube links
+                    // Enhanced video embedding logic
                     let videoEmbed = '';
                     if (videoLink) {
-                        if (videoLink.includes('youtube.com') || videoLink.includes('youtu.be')) {
+                        if (videoLink.includes('embed/')) {
+                            // Use the embed URL directly
+                            videoEmbed = `<iframe width="280" height="157" src="${videoLink}" frameborder="0" allowfullscreen></iframe>`;
+                        } else if (videoLink.includes('youtube.com') || videoLink.includes('youtu.be')) {
+                            // Extract video ID from watch or short URLs
                             const videoId = videoLink.split('v=')[1]?.split('&')[0] || videoLink.split('/').pop();
                             if (videoId) {
                                 videoEmbed = `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
