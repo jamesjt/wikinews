@@ -11,11 +11,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// Updated MarkerClusterGroup with custom behavior
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: 40
+    spiderfyOnMaxZoom: true,         // Spiderfies markers at the maximum zoom if still clustered
+    showCoverageOnHover: false,      // Optional: disables polygon preview on hover
+    zoomToBoundsOnClick: true,       // Zooms to cluster bounds on click
+    maxClusterRadius: 40,            // Controls the clustering distance (in pixels)
+    disableClusteringAtZoom: 15      // Clusters separate at zoom level 15
 });
 map.addLayer(markers);
 
@@ -416,10 +418,13 @@ function buildSidebar(events) {
         eventList.appendChild(decadeDiv);
     });
 
-    // Open all collapsible areas by default
-    document.querySelectorAll('.decade-list').forEach(list => list.classList.add('show'));
-    document.querySelectorAll('.year-list').forEach(list => list.classList.add('show'));
-    document.querySelectorAll('.toggle').forEach(toggle => toggle.classList.add('open'));
+    document.querySelectorAll('.toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const sublist = this.nextElementSibling;
+            sublist.classList.toggle('show');
+            this.classList.toggle('open');
+        });
+    });
 }
 
 function expandAndScrollToEvent(eventItem) {
