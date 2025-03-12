@@ -159,8 +159,8 @@ body {
 .year .toggle {
     position: sticky;
     top: -10px; /* Offset the sidebar’s 10px padding */
-    padding: 15px 10px 5px 10px; /* Increase top padding to compensate */
-    background-color: #e9e9e9;
+    padding: 5px 0px 5px 8px; /* Increase top padding to compensate */
+    background-color: #f9e9c3;
     z-index: 10;
     border-bottom: 1px solid #ddd;
 }
