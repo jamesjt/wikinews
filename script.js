@@ -13,13 +13,20 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // MarkerClusterGroup with custom behavior
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true,         // Spiderfies markers at max zoom if still clustered
-    showCoverageOnHover: false,      // Disables polygon preview on hover
-    zoomToBoundsOnClick: true,       // Zooms to cluster bounds on click
-    maxClusterRadius: 40,            // Clustering distance in pixels
-    disableClusteringAtZoom: 15      // Clusters separate at zoom level 15
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    maxClusterRadius: 40,
+    disableClusteringAtZoom: 15
 });
 map.addLayer(markers);
+
+// Graph container
+const graphContainer = d3.select('#graph')
+    .append('svg')
+    .attr('class', 'graph-container')
+    .attr('width', '100%')
+    .attr('height', '100%');
 
 let events = [];
 let csvData = null;
@@ -92,7 +99,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Popup content with image above videos
                             let popupContent = `
                                 <div class="popup-text">
                                     <span class="popup-event-date">${dateStr}</span><br>
@@ -140,7 +146,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
                                     expandAndScrollToEvent(eventItem);
-                                    eventItem.style.border = '5px solid #f9e9c3'; // Highlight with border
+                                    eventItem.style.border = '5px solid #f9e9c3';
                                 }
                                 highlightTimelineBubble(eventIndex, true);
                             });
@@ -149,7 +155,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    eventItem.style.border = '1px solid #eee'; // Reset border
+                                    eventItem.style.border = '1px solid #eee';
                                 }
                                 highlightTimelineBubble(eventIndex, false);
                             });
@@ -191,7 +197,7 @@ let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = ''; // Clear existing content
+    timelineDiv.innerHTML = '';
 
     height = 120;
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -453,7 +459,6 @@ function buildSidebar(events) {
                     ${videoHtml}
                 `;
 
-                // Tooltip event listeners
                 const linkWrapper = eventItem.querySelector('.link-wrapper');
                 const documentWrapper = eventItem.querySelector('.document-wrapper');
 
@@ -514,7 +519,6 @@ function buildSidebar(events) {
         });
     });
 
-    // Intersection Observer for sticky year toggles
     const sidebar = document.getElementById('sidebar');
     const observer = new IntersectionObserver(
         (entries) => {
@@ -568,11 +572,7 @@ function handleEventClick(event) {
 function handleLocationClick(event) {
     if (event.marker) {
         const latLng = event.marker.getLatLng();
-        
-        // Pan to the location without changing zoom
         map.panTo(latLng);
-        
-        // Handle clustered markers
         if (markers.hasLayer(event.marker)) {
             markers.zoomToShowLayer(event.marker, () => {
                 event.marker.openPopup();
@@ -616,6 +616,26 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.cursor = 'default';
         }
     });
+
+    // Button handling for view toggling
+    const mapBtn = document.querySelector('#timeline-selector button:nth-child(1)');
+    const graphBtn = document.querySelector('#timeline-selector button:nth-child(2)');
+    const docsBtn = document.querySelector('#timeline-selector button:nth-child(3)');
+    
+    mapBtn.classList.add('active');
+    
+    function toggleView(activeBtn, activeView) {
+        [mapBtn, graphBtn, docsBtn].forEach(btn => btn.classList.remove('active'));
+        activeBtn.classList.add('active');
+        document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+        document.querySelector(activeView).classList.add('active');
+        if (activeView === '#map') map.invalidateSize();
+        if (activeView === '#graph') renderGraph();
+    }
+
+    mapBtn.addEventListener('click', () => toggleView(mapBtn, '#map'));
+    graphBtn.addEventListener('click', () => toggleView(graphBtn, '#graph'));
+    docsBtn.addEventListener('click', () => toggleView(docsBtn, '#documents')); // Placeholder
 });
 
 function highlightTimelineBubble(eventIndex, highlight) {
@@ -624,9 +644,248 @@ function highlightTimelineBubble(eventIndex, highlight) {
         .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
 
-// Click-to-enlarge functionality for images
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('clickable-image')) {
         event.target.classList.toggle('enlarged');
     }
 });
+
+// Sub-node color definitions
+const subNodeColors = {
+    'Newscasts': '#FF6B6B',
+    'Live footage': '#4ECDC4',
+    'Podcasts': '#45B7D1',
+    'Other audio files': '#96CEB4',
+    'Downloadable documents': '#FFEEAD',
+    'News articles': '#D4A5A5',
+    'Pictures': '#9B59B6',
+    'Forum posts': '#3498DB',
+    'Twitter feeds': '#1ABC9C',
+    'Book recommendations': '#E74C3C'
+};
+
+// Render graph function
+function renderGraph() {
+    graphContainer.selectAll('*').remove();
+
+    const nodeWidth = 300;
+    const padding = 20;
+    let currentY = padding;
+    const nodes = [];
+    const links = [];
+
+    events.forEach((event, index) => {
+        const blurbLines = event.blurb.split('\n').length;
+        const height = Math.max(100, 50 + blurbLines * 20);
+
+        const mainNode = {
+            id: `main-${index}`,
+            x: padding,
+            y: currentY,
+            width: nodeWidth,
+            height: height,
+            data: event
+        };
+        nodes.push(mainNode);
+
+        if (index > 0) {
+            links.push({
+                source: `main-${index - 1}`,
+                target: `main-${index}`
+            });
+        }
+
+        // Discussion sub-nodes (left side)
+        const discussionNodes = [
+            { type: 'Twitter feeds', content: 'twitter' },
+            { type: 'Podcasts', content: 'podcast' }
+        ];
+        let discussionX = padding - 150;
+        discussionNodes.forEach((sub, i) => {
+            const subNode = {
+                id: `sub-${index}-discussion-${i}`,
+                x: discussionX,
+                y: currentY + height / 2 + i * 40 - 20,
+                width: 120,
+                height: 30,
+                type: sub.type,
+                content: sub.content,
+                purpose: 'discussion'
+            };
+            nodes.push(subNode);
+            links.push({ source: mainNode.id, target: subNode.id });
+            if (i > 0) {
+                links.push({ source: `sub-${index}-discussion-${i-1}`, target: subNode.id });
+            }
+        });
+
+        // Evidence sub-nodes (right side)
+        const evidenceNodes = [];
+        event.validDocuments.forEach((doc, i) => {
+            evidenceNodes.push({
+                type: 'Downloadable documents',
+                content: `<a href="${doc.link}" target="_blank">${doc.name}</a>`
+            });
+        });
+        event.videoEmbeds.forEach(embed => {
+            evidenceNodes.push({
+                type: 'Newscasts',
+                content: embed
+            });
+        });
+        event.validLinks.forEach(link => {
+            evidenceNodes.push({
+                type: 'News articles',
+                content: `<a href="${link.link}" target="_blank">${link.name}</a>`
+            });
+        });
+
+        let evidenceX = padding + nodeWidth + 30;
+        evidenceNodes.forEach((sub, i) => {
+            const subHeight = sub.type === 'Newscasts' ? 167 : 30;
+            const subNode = {
+                id: `sub-${index}-evidence-${i}`,
+                x: evidenceX,
+                y: currentY + height / 2 + i * 40 - subHeight / 2,
+                width: sub.type === 'Newscasts' ? 280 : 120,
+                height: subHeight,
+                type: sub.type,
+                content: sub.content,
+                purpose: 'evidence'
+            };
+            nodes.push(subNode);
+            links.push({ source: mainNode.id, target: subNode.id });
+            if (i > 0 && sub.type === evidenceNodes[i-1].type) {
+                links.push({ source: `sub-${index}-evidence-${i-1}`, target: subNode.id });
+            }
+        });
+
+        currentY += height + padding;
+    });
+
+    const maxX = d3.max(nodes, d => d.x + d.width) + 1000;
+    const maxY = d3.max(nodes, d => d.y + d.height) + 1000;
+    graphContainer.attr('width', maxX).attr('height', maxY);
+
+    graphContainer.selectAll('.connection-line')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', 'connection-line')
+        .attr('x1', d => nodes.find(n => n.id === d.source).x + nodes.find(n => n.id === d.source).width / 2)
+        .attr('y1', d => nodes.find(n => n.id === d.source).y + nodes.find(n => n.id === d.source).height / 2)
+        .attr('x2', d => nodes.find(n => n.id === d.target).x + nodes.find(n => n.id === d.target).width / 2)
+        .attr('y2', d => nodes.find(n => n.id === d.target).y + nodes.find(n => n.id === d.target).height / 2);
+
+    const nodeGroups = graphContainer.selectAll('.node')
+        .data(nodes)
+        .enter()
+        .append('g')
+        .attr('class', d => d.type ? 'sub-node' : 'main-node')
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+
+    nodeGroups.each(function(d) {
+        const group = d3.select(this);
+        if (d.type) {
+            group.append('rect')
+                .attr('width', d.width)
+                .attr('height', d.height)
+                .attr('stroke', subNodeColors[d.type])
+                .attr('fill', 'none');
+            group.append('foreignObject')
+                .attr('width', d.width)
+                .attr('height', d.height)
+                .html(`<div style="color: ${subNodeColors[d.type]}; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">${d.content}</div>`);
+        } else {
+            group.append('rect')
+                .attr('width', d.width)
+                .attr('height', d.height);
+            group.append('text')
+                .attr('x', 5)
+                .attr('y', 20)
+                .attr('class', 'event-number')
+                .text(`Event ${d.data.index + 1}`);
+            group.append('text')
+                .attr('x', 5)
+                .attr('y', 40)
+                .text(d.data.date);
+            group.append('text')
+                .attr('x', 5)
+                .attr('y', 60)
+                .text(d.data.location ? d.data.location.join(', ') : 'No Location');
+            group.append('text')
+                .attr('x', 5)
+                .attr('y', 80)
+                .attr('width', d.width - 10)
+                .call(wrapText, d.width - 10)
+                .text(d.data.blurb);
+        }
+    });
+
+    let isDragging = false;
+    let startX, startY;
+
+    graphContainer
+        .on('mousedown', function(event) {
+            isDragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            d3.select(this).classed('dragging', true);
+        })
+        .on('mousemove', function(event) {
+            if (!isDragging) return;
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+            const transform = d3.zoomTransform(this);
+            const newX = Math.min(0, Math.max(transform.x + dx, -maxX + graph.offsetWidth + 1000));
+            const newY = Math.min(0, Math.max(transform.y + dy, -maxY + graph.offsetHeight + 1000));
+            d3.select(this).call(zoom.transform, d3.zoomIdentity.translate(newX, newY));
+            startX = event.clientX;
+            startY = event.clientY;
+        })
+        .on('mouseup', function() {
+            isDragging = false;
+            d3.select(this).classed('dragging', false);
+        });
+
+    const zoom = d3.zoom()
+        .on('zoom', (event) => {
+            graphContainer.attr('transform', event.transform);
+        });
+    graphContainer.call(zoom).call(zoom.transform, d3.zoomIdentity);
+}
+
+// Text wrapping function
+function wrapText(text, width) {
+    text.each(function() {
+        const text = d3.select(this);
+        const words = text.text().split(/\s+/).reverse();
+        let word;
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 1.1;
+        const y = text.attr('y');
+        const dy = 0;
+
+        let tspan = text.text(null)
+            .append('tspan')
+            .attr('x', 5)
+            .attr('y', y)
+            .attr('dy', dy + 'em');
+
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(' '));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(' '));
+                line = [word];
+                tspan = text.append('tspan')
+                    .attr('x', 5)
+                    .attr('y', y)
+                    .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                    .text(word);
+            }
+        }
+    });
+}
