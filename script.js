@@ -667,23 +667,19 @@ document.addEventListener('click', function(event) {
 function renderGraph() {
     const canvas = document.getElementById('graph-canvas');
     const ctx = canvas.getContext('2d');
-    const graphDiv = document.getElementById('graph');
-    
-    // Clear previous sub-node overlays
-    document.querySelectorAll('.sub-node-picture, .sub-node-video').forEach(el => el.remove());
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const mainX = 1000; // Center of canvas width
     const mainSpacing = 400; // Vertical spacing between main nodes
 
-    // Define angles for sub-node types (in degrees), starting horizontally
+    // Define angles for each sub-node type (in degrees)
     const typeAngles = {
-        'newscast': 0,    // Right side (evidence), horizontal
-        'picture': 10,    // Slight spread
-        'document': 20,
-        'article': 30,
-        'forum': 180,     // Left side (discussion), horizontal
-        'twitter': 170    // Slight spread
+        'newscast': 0,    // Right side (evidence)
+        'picture': 30,
+        'document': 60,
+        'article': 90,
+        'forum': 180,     // Left side (discussion)
+        'twitter': 210
     };
 
     // Polar to Cartesian conversion function
@@ -693,26 +689,6 @@ function renderGraph() {
             x: centerX + (radius * Math.cos(angleInRadians)),
             y: centerY + (radius * Math.sin(angleInRadians))
         };
-    }
-
-    // Text wrapping function
-    function wrapText(ctx, text, maxWidth) {
-        const words = text.split(' ');
-        const lines = [];
-        let currentLine = words[0] || '';
-        for (let i = 1; i < words.length; i++) {
-            const word = words[i];
-            const testLine = currentLine + ' ' + word;
-            const width = ctx.measureText(testLine).width;
-            if (width < maxWidth) {
-                currentLine = testLine;
-            } else {
-                lines.push(currentLine);
-                currentLine = word;
-            }
-        }
-        lines.push(currentLine);
-        return lines;
     }
 
     const typeColors = {
@@ -805,7 +781,7 @@ function renderGraph() {
         currentY += node.height + mainSpacing;
     });
 
-    // Position sub-nodes radially with increased distance
+    // Position sub-nodes radially around main nodes
     mainNodes.forEach(mainNode => {
         const subNodesForMain = subNodes.filter(sn => sn.mainId === mainNode.id);
         const typeGroups = {};
@@ -817,7 +793,7 @@ function renderGraph() {
         Object.entries(typeGroups).forEach(([type, group]) => {
             const angle = typeAngles[type] || 0;
             group.forEach((subNode, index) => {
-                const radius = 600 + index * 150; // 3x base radius and increment
+                const radius = 200 + index * 50; // Base radius 200, increment 50
                 const centerX = mainNode.x + mainNode.width / 2;
                 const centerY = mainNode.y + mainNode.height / 2;
                 const position = polarToCartesian(centerX, centerY, radius, angle);
@@ -872,7 +848,7 @@ function renderGraph() {
         });
     });
 
-    // Draw main nodes with wrapped text
+    // Draw main nodes
     mainNodes.forEach(node => {
         ctx.fillStyle = 'lightgray';
         ctx.fillRect(node.x, node.y, node.width, node.height);
@@ -880,65 +856,25 @@ function renderGraph() {
         ctx.strokeRect(node.x, node.y, node.width, node.height);
         ctx.fillStyle = 'black';
         ctx.font = '14px Arial';
-        let y = node.y + 20;
-        const lineHeight = 20;
-        const maxWidth = node.width - 20; // Padding
-        const paragraphs = node.text.split('\n');
-        paragraphs.forEach(paragraph => {
-            const lines = wrapText(ctx, paragraph, maxWidth);
-            lines.forEach(line => {
-                if (y + lineHeight <= node.y + node.height - 10) {
-                    ctx.fillText(line, node.x + 10, y);
-                    y += lineHeight;
-                }
-            });
-            y += lineHeight; // Space between paragraphs
+        const lines = node.text.split('\n');
+        lines.forEach((line, i) => {
+            ctx.fillText(line, node.x + 10, node.y + 20 + i * 20);
         });
     });
 
-    // Draw sub-nodes with wrapped text, skipping for picture and newscast
+    // Draw sub-nodes
     subNodes.forEach(subNode => {
         const color = typeColors[subNode.type] || 'gray';
         ctx.strokeStyle = color;
         ctx.strokeRect(subNode.x, subNode.y, subNode.width, subNode.height);
-        if (subNode.type !== 'picture' && subNode.type !== 'newscast') {
-            ctx.fillStyle = 'black';
-            ctx.font = '12px Arial';
-            if (subNode.text) {
-                const lines = wrapText(ctx, subNode.text, subNode.width - 20);
-                let y = subNode.y + 20;
-                lines.forEach(line => {
-                    if (y + 15 <= subNode.y + subNode.height - 5) {
-                        ctx.fillText(line, subNode.x + 10, y);
-                        y += 15;
-                    }
-                });
-            }
-        }
-    });
-
-    // Add HTML overlays for picture and newscast sub-nodes
-    subNodes.forEach(subNode => {
-        if (subNode.type === 'picture' && subNode.imageUrl) {
-            const pictureDiv = document.createElement('div');
-            pictureDiv.className = 'sub-node-picture';
-            pictureDiv.style.position = 'absolute';
-            pictureDiv.style.left = `${subNode.x}px`;
-            pictureDiv.style.top = `${subNode.y}px`;
-            pictureDiv.style.width = `${subNode.width}px`;
-            pictureDiv.style.height = `${subNode.height}px`;
-            pictureDiv.innerHTML = `<img src="${subNode.imageUrl}" class="clickable-image" style="width:100%;height:100%;" alt="Event Image">`;
-            graphDiv.appendChild(pictureDiv);
-        } else if (subNode.type === 'newscast' && subNode.embed) {
-            const videoDiv = document.createElement('div');
-            videoDiv.className = 'sub-node-video';
-            videoDiv.style.position = 'absolute';
-            videoDiv.style.left = `${subNode.x}px`;
-            videoDiv.style.top = `${subNode.y}px`;
-            videoDiv.style.width = `${subNode.width}px`;
-            videoDiv.style.height = `${subNode.height}px`;
-            videoDiv.innerHTML = subNode.embed.replace('width="280"', 'width="200"').replace('height="157"', 'height="50"');
-            graphDiv.appendChild(videoDiv);
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        if (subNode.text) {
+            ctx.fillText(subNode.text, subNode.x + 10, subNode.y + 25);
+        } else if (subNode.type === 'newscast') {
+            ctx.fillText('Video', subNode.x + 10, subNode.y + 25);
+        } else if (subNode.type === 'picture') {
+            ctx.fillText('Image', subNode.x + 10, subNode.y + 25);
         }
     });
 
@@ -961,9 +897,9 @@ function renderGraph() {
                     }
                 } else if (node.link) {
                     window.open(node.link, '_blank');
-                } else if (node.type === 'newscast' && node.embed) {
+                } else if (node.type === 'newscast') {
                     alert('Open video: ' + node.embed);
-                } else if (node.type === 'picture' && node.imageUrl) {
+                } else if (node.type === 'picture') {
                     alert('Show image: ' + node.imageUrl);
                 }
             }
