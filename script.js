@@ -671,16 +671,25 @@ function renderGraph() {
 
     const mainX = 1000; // Center of canvas width
     const mainSpacing = 400; // Vertical spacing between main nodes
-    const subSpacing = 60; // Vertical spacing between sub-nodes
 
-    const typeOffsets = {
-        'newscast': 200,
-        'picture': 400,
-        'document': 600,
-        'article': 800,
-        'forum': -200,
-        'twitter': -400
+    // Define angles for each sub-node type (in degrees)
+    const typeAngles = {
+        'newscast': 0,    // Right side (evidence)
+        'picture': 30,
+        'document': 60,
+        'article': 90,
+        'forum': 180,     // Left side (discussion)
+        'twitter': 210
     };
+
+    // Polar to Cartesian conversion function
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        const angleInRadians = angleInDegrees * Math.PI / 180.0;
+        return {
+            x: centerX + (radius * Math.cos(angleInRadians)),
+            y: centerY + (radius * Math.sin(angleInRadians))
+        };
+    }
 
     const typeColors = {
         'newscast': 'orange',
@@ -764,7 +773,7 @@ function renderGraph() {
         });
     });
 
-    // Position main nodes
+    // Position main nodes vertically
     let currentY = 100;
     mainNodes.forEach(node => {
         node.x = mainX - node.width / 2;
@@ -772,15 +781,26 @@ function renderGraph() {
         currentY += node.height + mainSpacing;
     });
 
-    // Position sub-nodes
-    subNodes.forEach(subNode => {
-        const mainNode = mainNodes.find(n => n.id === subNode.mainId);
-        const type = subNode.type;
-        const offset = typeOffsets[type];
-        const sameTypeSubNodes = subNodes.filter(sn => sn.mainId === subNode.mainId && sn.type === type);
-        const index = sameTypeSubNodes.indexOf(subNode);
-        subNode.x = mainX + offset - subNode.width / 2;
-        subNode.y = mainNode.y + index * subSpacing;
+    // Position sub-nodes radially around main nodes
+    mainNodes.forEach(mainNode => {
+        const subNodesForMain = subNodes.filter(sn => sn.mainId === mainNode.id);
+        const typeGroups = {};
+        subNodesForMain.forEach(sn => {
+            if (!typeGroups[sn.type]) typeGroups[sn.type] = [];
+            typeGroups[sn.type].push(sn);
+        });
+
+        Object.entries(typeGroups).forEach(([type, group]) => {
+            const angle = typeAngles[type] || 0;
+            group.forEach((subNode, index) => {
+                const radius = 200 + index * 50; // Base radius 200, increment 50
+                const centerX = mainNode.x + mainNode.width / 2;
+                const centerY = mainNode.y + mainNode.height / 2;
+                const position = polarToCartesian(centerX, centerY, radius, angle);
+                subNode.x = position.x - subNode.width / 2;
+                subNode.y = position.y - subNode.height / 2;
+            });
+        });
     });
 
     // Draw connections
@@ -797,7 +817,7 @@ function renderGraph() {
         ctx.stroke();
     }
 
-    // Connect main nodes to sub-nodes and between sub-nodes
+    // Connect main nodes to sub-nodes and between sub-nodes of the same type
     mainNodes.forEach(mainNode => {
         const mainId = mainNode.id;
         const typeGroups = {};
