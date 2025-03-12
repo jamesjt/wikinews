@@ -409,6 +409,58 @@ body {
     max-width: 500px; /* Larger size when clicked */
 }
 
+/* Link wrapper for sidebar */
+.link-wrapper {
+    position: relative;
+    margin-right: 5px;
+}
+
+.link-icon img {
+    width: 16px;
+    height: 16px;
+}
+
+.link-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.link-wrapper:hover .link-tooltip {
+    display: block;
+}
+
+.link-entry {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+}
+
+.link-entry img {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}
+
+.link-entry a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
+}
+
+/* Popup text separator */
+.popup-text {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
 /* D3 timeline event circles */
 .event-circle {
     cursor: pointer;
