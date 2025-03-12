@@ -140,8 +140,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         index,
                         summaryState: 0,
                         documentNames,
-                        documentLinks,
-                        videoEmbeds // Store video embeds in the event object
+                        documentLinks
                     };
                 }).filter(event => event.timestamp);
 
@@ -367,11 +366,6 @@ function buildSidebar(events) {
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
-                // Generate video HTML if there are embeds
-                const videoHtml = event.videoEmbeds && event.videoEmbeds.length > 0
-                    ? event.videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('')
-                    : '';
-
                 eventItem.innerHTML = `
                     <div class="event-date">
                         <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
@@ -391,7 +385,6 @@ function buildSidebar(events) {
                         </div>
                     </div>
                     <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
-                    ${videoHtml} <!-- Add video embeds here -->
                 `;
 
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
@@ -423,13 +416,10 @@ function buildSidebar(events) {
         eventList.appendChild(decadeDiv);
     });
 
-    document.querySelectorAll('.toggle').forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const sublist = this.nextElementSibling;
-            sublist.classList.toggle('show');
-            this.classList.toggle('open');
-        });
-    });
+    // Open all collapsible areas by default
+    document.querySelectorAll('.decade-list').forEach(list => list.classList.add('show'));
+    document.querySelectorAll('.year-list').forEach(list => list.classList.add('show'));
+    document.querySelectorAll('.toggle').forEach(toggle => toggle.classList.add('open'));
 }
 
 function expandAndScrollToEvent(eventItem) {
