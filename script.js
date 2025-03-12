@@ -88,7 +88,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    expandAndScrollToEvent(eventItem); // Updated to use expandAndScrollToEvent
                                     eventItem.style.backgroundColor = 'tan';
                                 }
                                 highlightTimelineBubble(eventIndex, true);
