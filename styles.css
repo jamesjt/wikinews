@@ -165,7 +165,7 @@ body {
     border-bottom: 1px solid #ddd;
 }
 .year .toggle.sticky-active {
-    background-color: #f9e9c3; /* Highlight color when actively sticky */
+    background-color: #b7b7b7; /* Highlight color when actively sticky */
 }
 
 /* Event container to hold state icons and event item */
