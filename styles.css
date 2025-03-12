@@ -394,6 +394,20 @@ body {
     font-size:16px;
 }
 
+/* Style for clickable images */
+.clickable-image {
+    width: 100%;
+    max-width: 280px; /* Matches video iframe width for consistency */
+    cursor: pointer;
+    transition: max-width 0.3s ease; /* Smooth size transition */
+    display: block; /* Ensures images stack vertically */
+    margin: 10px 0; /* Adds spacing similar to video-container */
+}
+
+/* Enlarged state */
+.clickable-image.enlarged {
+    max-width: 500px; /* Larger size when clicked */
+}
 
 /* D3 timeline event circles */
 .event-circle {
