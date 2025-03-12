@@ -11,7 +11,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Replace markers array with MarkerClusterGroup
 const markers = L.markerClusterGroup({
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
@@ -41,7 +40,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
 
-                    // Create an array of valid document pairs
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
                         const name = documentNames[i];
@@ -67,12 +65,11 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Updated popup content: date at top, followed by blurb, then document links if present
                             let popupContent = `
                                 <span class="popup-event-date">${dateStr}</span><br>
                                 <span class="popup-short-summary">${shortSummary}</span><br>
                                 <span class="popup-blurb">${blurb}</span>
-                                `;
+                            `;
                             if (validDocuments.length > 0) {
                                 validDocuments.forEach(doc => {
                                     popupContent += `
@@ -83,11 +80,27 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 });
                             }
 
-                            marker = L.marker(location, { icon: numberedIcon })
-                                .bindPopup(popupContent);
+                            marker = L.marker(location, { icon: numberedIcon });
+                            marker.eventIndex = index; // Store the event index
+                            marker.bindPopup(popupContent);
 
-                            marker.on('click', () => {
-                                marker.openPopup();
+                            marker.on('popupopen', () => {
+                                const eventIndex = marker.eventIndex;
+                                const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+                                if (eventItem) {
+                                    eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    eventItem.style.backgroundColor = 'tan';
+                                }
+                                highlightTimelineBubble(eventIndex, true);
+                            });
+
+                            marker.on('popupclose', () => {
+                                const eventIndex = marker.eventIndex;
+                                const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
+                                if (eventItem) {
+                                    eventItem.style.backgroundColor = '';
+                                }
+                                highlightTimelineBubble(eventIndex, false);
                             });
 
                             markers.addLayer(marker);
@@ -118,21 +131,19 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
-// Declare global variables for D3 elements
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = ''; // Clear existing content
+    timelineDiv.innerHTML = '';
 
     height = 120;
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
-    // Create SVG with responsive width
     svg = d3.select('#timeline')
         .append('svg')
         .attr('height', height)
-        .attr('width', '100%'); // Fills container width
+        .attr('width', '100%');
 
     g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -141,7 +152,6 @@ function setupD3Timeline() {
     const maxTime = d3.max(events, d => d.timestamp);
     const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
 
-    // Initial xScale with current container width
     xScale = d3.scaleTime()
         .domain([new Date(minTime - oneYearInMs), new Date(maxTime + oneYearInMs)])
         .range([0, timelineDiv.clientWidth - margin.left - margin.right]);
@@ -199,7 +209,6 @@ function setupD3Timeline() {
         .style('pointer-events', 'none')
         .text(d => d.index + 1);
 
-    // Define zoom behavior
     const zoom = d3.zoom()
         .scaleExtent([0.1, 50])
         .translateExtent([[0, 0], [timelineDiv.clientWidth - margin.left - margin.right, height - margin.top - margin.bottom]])
@@ -213,36 +222,29 @@ function setupD3Timeline() {
         });
 
     svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
-    window.zoomBehavior = zoom; // Store for updates
+    window.zoomBehavior = zoom;
 
-    // Double-click to reset zoom
     svg.on('dblclick.zoom', null);
     svg.on('dblclick', () => svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity));
 }
 
-// Function to update timeline on resize
 function updateTimeline() {
     const timelineDiv = document.getElementById('timeline');
     const width = timelineDiv.clientWidth;
 
-    // Update xScale range
     xScale.range([0, width - margin.left - margin.right]);
 
-    // Redraw axis and reposition circles
     gX.call(d3.axisBottom(xScale));
     circles.attr('cx', d => xScale(d.timestamp));
     eventGroup.selectAll('.event-number').attr('x', d => xScale(d.timestamp));
 
-    // Update zoom translate extent
     window.zoomBehavior.translateExtent([[0, 0], [width - margin.left - margin.right, height - margin.top - margin.bottom]]);
     svg.call(window.zoomBehavior);
 }
 
-// Initial setup and update
 setupD3Timeline();
 updateTimeline();
 
-// Listen for window resize
 window.addEventListener('resize', updateTimeline);
 
 function buildSidebar(events) {
@@ -316,10 +318,9 @@ function buildSidebar(events) {
                 const eventContainer = document.createElement('div');
                 eventContainer.className = 'event-container';
 
-                // State icons
                 const stateIcons = document.createElement('div');
                 stateIcons.className = 'state-icons';
-                const icons = ['–', '☰', '¶']; // Short summary, longer summary, blurb
+                const icons = ['–', '☰', '¶'];
                 icons.forEach((icon, idx) => {
                     const stateIcon = document.createElement('div');
                     stateIcon.className = `state-icon ${event.summaryState === idx ? 'active' : ''}`;
@@ -472,3 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function highlightTimelineBubble(eventIndex, highlight) {
+    eventGroup.selectAll('.event-circle')
+        .filter(d => d.index === eventIndex)
+        .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
+}
