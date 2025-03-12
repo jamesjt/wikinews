@@ -321,23 +321,26 @@ body {
     box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
+/* Custom cluster colors with gradient opacity */
 .marker-cluster-small {
-    background-color: yellow !important;
+    background-color: rgba(220, 180, 0, 0.8) !important; /* Light yellow with lower opacity */
 }
 .marker-cluster-small > div {
-    background-color: yellow !important;
+    background-color: rgba(220, 180, 0, 0.8) !important;
 }
+
 .marker-cluster-medium {
-    background-color: orange !important;
+    background-color: rgba(240, 160, 0, 0.8) !important; /* Orange with moderate opacity */
 }
 .marker-cluster-medium > div {
-    background-color: orange !important;
+    background-color: rgba(240, 160, 0, 0.8) !important;
 }
+
 .marker-cluster-large {
-    background-color: red !important;
+    background-color: rgba(255, 0, 0, 0.8) !important; /* Red with full opacity */
 }
 .marker-cluster-large > div {
-    background-color: red !important;
+    background-color: rgba(255, 0, 0, 0.8) !important;
 }
 
 /* Tooltip styling */
