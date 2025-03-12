@@ -11,12 +11,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Updated MarkerClusterGroup with custom behavior
+// MarkerClusterGroup with custom behavior
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true,         // Spiderfies markers at the maximum zoom if still clustered
-    showCoverageOnHover: false,      // Optional: disables polygon preview on hover
+    spiderfyOnMaxZoom: true,         // Spiderfies markers at max zoom if still clustered
+    showCoverageOnHover: false,      // Disables polygon preview on hover
     zoomToBoundsOnClick: true,       // Zooms to cluster bounds on click
-    maxClusterRadius: 40,            // Controls the clustering distance (in pixels)
+    maxClusterRadius: 40,            // Clustering distance in pixels
     disableClusteringAtZoom: 15      // Clusters separate at zoom level 15
 });
 map.addLayer(markers);
@@ -92,7 +92,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Construct popup content with image above videos
+                            // Popup content with image above videos
                             let popupContent = `
                                 <div class="popup-text">
                                     <span class="popup-event-date">${dateStr}</span><br>
@@ -140,7 +140,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
                                     expandAndScrollToEvent(eventItem);
-                                    eventItem.style.backgroundColor = '#f9e9c3';
+                                    eventItem.style.border = '5px solid #f9e9c3'; // Highlight with border
                                 }
                                 highlightTimelineBubble(eventIndex, true);
                             });
@@ -149,7 +149,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    eventItem.style.backgroundColor = '';
+                                    eventItem.style.border = '1px solid #eee'; // Reset border
                                 }
                                 highlightTimelineBubble(eventIndex, false);
                             });
@@ -172,9 +172,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         documentNames,
                         documentLinks,
                         videoEmbeds,
-                        imageUrl, // Store single image URL
-                        validDocuments, // Added to track valid document pairs
-                        validLinks // Added to track valid link pairs
+                        imageUrl,
+                        validDocuments,
+                        validLinks
                     };
                 }).filter(event => event.timestamp);
 
@@ -186,7 +186,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
-// Declare global variables for D3 elements
+// D3 timeline global variables
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
@@ -240,7 +240,6 @@ function setupD3Timeline() {
         .on('mouseover', function(event, d) {
             d3.select(this).transition().duration(200).attr('r', 10);
 
-            // Build icons HTML based on event properties
             let iconsHtml = '';
             if (d.imageUrl) {
                 iconsHtml += `<img src="icon-picture.png" alt="Image" width="16" height="16">`;
@@ -255,7 +254,6 @@ function setupD3Timeline() {
                 iconsHtml += `<img src="icon-document.png" alt="Document" width="16" height="16">`;
             }
 
-            // Update tooltip content without "Date:" label
             d3.select('body').append('div')
                 .attr('class', 'dynamic-tooltip')
                 .style('position', 'absolute')
@@ -455,7 +453,7 @@ function buildSidebar(events) {
                     ${videoHtml}
                 `;
 
-                // Add tooltip event listeners
+                // Tooltip event listeners
                 const linkWrapper = eventItem.querySelector('.link-wrapper');
                 const documentWrapper = eventItem.querySelector('.document-wrapper');
 
@@ -516,7 +514,7 @@ function buildSidebar(events) {
         });
     });
 
-    // Add Intersection Observer to highlight actively sticky year toggles
+    // Intersection Observer for sticky year toggles
     const sidebar = document.getElementById('sidebar');
     const observer = new IntersectionObserver(
         (entries) => {
@@ -535,7 +533,6 @@ function buildSidebar(events) {
         }
     );
 
-    // Observe each year toggle
     document.querySelectorAll('.year .toggle').forEach(toggle => {
         observer.observe(toggle);
     });
@@ -570,10 +567,19 @@ function handleEventClick(event) {
 
 function handleLocationClick(event) {
     if (event.marker) {
-        map.setView(event.marker.getLatLng(), 14);
-        markers.zoomToShowLayer(event.marker, () => {
+        const latLng = event.marker.getLatLng();
+        
+        // Pan to the location without changing zoom
+        map.panTo(latLng);
+        
+        // Handle clustered markers
+        if (markers.hasLayer(event.marker)) {
+            markers.zoomToShowLayer(event.marker, () => {
+                event.marker.openPopup();
+            });
+        } else {
             event.marker.openPopup();
-        });
+        }
     }
 }
 
@@ -618,7 +624,7 @@ function highlightTimelineBubble(eventIndex, highlight) {
         .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
 
-// Add event listener for click-to-enlarge functionality on images
+// Click-to-enlarge functionality for images
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('clickable-image')) {
         event.target.classList.toggle('enlarged');
