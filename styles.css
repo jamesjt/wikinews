@@ -456,3 +456,31 @@ body {
     margin-right: 5px;
     vertical-align: middle;
 }
+
+
+/* Graph container */
+#graph {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    display: none;
+}
+
+/* Active button styling */
+button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Center header */
+#header {
+    text-align: center;
+}
+
+/* Center timeline selector */
+#timeline-selector {
+    text-align: center;
+    padding: 10px 20px;
+    background-color: #fafafa;
+    border-bottom: 1px solid #ddd;
+}
