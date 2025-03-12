@@ -41,10 +41,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const locationStr = row['Location']?.trim() || '';
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
-                    const linkNames = row['Link Name']?.split(',').map(name => name.trim()) || [];
-                    const links = row['Links']?.split(',').map(link => link.trim()) || [];
                     const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
-                    const imageUrl = row['Image']?.trim() || '';
+                    const imageUrl = row['Image']?.trim() || ''; // Single image URL per event
 
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
@@ -52,15 +50,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         const link = documentLinks[i];
                         if (name && name.trim() !== '' && link && link.trim() !== '') {
                             validDocuments.push({ name, link });
-                        }
-                    }
-
-                    const validLinks = [];
-                    for (let i = 0; i < Math.min(linkNames.length, links.length); i++) {
-                        const name = linkNames[i];
-                        const link = links[i];
-                        if (name && name.trim() !== '' && link && link.trim() !== '') {
-                            validLinks.push({ name, link });
                         }
                     }
 
@@ -94,13 +83,10 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                             // Construct popup content with image above videos
                             let popupContent = `
-                                <div class="popup-text">
-                                    <span class="popup-event-date">${dateStr}</span><br>
-                                    <span class="popup-short-summary">${shortSummary}</span><br>
-                                    <span class="popup-blurb">${blurb}</span>
-                                </div>
+                                <span class="popup-event-date">${dateStr}</span><br>
+                                <span class="popup-short-summary">${shortSummary}</span><br>
+                                <span class="popup-blurb">${blurb}</span>
                             `;
-
                             if (imageUrl) {
                                 popupContent += `<br><img src="${imageUrl}" class="clickable-image" alt="Event Image">`;
                             }
@@ -108,19 +94,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const videoHtml = videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('');
                                 popupContent += `${videoHtml}`;
                             }
-                            if (validLinks.length > 0) {
-                                popupContent += `<div class="popup-links">`;
-                                validLinks.forEach(linkObj => {
-                                    popupContent += `
-                                        <div class="link-entry">
-                                            <img src="icon-link.png" alt="Link">
-                                            <a href="${linkObj.link}" target="_blank">${linkObj.name}</a>
-                                        </div>`;
-                                });
-                                popupContent += `</div>`;
-                            }
                             if (validDocuments.length > 0) {
-                                popupContent += `<div class="popup-documents">`;
                                 validDocuments.forEach(doc => {
                                     popupContent += `
                                         <div class="document-link">
@@ -128,7 +102,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                             <a href="${doc.link}" target="_blank">${doc.name}</a>
                                         </div>`;
                                 });
-                                popupContent += `</div>`;
                             }
 
                             marker = L.marker(location, { icon: numberedIcon });
@@ -173,8 +146,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         documentLinks,
                         videoEmbeds,
                         imageUrl, // Store single image URL
-                        validDocuments, // Added to track valid document pairs
-                        validLinks // Added to track valid link pairs
+                        validDocuments // Added to track valid document pairs
                     };
                 }).filter(event => event.timestamp);
 
@@ -248,7 +220,7 @@ function setupD3Timeline() {
             if (d.videoEmbeds.length > 0) {
                 iconsHtml += `<img src="icon-video.png" alt="Video" width="16" height="16">`;
             }
-            if (d.validLinks.length > 0) {
+            if (d.validDocuments.length > 0) {
                 iconsHtml += `<img src="icon-link.png" alt="Links" width="16" height="16">`;
             }
             if (d.validDocuments.length > 0) {
@@ -427,16 +399,6 @@ function buildSidebar(events) {
                         <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
                         <span>${event.displayDate}</span>
                         <div class="icons-container">
-                            ${
-                                event.validLinks.length > 0
-                                    ? `<div class="link-wrapper"><div class="link-icon"><img src="icon-link.png" alt="Links"></div><div class="link-tooltip">${event.validLinks
-                                          .map(
-                                              linkObj =>
-                                                  `<div class="link-entry"><img src="icon-link.png" alt="Link"><a href="${linkObj.link}" target="_blank">${linkObj.name}</a></div>`
-                                          )
-                                          .join('')}</div></div>`
-                                    : ''
-                            }
                             ${
                                 hasValidDocuments
                                     ? `<div class="document-wrapper"><div class="document-icon"><img src="icon-document.png" alt="Document"></div><div class="document-tooltip">${validDocumentNames
