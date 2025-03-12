@@ -168,7 +168,6 @@ body {
     background-color: #f9e9c3; /* Highlight color when actively sticky */
 }
 
-
 /* Event container to hold state icons and event item */
 .event-container {
     display: flex;
@@ -186,7 +185,7 @@ body {
 /* Individual state icon */
 .state-icon {
     width: 10px;
-    height: 1-px;
+    height: 10px; /* Fixed typo from 1-px */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -196,7 +195,7 @@ body {
     background-color: #e0e0e0;
     opacity: 0.5;
     transition: background-color 0.3s, opacity 0.3s;
-    font-size: 8px
+    font-size: 8px;
 }
 
 /* Active state icon */
@@ -224,7 +223,6 @@ body {
     color: #979797;
     font-weight: bold;
 }
-
 
 .event-number-circle {
     display: inline-flex;
@@ -380,6 +378,7 @@ body {
 .video-container {
     margin: 10px 0;
 }
+
 .popup-event-date {
     text-transform: uppercase;
     font-size: 13px;
@@ -387,11 +386,12 @@ body {
     color: #979797;
     font-weight: bold;
 }
+
 .popup-short-summary {
     font-weight: bold;
-    text-transfomr: uppercase;
+    text-transform: uppercase; /* Fixed typo from text-transfomr */
     font-family: 'PT Sans Narrow', sans-serif !important;
-    font-size:16px;
+    font-size: 16px;
 }
 
 /* Style for clickable images */
@@ -415,3 +415,8 @@ body {
     transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
 }
 
+/* Icons in tooltip */
+.dynamic-tooltip .icons img {
+    margin-right: 5px;
+    vertical-align: middle;
+}
