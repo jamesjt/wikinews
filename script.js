@@ -89,7 +89,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
                                     expandAndScrollToEvent(eventItem); // Updated to use expandAndScrollToEvent
-                                    eventItem.style.backgroundColor = 'tan';
+                                    eventItem.style.backgroundColor = #f9e9c3;
                                 }
                                 highlightTimelineBubble(eventIndex, true);
                             });
