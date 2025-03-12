@@ -417,10 +417,7 @@ function buildSidebar(events) {
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
-                // Generate image HTML if there is an image URL
                 const imageHtml = event.imageUrl ? `<img src="${event.imageUrl}" class="clickable-image" alt="Event Image">` : '';
-
-                // Generate video HTML if there are embeds
                 const videoHtml = event.videoEmbeds && event.videoEmbeds.length > 0
                     ? event.videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('')
                     : '';
@@ -454,9 +451,33 @@ function buildSidebar(events) {
                         </div>
                     </div>
                     <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
-                    ${imageHtml} <!-- Add image above videos -->
-                    ${videoHtml} <!-- Videos below image -->
+                    ${imageHtml}
+                    ${videoHtml}
                 `;
+
+                // Add tooltip event listeners
+                const linkWrapper = eventItem.querySelector('.link-wrapper');
+                const documentWrapper = eventItem.querySelector('.document-wrapper');
+
+                if (linkWrapper) {
+                    const linkTooltip = linkWrapper.querySelector('.link-tooltip');
+                    linkWrapper.addEventListener('mouseenter', () => {
+                        linkTooltip.style.display = 'block';
+                    });
+                    linkWrapper.addEventListener('mouseleave', () => {
+                        linkTooltip.style.display = 'none';
+                    });
+                }
+
+                if (documentWrapper) {
+                    const documentTooltip = documentWrapper.querySelector('.document-tooltip');
+                    documentWrapper.addEventListener('mouseenter', () => {
+                        documentTooltip.style.display = 'block';
+                    });
+                    documentWrapper.addEventListener('mouseleave', () => {
+                        documentTooltip.style.display = 'none';
+                    });
+                }
 
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
                     event.summaryState = (event.summaryState + 1) % 3;
