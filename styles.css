@@ -343,12 +343,9 @@ body {
     font-size: 12px;
 }
 
-/* D3 timeline event circles */
-.event-circle {
-    cursor: pointer;
-    transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
+.video-container {
+    margin: 10px 0;
 }
-
 .popup-event-date {
     text-transform: uppercase;
     font-size: 13px;
@@ -362,3 +359,11 @@ body {
     font-family: 'PT Sans Narrow', sans-serif !important;
     font-size:16px;
 }
+
+
+/* D3 timeline event circles */
+.event-circle {
+    cursor: pointer;
+    transition: transform 0.2s ease; /* Kept for consistency, but not used for hover */
+}
+
