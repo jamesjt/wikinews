@@ -13,16 +13,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // MarkerClusterGroup with custom behavior
 const markers = L.markerClusterGroup({
-    spiderfyOnMaxZoom: true,         // Spiderfies markers at max zoom if still clustered
-    showCoverageOnHover: false,      // Disables polygon preview on hover
-    zoomToBoundsOnClick: true,       // Zooms to cluster bounds on click
-    maxClusterRadius: 40,            // Clustering distance in pixels
-    disableClusteringAtZoom: 15      // Clusters separate at zoom level 15
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    maxClusterRadius: 40,
+    disableClusteringAtZoom: 15
 });
 map.addLayer(markers);
 
 let events = [];
 let csvData = null;
+let currentView = 'map'; // Track the current view
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -92,7 +93,6 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 popupAnchor: [0, -12]
                             });
 
-                            // Popup content with image above videos
                             let popupContent = `
                                 <div class="popup-text">
                                     <span class="popup-event-date">${dateStr}</span><br>
@@ -140,7 +140,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
                                     expandAndScrollToEvent(eventItem);
-                                    eventItem.style.border = '5px solid #f9e9c3'; // Highlight with border
+                                    eventItem.style.border = '5px solid #f9e9c3';
                                 }
                                 highlightTimelineBubble(eventIndex, true);
                             });
@@ -149,7 +149,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                                 const eventIndex = marker.eventIndex;
                                 const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
                                 if (eventItem) {
-                                    eventItem.style.border = '1px solid #eee'; // Reset border
+                                    eventItem.style.border = '1px solid #eee';
                                 }
                                 highlightTimelineBubble(eventIndex, false);
                             });
@@ -186,12 +186,112 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
     })
     .catch(error => console.error('Error fetching CSV:', error));
 
+// View switching function
+function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelector(`#${view}-btn`).classList.add('active');
+    document.querySelector(`#${view}`).classList.add('active');
+    if (view === 'map') {
+        map.invalidateSize(); // Ensure map resizes correctly
+    } else if (view === 'graph' && !document.querySelector('#graph').dataset.initialized) {
+        initGraph();
+    }
+}
+
+// Event listeners for view buttons
+document.querySelector('#map-btn').addEventListener('click', () => switchView('map'));
+document.querySelector('#graph-btn').addEventListener('click', () => switchView('graph'));
+document.querySelector('#docs-btn').addEventListener('click', () => switchView('docs'));
+
+// Initialize Graph
+function initGraph() {
+    const graphDiv = document.querySelector('#graph');
+    graphDiv.dataset.initialized = 'true';
+    const width = graphDiv.clientWidth;
+    const height = graphDiv.clientHeight;
+
+    const svg = d3.select('#graph').append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    const nodes = [];
+    const links = [];
+
+    // Create main event nodes and connections
+    events.forEach((event, i) => {
+        nodes.push({ id: `event-${event.index}`, type: 'event', label: event.date, blurb: event.blurb });
+        if (i > 0) {
+            links.push({ source: `event-${events[i-1].index}`, target: `event-${event.index}`, type: 'main' });
+        }
+
+        // Sub-nodes for videos, docs, links, images
+        const subTypes = ['video', 'doc', 'link', 'image'];
+        subTypes.forEach(type => {
+            const items = type === 'video' ? event.videoEmbeds :
+                          type === 'doc' ? event.validDocuments :
+                          type === 'link' ? event.validLinks :
+                          type === 'image' ? (event.imageUrl ? [event.imageUrl] : []) : [];
+            items.forEach((item, idx) => {
+                const subId = `${type}-${event.index}-${idx}`;
+                nodes.push({ 
+                    id: subId, 
+                    type, 
+                    label: type === 'doc' || type === 'link' ? item.name : item 
+                });
+                links.push({ source: `event-${event.index}`, target: subId, type: 'sub' });
+            });
+        });
+    });
+
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'main' ? 100 : 50))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('center', d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append('g')
+        .selectAll('line')
+        .data(links)
+        .enter().append('line')
+        .attr('stroke', d => d.type === 'main' ? '#000' : '#999')
+        .attr('stroke-width', d => d.type === 'main' ? 3 : 1);
+
+    const node = svg.append('g')
+        .selectAll('g')
+        .data(nodes)
+        .enter().append('g')
+        .attr('class', 'node')
+        .on('click', (event, d) => {
+            if (d.type === 'event') {
+                const eventIndex = parseInt(d.id.split('-')[1]);
+                handleEventClick(events[eventIndex]);
+            }
+        });
+
+    node.append('circle')
+        .attr('r', 10)
+        .attr('fill', d => d.type === 'event' ? '#007bff' : '#ccc');
+    node.append('text')
+        .attr('dy', -15)
+        .attr('text-anchor', 'middle')
+        .text(d => d.label);
+
+    simulation.on('tick', () => {
+        link.attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+}
+
 // D3 timeline global variables
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
 function setupD3Timeline() {
     const timelineDiv = document.getElementById('timeline');
-    timelineDiv.innerHTML = ''; // Clear existing content
+    timelineDiv.innerHTML = '';
 
     height = 120;
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -316,7 +416,12 @@ function updateTimeline() {
 setupD3Timeline();
 updateTimeline();
 
-window.addEventListener('resize', updateTimeline);
+window.addEventListener('resize', () => {
+    updateTimeline();
+    if (currentView === 'map') {
+        map.invalidateSize();
+    }
+});
 
 function buildSidebar(events) {
     const groupedEvents = {};
@@ -453,7 +558,6 @@ function buildSidebar(events) {
                     ${videoHtml}
                 `;
 
-                // Tooltip event listeners
                 const linkWrapper = eventItem.querySelector('.link-wrapper');
                 const documentWrapper = eventItem.querySelector('.document-wrapper');
 
@@ -514,7 +618,6 @@ function buildSidebar(events) {
         });
     });
 
-    // Intersection Observer for sticky year toggles
     const sidebar = document.getElementById('sidebar');
     const observer = new IntersectionObserver(
         (entries) => {
@@ -560,7 +663,7 @@ function expandAndScrollToEvent(eventItem) {
 function handleEventClick(event) {
     const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
     if (eventItem) expandAndScrollToEvent(eventItem);
-    if (event.marker) {
+    if (event.marker && currentView === 'map') {
         handleLocationClick(event);
     }
 }
@@ -568,11 +671,7 @@ function handleEventClick(event) {
 function handleLocationClick(event) {
     if (event.marker) {
         const latLng = event.marker.getLatLng();
-        
-        // Pan to the location without changing zoom
         map.panTo(latLng);
-        
-        // Handle clustered markers
         if (markers.hasLayer(event.marker)) {
             markers.zoomToShowLayer(event.marker, () => {
                 event.marker.openPopup();
@@ -606,7 +705,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (newWidth >= minWidth && newWidth <= maxWidth) {
             sidebar.style.flex = `0 0 ${newWidth}px`;
-            map.invalidateSize();
+            if (currentView === 'map') {
+                map.invalidateSize();
+            }
         }
     });
 
@@ -624,7 +725,6 @@ function highlightTimelineBubble(eventIndex, highlight) {
         .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
 
-// Click-to-enlarge functionality for images
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('clickable-image')) {
         event.target.classList.toggle('enlarged');
