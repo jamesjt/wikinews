@@ -260,6 +260,7 @@ body {
     height: 16px;
 }
 
+/* Updated document tooltip */
 .document-tooltip {
     display: none;
     position: absolute;
@@ -267,31 +268,57 @@ body {
     right: 0;
     background-color: #fff;
     border: 1px solid #ddd;
-    padding: 5px;
+    padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
+    max-width: 100%; /* Constrain to event-item width */
+    width: auto; /* Adjust to content */
+    white-space: normal; /* Allow text wrapping */
 }
 
-.document-wrapper:hover .document-tooltip {
-    display: block;
+/* Updated link tooltip */
+.link-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-width: 100%; /* Constrain to event-item width */
+    width: auto; /* Adjust to content */
+    white-space: normal; /* Allow text wrapping */
 }
 
-.doc-entry {
+/* Ensure natural text case for links */
+.link-tooltip a, .document-tooltip a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 12px;
+    text-transform: none; /* Override uppercase from event-date */
+}
+
+/* Add borders between entries */
+.link-tooltip .link-entry:not(:last-child),
+.document-tooltip .doc-entry:not(:last-child) {
+    border-bottom: 1px solid #ddd; /* Elegant separator */
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+/* Style for link and document entries */
+.link-entry, .doc-entry {
     display: flex;
     align-items: center;
     margin: 3px 0;
 }
 
-.doc-entry img {
+.link-entry img, .doc-entry img {
     width: 12px;
     height: 12px;
     margin-right: 5px;
-}
-
-.doc-entry a {
-    text-decoration: none;
-    color: #007bff;
-    font-size: 12px;
 }
 
 .location-icon {
@@ -418,47 +445,6 @@ body {
 .link-icon img {
     width: 16px;
     height: 16px;
-}
-
-.link-tooltip {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    z-index: 1000;
-}
-
-.link-wrapper:hover .link-tooltip {
-    display: block;
-}
-
-.link-entry {
-    display: flex;
-    align-items: center;
-    margin: 3px 0;
-}
-
-.link-entry img {
-    width: 12px;
-    height: 12px;
-    margin-right: 5px;
-}
-
-.link-entry a {
-    text-decoration: none;
-    color: #007bff;
-    font-size: 12px;
-}
-
-/* Popup text separator */
-.popup-text {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
 }
 
 /* D3 timeline event circles */
