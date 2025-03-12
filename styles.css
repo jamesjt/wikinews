@@ -546,3 +546,46 @@ body {
     stroke: #666;
     stroke-width: 2px;
 }
+.graph-container {
+    position: absolute;
+    cursor: grab;
+}
+
+.graph-container.dragging {
+    cursor: grabbing;
+}
+
+.graph-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.main-node, .sub-node {
+    border-radius: 5px;
+    padding: 10px;
+    position: absolute;
+    font-family: Arial, sans-serif;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.main-node {
+    background-color: #f0f0f0;
+    border: 2px solid #666;
+}
+
+.sub-node {
+    border: 2px solid; /* Color set dynamically */
+}
+
+.sub-node a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.connection-line {
+    stroke: #666;
+    stroke-width: 2px;
+}
