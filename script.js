@@ -140,7 +140,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         index,
                         summaryState: 0,
                         documentNames,
-                        documentLinks
+                        documentLinks,
+                        videoEmbeds // Store video embeds in the event object
                     };
                 }).filter(event => event.timestamp);
 
@@ -366,6 +367,11 @@ function buildSidebar(events) {
                 const validDocumentLinks = event.documentLinks.filter(link => link && link.trim() !== '');
                 const hasValidDocuments = validDocumentNames.length > 0 && validDocumentLinks.length > 0;
 
+                // Generate video HTML if there are embeds
+                const videoHtml = event.videoEmbeds && event.videoEmbeds.length > 0
+                    ? event.videoEmbeds.map(embed => `<div class="video-container">${embed}</div>`).join('')
+                    : '';
+
                 eventItem.innerHTML = `
                     <div class="event-date">
                         <span class="event-number-circle${event.location ? ' has-location' : ''}">${event.index + 1}</span>
@@ -385,6 +391,7 @@ function buildSidebar(events) {
                         </div>
                     </div>
                     <div class="event-summary">${[event.shortSummary, event.summary, event.blurb][event.summaryState]}</div>
+                    ${videoHtml} <!-- Add video embeds here -->
                 `;
 
                 eventItem.querySelector('.event-summary').addEventListener('click', () => {
