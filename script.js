@@ -432,6 +432,30 @@ function buildSidebar(events) {
             this.classList.toggle('open');
         });
     });
+
+    // Add Intersection Observer to highlight actively sticky year toggles
+    const sidebar = document.getElementById('sidebar');
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('sticky-active');
+                } else {
+                    entry.target.classList.remove('sticky-active');
+                }
+            });
+        },
+        {
+            root: sidebar,
+            threshold: 0,
+            rootMargin: '0px 0px -100% 0px'
+        }
+    );
+
+    // Observe each year toggle
+    document.querySelectorAll('.year .toggle').forEach(toggle => {
+        observer.observe(toggle);
+    });
 }
 
 function expandAndScrollToEvent(eventItem) {
