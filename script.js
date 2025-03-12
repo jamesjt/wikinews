@@ -216,19 +216,26 @@ function initGraph() {
         .attr('width', width)
         .attr('height', height);
 
-    const g = svg.append('g'); // Container group for all graph elements
+    const g = svg.append('g');
 
     const nodes = [];
     const links = [];
 
-    // Create main event nodes and connections
+    // Create main event nodes (linear, top to bottom)
     events.forEach((event, i) => {
-        nodes.push({ id: `event-${event.index}`, type: 'event', label: event.date, blurb: event.blurb });
-        if (i > 0) {
-            links.push({ source: `event-${events[i-1].index}`, target: `event-${event.index}`, type: 'main' });
-        }
+        const node = {
+            id: `event-${event.index}`,
+            type: 'event',
+            label: event.date,
+            blurb: event.blurb,
+            number: i + 1,
+            fixed: true,
+            x: width / 2,        // Center horizontally
+            y: 50 + i * 150      // Linear vertical spacing
+        };
+        nodes.push(node);
 
-        // Sub-nodes for videos, docs, links, images
+        // Create sub-nodes (videos, docs, links, images)
         const subTypes = ['video', 'doc', 'link', 'image'];
         subTypes.forEach(type => {
             const items = type === 'video' ? event.videoEmbeds :
@@ -237,29 +244,37 @@ function initGraph() {
                           type === 'image' ? (event.imageUrl ? [event.imageUrl] : []) : [];
             items.forEach((item, idx) => {
                 const subId = `${type}-${event.index}-${idx}`;
-                nodes.push({ 
-                    id: subId, 
-                    type, 
-                    label: type === 'doc' || type === 'link' ? item.name : item 
+                nodes.push({
+                    id: subId,
+                    type,
+                    label: type === 'doc' || type === 'link' ? item.name : item,
+                    parent: node
                 });
-                links.push({ source: `event-${event.index}`, target: subId, type: 'sub' });
+                links.push({ source: node.id, target: subId, type: 'sub' });
             });
         });
     });
 
-    const simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'main' ? 100 : 50))
-        .force('charge', d3.forceManyBody().strength(-200))
-        .force('center', d3.forceCenter(width / 2, height / 2));
+    // Link main nodes sequentially
+    for (let i = 1; i < events.length; i++) {
+        links.push({ source: `event-${events[i-1].index}`, target: `event-${events[i].index}`, type: 'main' });
+    }
 
-    // Enable panning (dragging the graph)
+    // Force simulation
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'main' ? 150 : 50))
+        .force('charge', d3.forceManyBody().strength(-100))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('fixX', d3.forceX(d => d.fixed ? d.x : width / 2).strength(1))
+        .force('fixY', d3.forceY(d => d.fixed ? d.y : height / 2).strength(1));
+
+    // Enable panning
     const zoom = d3.zoom()
-        .scaleExtent([1, 1])  // Disable zooming, only panning
-        .on('zoom', (event) => {
-            g.attr('transform', event.transform); // Update the container group's position
-        });
+        .scaleExtent([1, 1])
+        .on('zoom', (event) => g.attr('transform', event.transform));
     svg.call(zoom);
 
+    // Draw links
     const link = g.append('g')
         .selectAll('line')
         .data(links)
@@ -267,10 +282,12 @@ function initGraph() {
         .attr('stroke', d => d.type === 'main' ? '#000' : '#999')
         .attr('stroke-width', d => d.type === 'main' ? 3 : 1);
 
+    // Draw nodes
     const node = g.selectAll('.node')
         .data(nodes)
         .enter().append('g')
         .attr('class', 'node')
+        .attr('id', d => d.id)
         .on('click', (event, d) => {
             if (d.type === 'event') {
                 const eventIndex = parseInt(d.id.split('-')[1]);
@@ -278,32 +295,69 @@ function initGraph() {
             }
         });
 
-    // Add rounded rectangle for nodes
+    // Add rounded rectangles
     node.append('rect')
-        .attr('width', 100)  // Width of the node
-        .attr('height', 50)  // Height of the node
-        .attr('rx', 10)      // Horizontal radius for rounded corners
-        .attr('ry', 10)      // Vertical radius for rounded corners
-        .attr('fill', d => d.type === 'event' ? '#007bff' : '#ccc'); // Color based on node type
+        .attr('rx', 10)
+        .attr('ry', 10)
+        .attr('fill', d => d.type === 'event' ? '#007bff' : '#ccc');
 
-    // Add text inside the rectangle
-    node.append('text')
-        .attr('x', 50)              // Center horizontally
-        .attr('y', 25)              // Center vertically
-        .attr('text-anchor', 'middle')        // Align text to center
-        .attr('dominant-baseline', 'central') // Vertically center text
-        .attr('fill', 'white')      // Text color
-        .text(d => d.label);        // Display node content (e.g., event date)
+    // Add text for main nodes
+    const mainNodes = node.filter(d => d.type === 'event');
+    mainNodes.append('text')
+        .attr('class', 'node-number')
+        .attr('x', 10)
+        .attr('y', 20)
+        .attr('fill', 'white')
+        .text(d => `${d.number}. ${d.label}`);
+    mainNodes.append('text')
+        .attr('class', 'node-blurb')
+        .attr('x', 10)
+        .attr('y', 40)
+        .attr('fill', 'white')
+        .text(d => d.blurb);
 
+    // Add text for sub-nodes
+    const subNodes = node.filter(d => d.type !== 'event');
+    subNodes.append('text')
+        .attr('x', 10)
+        .attr('y', 20)
+        .attr('fill', 'white')
+        .text(d => d.label);
+
+    // Dynamically size main nodes
+    mainNodes.each(function(d) {
+        const numberText = d3.select(this).select('.node-number');
+        const blurbText = d3.select(this).select('.node-blurb');
+        const numberWidth = numberText.node().getBBox().width;
+        const blurbWidth = blurbText.node().getBBox().width;
+        const maxWidth = Math.max(numberWidth, blurbWidth) + 20; // Padding
+        const height = 60; // Fixed height for two lines
+        d3.select(this).select('rect')
+            .attr('width', maxWidth)
+            .attr('height', height);
+        numberText.attr('x', maxWidth / 2).attr('text-anchor', 'middle');
+        blurbText.attr('x', maxWidth / 2).attr('text-anchor', 'middle');
+    });
+
+    // Size sub-nodes
+    subNodes.each(function(d) {
+        const text = d3.select(this).select('text');
+        const textWidth = text.node().getBBox().width + 20;
+        d3.select(this).select('rect')
+            .attr('width', textWidth)
+            .attr('height', 30);
+        text.attr('x', textWidth / 2).attr('text-anchor', 'middle');
+    });
+
+    // Update positions on tick
     simulation.on('tick', () => {
         link.attr('x1', d => d.source.x)
             .attr('y1', d => d.source.y)
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
-        node.attr('transform', d => `translate(${d.x - 50}, ${d.y - 25})`); // Center the 100x50 rectangle
+        node.attr('transform', d => `translate(${d.x - (d.type === 'event' ? d3.select(`#${d.id} rect`).attr('width') / 2 : 0)}, ${d.y - (d.type === 'event' ? 30 : 15)})`);
     });
 }
-
 // D3 timeline global variables
 let svg, g, gX, eventGroup, circles, xScale, height, margin;
 
