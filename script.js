@@ -52,6 +52,12 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const twitter = row['Twitter']?.trim() || '';
                     const podcast = row['Podcast']?.trim() || '';
 
+                    // Add raw data fields for List view
+                    const videoRaw = row['Video']?.trim() || '';
+                    const imageRaw = row['Image']?.trim() || '';
+                    const linksRaw = row['Links']?.trim() || '';
+                    const documentLinkRaw = row['Document Link']?.trim() || '';
+
                     // Compute formattedDate for graph view
                     let formattedDate = dateStr;
                     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
@@ -213,7 +219,11 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         formattedDate,
                         locationName,
                         twitter,
-                        podcast
+                        podcast,
+                        videoRaw,
+                        imageRaw,
+                        linksRaw,
+                        documentLinkRaw
                     };
                 }).filter(event => event.timestamp);
 
@@ -679,6 +689,63 @@ function handleLocationClick(event) {
     }
 }
 
+function renderListView() {
+    const listView = document.getElementById('list-view');
+    if (!events || events.length === 0) {
+        listView.innerHTML = 'Loading events...';
+        return;
+    }
+    listView.innerHTML = ''; // Clear existing content
+
+    events.forEach(event => {
+        // Create event container
+        const eventEntry = document.createElement('div');
+        eventEntry.className = 'event-entry';
+
+        // Event header with number and summary
+        const eventHeader = document.createElement('div');
+        eventHeader.className = 'event-header';
+
+        const eventNumber = document.createElement('span');
+        eventNumber.className = 'event-number';
+        eventNumber.textContent = `Event ${event.index + 1}: `;
+
+        const eventSummary = document.createElement('span');
+        eventSummary.className = 'event-summary';
+        eventSummary.textContent = event.shortSummary;
+
+        eventHeader.appendChild(eventNumber);
+        eventHeader.appendChild(eventSummary);
+        eventEntry.appendChild(eventHeader);
+
+        // Event details
+        const eventDetails = document.createElement('div');
+        eventDetails.className = 'event-details';
+
+        const details = [
+            { label: 'Video', data: event.videoRaw },
+            { label: 'Image', data: event.imageRaw },
+            { label: 'Links', data: event.linksRaw },
+            { label: 'Document Link', data: event.documentLinkRaw }
+        ];
+
+        details.forEach(detail => {
+            if (detail.data && detail.data.trim() !== '') {
+                const detailElement = document.createElement('div');
+                detailElement.className = 'event-detail';
+                detailElement.textContent = `${detail.label}: ${detail.data}`;
+                eventDetails.appendChild(detailElement);
+            }
+        });
+
+        if (eventDetails.children.length > 0) {
+            eventEntry.appendChild(eventDetails);
+        }
+
+        listView.appendChild(eventEntry);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const resizeHandle = document.querySelector('.resize-handle');
@@ -716,21 +783,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // View switching logic
     const mapBtn = document.querySelector('.view-btn[data-view="map"]');
     const graphBtn = document.querySelector('.view-btn[data-view="graph"]');
-    const documentsBtn = document.querySelector('.view-btn[data-view="documents"]');
+    const listBtn = document.querySelector('.view-btn[data-view="list"]');
 
     const mapView = document.getElementById('map');
     const graphView = document.getElementById('graph-view');
-    const documentsView = document.getElementById('documents-view');
+    const listView = document.getElementById('list-view');
 
     function switchView(view) {
         currentView = view;
         mapView.style.display = 'none';
         graphView.style.display = 'none';
-        documentsView.style.display = 'none';
+        listView.style.display = 'none';
 
         mapBtn.classList.remove('active');
         graphBtn.classList.remove('active');
-        documentsBtn.classList.remove('active');
+        listBtn.classList.remove('active');
 
         if (view === 'map') {
             mapView.style.display = 'block';
@@ -753,15 +820,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 graphView.innerHTML = 'Loading events...';
             }
-        } else if (view === 'documents') {
-            documentsView.style.display = 'block';
-            documentsBtn.classList.add('active');
+        } else if (view === 'list') {
+            listView.style.display = 'block';
+            listBtn.classList.add('active');
+            renderListView();
         }
     }
 
     mapBtn.addEventListener('click', () => switchView('map'));
     graphBtn.addEventListener('click', () => switchView('graph'));
-    documentsBtn.addEventListener('click', () => switchView('documents'));
+    listBtn.addEventListener('click', () => switchView('list'));
 });
 
 function createEventRow(event) {
