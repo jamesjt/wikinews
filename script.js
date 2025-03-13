@@ -783,12 +783,11 @@ function renderFirstEvent(event) {
     if (event.validLinks.length > 0) {
         const linksSection = document.createElement('div');
         linksSection.className = 'links-section';
-        linksSection.innerHTML = '<h3>Links</h3>';
         event.validLinks.forEach(linkObj => {
             const linkElement = document.createElement('div');
             linkElement.className = 'link-item';
             linkElement.innerHTML = `
-                <img src="icon-link.png" alt="Link" width="16" height="16">
+                <img src="icon-link.png" alt="Link" width="16" height="16" style="margin-right: 5px;">
                 <a href="${linkObj.link}" target="_blank">${linkObj.name}</a>
             `;
             linksSection.appendChild(linkElement);
@@ -800,12 +799,11 @@ function renderFirstEvent(event) {
     if (event.validDocuments.length > 0) {
         const documentsSection = document.createElement('div');
         documentsSection.className = 'documents-section';
-        documentsSection.innerHTML = '<h3>Documents</h3>';
         event.validDocuments.forEach(doc => {
             const docElement = document.createElement('div');
             docElement.className = 'document-item';
             docElement.innerHTML = `
-                <img src="icon-document.png" alt="Document" width="16" height="16">
+                <img src="icon-document.png" alt="Document" width="16" height="16" style="margin-right: 5px;">
                 <a href="${doc.link}" target="_blank">${doc.name}</a>
             `;
             documentsSection.appendChild(docElement);
@@ -817,12 +815,14 @@ function renderFirstEvent(event) {
     if (event.videoEmbeds.length > 0) {
         const videosSection = document.createElement('div');
         videosSection.className = 'videos-section';
-        videosSection.innerHTML = '<h3>Videos</h3>';
         event.videoEmbeds.forEach(embed => {
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'video-container';
-            videoContainer.innerHTML = embed;
-            videosSection.appendChild(videoContainer);
+            const videoItem = document.createElement('div');
+            videoItem.className = 'video-item';
+            videoItem.innerHTML = `
+                <img src="icon-video.png" alt="Video" width="16" height="16" style="margin-right: 5px;">
+                <div class="video-container">${embed}</div>
+            `;
+            videosSection.appendChild(videoItem);
         });
         leftColumn.appendChild(videosSection);
     }
@@ -831,12 +831,12 @@ function renderFirstEvent(event) {
     if (event.imageUrl) {
         const imageSection = document.createElement('div');
         imageSection.className = 'image-section';
-        imageSection.innerHTML = '<h3>Image</h3>';
+        imageSection.innerHTML = `
+            <img src="icon-picture.png" alt="Image" width="16" height="16" style="margin-right: 5px;">
+        `;
         const imgElement = document.createElement('img');
         imgElement.src = event.imageUrl;
         imgElement.className = 'event-image';
-        imgElement.style.width = '100%';
-        imgElement.style.cursor = 'pointer';
         imgElement.addEventListener('click', () => {
             const modal = document.createElement('div');
             modal.className = 'image-modal';
@@ -869,7 +869,10 @@ function renderFirstEvent(event) {
     if (event.twitter) {
         const twitterSection = document.createElement('div');
         twitterSection.className = 'twitter-section';
-        twitterSection.innerHTML = '<h3>Twitter</h3>' + event.twitter;
+        twitterSection.innerHTML = `
+            <img src="icon-twitter.png" alt="Twitter" width="16" height="16" style="margin-right: 5px;">
+            ${event.twitter}
+        `;
         rightColumn.appendChild(twitterSection);
     }
 
@@ -877,7 +880,10 @@ function renderFirstEvent(event) {
     if (event.podcast) {
         const podcastSection = document.createElement('div');
         podcastSection.className = 'podcast-section';
-        podcastSection.innerHTML = '<h3>Podcast</h3>' + event.podcast;
+        podcastSection.innerHTML = `
+            <img src="icon-podcast.png" alt="Podcast" width="16" height="16" style="margin-right: 5px;">
+            ${event.podcast}
+        `;
         rightColumn.appendChild(podcastSection);
     }
 
