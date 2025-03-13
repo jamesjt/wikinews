@@ -662,12 +662,18 @@ function highlightTimelineBubble(eventIndex, highlight) {
 function handleLocationClick(event) {
     if (event.marker) {
         const latLng = event.marker.getLatLng();
-        map.panTo(latLng);
-        if (markers.hasLayer(event.marker)) {
-            markers.zoomToShowLayer(event.marker, () => {
+        const desiredZoom = 10; // Set zoom level to 10 for a wider view
+        map.setView(latLng, desiredZoom); // Center map on event location with specified zoom
+
+        const cluster = markers.getVisibleParent(event.marker);
+        if (cluster && cluster !== event.marker) {
+            // If marker is in a cluster, expand it
+            cluster.spiderfy();
+            setTimeout(() => {
                 event.marker.openPopup();
-            });
+            }, 300); // Delay to allow cluster expansion
         } else {
+            // If not in a cluster, open popup directly
             event.marker.openPopup();
         }
     }
