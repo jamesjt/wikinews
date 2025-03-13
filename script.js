@@ -46,6 +46,23 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
                     const imageUrl = row['Image']?.trim() || '';
 
+                    // Compute displayDate
+                    let displayDate = dateStr;
+                    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                        const [month, day, year] = dateStr.split('/').map(Number);
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const getOrdinal = (day) => {
+                            if (day > 3 && day < 21) return `${day}th`;
+                            switch (day % 10) {
+                                case 1: return `${day}st`;
+                                case 2: return `${day}nd`;
+                                case 3: return `${day}rd`;
+                                default: return `${day}th`;
+                            }
+                        };
+                        displayDate = `${months[month - 1]} ${getOrdinal(day)}`;
+                    }
+
                     const validDocuments = [];
                     for (let i = 0; i < Math.min(documentNames.length, documentLinks.length); i++) {
                         const name = documentNames[i];
@@ -173,7 +190,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         videoEmbeds,
                         imageUrl,
                         validDocuments,
-                        validLinks
+                        validLinks,
+                        displayDate  // Add displayDate to the event object
                     };
                 }).filter(event => event.timestamp);
 
@@ -634,10 +652,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (view === 'map') {
             mapView.style.display = 'block';
             mapBtn.classList.add('active');
-            map.invalidateSize(); // Recalculate map size
+            map.invalidateSize();
         } else if (view === 'graph') {
             graphView.style.display = 'block';
             graphBtn.classList.add('active');
+            if (events.length > 0) {
+                renderFirstEvent(events[0]);
+            } else {
+                graphView.innerHTML = 'Loading events...';
+            }
         } else if (view === 'documents') {
             documentsView.style.display = 'block';
             documentsBtn.classList.add('active');
@@ -662,215 +685,65 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Graph rendering function (unchanged)
-function renderGraph() {
-    const canvas = document.getElementById('graph-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// New functions for graph view
+function renderFirstEvent(event) {
+    const graphView = document.getElementById('graph-view');
+    graphView.innerHTML = ''; // Clear previous content
 
-    const mainX = 1000;
-    const mainSpacing = 400;
-    const subSpacing = 60;
+    const eventMain = document.createElement('div');
+    eventMain.className = 'event-main';
 
-    const typeOffsets = {
-        'newscast': 200,
-        'picture': 400,
-        'document': 600,
-        'article': 800,
-        'forum': -200,
-        'twitter': -400
-    };
+    const eventHeader = document.createElement('div');
+    eventHeader.className = 'event-header';
 
-    const typeColors = {
-        'newscast': 'orange',
-        'picture': 'purple',
-        'document': 'teal',
-        'article': 'blue',
-        'forum': 'green',
-        'twitter': 'deepskyblue'
-    };
+    const eventNumber = document.createElement('span');
+    eventNumber.className = 'event-number-circle';
+    eventNumber.textContent = event.index + 1;
 
-    const mainNodes = events.map((event, index) => ({
-        type: 'main',
-        id: `main-${index}`,
-        eventIndex: index,
-        text: `Event ${index + 1}\n${event.date}\n${event.location ? event.location.join(', ') : 'No Location'}\n${event.blurb}`,
-        width: 300,
-        height: 200
-    }));
+    const eventDate = document.createElement('span');
+    eventDate.className = 'event-date-text';
+    eventDate.textContent = event.displayDate;
 
-    const subNodes = [];
-    events.forEach((event, index) => {
-        const mainId = `main-${index}`;
+    const stateIcons = document.createElement('div');
+    stateIcons.className = 'state-icons state-icons-row';
 
-        event.videoEmbeds.forEach((embed, i) => {
-            subNodes.push({
-                type: 'newscast',
-                id: `video-${index}-${i}`,
-                mainId: mainId,
-                embed: embed,
-                width: 200,
-                height: 50
-            });
+    const icons = ['–', '☰', '¶']; // Short summary, summary, blurb
+    icons.forEach((icon, idx) => {
+        const stateIcon = document.createElement('div');
+        stateIcon.className = `state-icon ${event.summaryState === idx ? 'active' : ''}`;
+        stateIcon.textContent = icon;
+        stateIcon.setAttribute('data-state', idx);
+        stateIcon.addEventListener('click', () => {
+            event.summaryState = idx;
+            updateContent(event);
+            updateStateIcons(stateIcons, idx);
         });
-
-        if (event.imageUrl) {
-            subNodes.push({
-                type: 'picture',
-                id: `picture-${index}`,
-                mainId: mainId,
-                imageUrl: event.imageUrl,
-                width: 200,
-                height: 50
-            });
-        }
-
-        event.validDocuments.forEach((doc, i) => {
-            subNodes.push({
-                type: 'document',
-                id: `document-${index}-${i}`,
-                mainId: mainId,
-                text: doc.name,
-                link: doc.link,
-                width: 200,
-                height: 50
-            });
-        });
-
-        event.validLinks.forEach((linkObj, i) => {
-            subNodes.push({
-                type: 'article',
-                id: `article-${index}-${i}`,
-                mainId: mainId,
-                text: linkObj.name,
-                link: linkObj.link,
-                width: 200,
-                height: 50
-            });
-        });
-
-        ['forum', 'twitter'].forEach(type => {
-            subNodes.push({
-                type: type,
-                id: `${type}-${index}`,
-                mainId: mainId,
-                text: `${type.charAt(0).toUpperCase() + type.slice(1)} Post`,
-                width: 200,
-                height: 50
-            });
-        });
+        stateIcons.appendChild(stateIcon);
     });
 
-    let currentY = 100;
-    mainNodes.forEach(node => {
-        node.x = mainX - node.width / 2;
-        node.y = currentY;
-        currentY += node.height + mainSpacing;
-    });
+    eventHeader.appendChild(eventNumber);
+    eventHeader.appendChild(eventDate);
+    eventHeader.appendChild(stateIcons);
 
-    subNodes.forEach(subNode => {
-        const mainNode = mainNodes.find(n => n.id === subNode.mainId);
-        const type = subNode.type;
-        const offset = typeOffsets[type];
-        const sameTypeSubNodes = subNodes.filter(sn => sn.mainId === subNode.mainId && sn.type === type);
-        const index = sameTypeSubNodes.indexOf(subNode);
-        subNode.x = mainX + offset - subNode.width / 2;
-        subNode.y = mainNode.y + index * subSpacing;
-    });
+    const eventContent = document.createElement('div');
+    eventContent.className = 'event-content';
 
-    ctx.strokeStyle = 'darkgray';
-    ctx.lineWidth = 2;
+    eventMain.appendChild(eventHeader);
+    eventMain.appendChild(eventContent);
 
-    for (let i = 0; i < mainNodes.length - 1; i++) {
-        const n1 = mainNodes[i];
-        const n2 = mainNodes[i + 1];
-        ctx.beginPath();
-        ctx.moveTo(n1.x + n1.width / 2, n1.y + n1.height);
-        ctx.lineTo(n2.x + n2.width / 2, n2.y);
-        ctx.stroke();
-    }
+    graphView.appendChild(eventMain);
 
-    mainNodes.forEach(mainNode => {
-        const mainId = mainNode.id;
-        const typeGroups = {};
-        subNodes.forEach(subNode => {
-            if (subNode.mainId === mainId) {
-                if (!typeGroups[subNode.type]) typeGroups[subNode.type] = [];
-                typeGroups[subNode.type].push(subNode);
-            }
-        });
+    updateContent(event); // Initial content display
+}
 
-        Object.values(typeGroups).forEach(group => {
-            if (group.length > 0) {
-                const firstSub = group[0];
-                ctx.beginPath();
-                ctx.moveTo(mainNode.x + mainNode.width / 2, mainNode.y + mainNode.height / 2);
-                ctx.lineTo(firstSub.x + firstSub.width / 2, firstSub.y + firstSub.height / 2);
-                ctx.stroke();
+function updateContent(event) {
+    const eventContent = document.querySelector('.event-content');
+    const content = [event.shortSummary, event.summary, event.blurb][event.summaryState];
+    eventContent.innerHTML = `<p>${content}</p>`;
+}
 
-                for (let i = 0; i < group.length - 1; i++) {
-                    const s1 = group[i];
-                    const s2 = group[i + 1];
-                    ctx.beginPath();
-                    ctx.moveTo(s1.x + s1.width / 2, s1.y + s1.height / 2);
-                    ctx.lineTo(s2.x + s2.width / 2, s2.y + s2.height / 2);
-                    ctx.stroke();
-                }
-            }
-        });
-    });
-
-    mainNodes.forEach(node => {
-        ctx.fillStyle = 'lightgray';
-        ctx.fillRect(node.x, node.y, node.width, node.height);
-        ctx.strokeStyle = 'darkgray';
-        ctx.strokeRect(node.x, node.y, node.width, node.height);
-        ctx.fillStyle = 'black';
-        ctx.font = '14px Arial';
-        const lines = node.text.split('\n');
-        lines.forEach((line, i) => {
-            ctx.fillText(line, node.x + 10, node.y + 20 + i * 20);
-        });
-    });
-
-    subNodes.forEach(subNode => {
-        const color = typeColors[subNode.type] || 'gray';
-        ctx.strokeStyle = color;
-        ctx.strokeRect(subNode.x, subNode.y, subNode.width, subNode.height);
-        ctx.fillStyle = 'black';
-        ctx.font = '12px Arial';
-        if (subNode.text) {
-            ctx.fillText(subNode.text, subNode.x + 10, subNode.y + 25);
-        } else if (subNode.type === 'newscast') {
-            ctx.fillText('Video', subNode.x + 10, subNode.y + 25);
-        } else if (subNode.type === 'picture') {
-            ctx.fillText('Image', subNode.x + 10, subNode.y + 25);
-        }
-    });
-
-    window.graphNodes = [...mainNodes, ...subNodes];
-
-    canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
-
-        window.graphNodes.forEach(node => {
-            if (clickX >= node.x && clickX <= node.x + node.width &&
-                clickY >= node.y && clickY <= node.y + node.height) {
-                if (node.type === 'main') {
-                    const eventItem = document.querySelector(`.event-item[data-event-index="${node.eventIndex}"]`);
-                    if (eventItem) {
-                        expandAndScrollToEvent(eventItem);
-                    }
-                } else if (node.link) {
-                    window.open(node.link, '_blank');
-                } else if (node.type === 'newscast') {
-                    alert('Open video: ' + node.embed);
-                } else if (node.type === 'picture') {
-                    alert('Show image: ' + node.imageUrl);
-                }
-            }
-        });
+function updateStateIcons(stateIcons, activeIdx) {
+    stateIcons.querySelectorAll('.state-icon').forEach((icon, idx) => {
+        icon.classList.toggle('active', idx === activeIdx);
     });
 }
