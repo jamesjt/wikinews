@@ -22,6 +22,8 @@ const markers = L.markerClusterGroup({
 map.addLayer(markers);
 
 let events = [];
+let focusedEvent = null;
+let currentView = 'map'; // Default view
 let csvData = null;
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
@@ -175,22 +177,12 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             marker.bindPopup(popupContent, { maxWidth: 320 });
 
                             marker.on('popupopen', () => {
-                                const eventIndex = marker.eventIndex;
-                                const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
-                                if (eventItem) {
-                                    expandAndScrollToEvent(eventItem);
-                                    eventItem.style.border = '5px solid #f9e9c3';
-                                }
-                                highlightTimelineBubble(eventIndex, true);
+                                const event = events[marker.eventIndex];
+                                setFocusedEvent(event);
                             });
 
                             marker.on('popupclose', () => {
-                                const eventIndex = marker.eventIndex;
-                                const eventItem = document.querySelector(`.event-item[data-event-index="${eventIndex}"]`);
-                                if (eventItem) {
-                                    eventItem.style.border = '1px solid #eee';
-                                }
-                                highlightTimelineBubble(eventIndex, false);
+                                clearFocusedEvent();
                             });
 
                             markers.addLayer(marker);
@@ -280,7 +272,7 @@ function setupD3Timeline() {
         .attr('fill', d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)')
         .attr('stroke', d => d.location ? '#2196F3' : '#4CAF50')
         .attr('stroke-width', 2)
-        .on('click', (event, d) => handleEventClick(d))
+        .on('click', (event, d) => setFocusedEvent(d))
         .on('mouseover', function(event, d) {
             d3.select(this).transition().duration(200).attr('r', 10);
 
@@ -534,7 +526,7 @@ function buildSidebar(events) {
                     });
                 }
                 eventItem.addEventListener('click', () => {
-                    handleEventClick(event);
+                    setFocusedEvent(event);
                 });
 
                 eventContainer.appendChild(stateIcons);
@@ -599,12 +591,67 @@ function expandAndScrollToEvent(eventItem) {
     eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-function handleEventClick(event) {
-    const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
-    if (eventItem) expandAndScrollToEvent(eventItem);
-    if (event.marker) {
-        handleLocationClick(event);
+function setFocusedEvent(event) {
+    if (focusedEvent) {
+        clearFocusedEvent();
     }
+    focusedEvent = event;
+
+    highlightTimelineBubble(event.index, true);
+
+    const eventItem = document.querySelector(`.event-item[data-event-index="${event.index}"]`);
+    if (eventItem) {
+        expandAndScrollToEvent(eventItem);
+        eventItem.classList.add('focused');
+    }
+
+    if (currentView === 'map' && event.marker) {
+        handleLocationClick(event);
+    } else if (currentView === 'graph') {
+        scrollToGraphEvent(event.index);
+        highlightGraphEvent(event.index, true);
+    }
+}
+
+function clearFocusedEvent() {
+    if (focusedEvent) {
+        highlightTimelineBubble(focusedEvent.index, false);
+        const eventItem = document.querySelector(`.event-item[data-event-index="${focusedEvent.index}"]`);
+        if (eventItem) {
+            eventItem.classList.remove('focused');
+        }
+        if (currentView === 'map' && focusedEvent.marker) {
+            focusedEvent.marker.closePopup();
+        }
+        if (currentView === 'graph') {
+            highlightGraphEvent(focusedEvent.index, false);
+        }
+        focusedEvent = null;
+    }
+}
+
+function scrollToGraphEvent(index) {
+    const eventRow = document.querySelector(`.event-row[data-event-index="${index}"]`);
+    if (eventRow) {
+        eventRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function highlightGraphEvent(index, highlight) {
+    const eventRow = document.querySelector(`.event-row[data-event-index="${index}"]`);
+    if (eventRow) {
+        if (highlight) {
+            eventRow.classList.add('focused');
+        } else {
+            eventRow.classList.remove('focused');
+        }
+    }
+}
+
+function highlightTimelineBubble(eventIndex, highlight) {
+    eventGroup.selectAll('.event-circle')
+        .filter(d => d.index === eventIndex)
+        .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
 }
 
 function handleLocationClick(event) {
@@ -665,6 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const documentsView = document.getElementById('documents-view');
 
     function switchView(view) {
+        currentView = view;
         mapView.style.display = 'none';
         graphView.style.display = 'none';
         documentsView.style.display = 'none';
@@ -677,11 +725,18 @@ document.addEventListener('DOMContentLoaded', () => {
             mapView.style.display = 'block';
             mapBtn.classList.add('active');
             map.invalidateSize();
+            if (focusedEvent && focusedEvent.marker) {
+                handleLocationClick(focusedEvent);
+            }
         } else if (view === 'graph') {
             graphView.style.display = 'block';
             graphBtn.classList.add('active');
             if (events.length > 0) {
                 renderAllEvents(events);
+                if (focusedEvent) {
+                    scrollToGraphEvent(focusedEvent.index);
+                    highlightGraphEvent(focusedEvent.index, true);
+                }
             } else {
                 graphView.innerHTML = 'Loading events...';
             }
@@ -696,25 +751,15 @@ document.addEventListener('DOMContentLoaded', () => {
     documentsBtn.addEventListener('click', () => switchView('documents'));
 });
 
-function highlightTimelineBubble(eventIndex, highlight) {
-    eventGroup.selectAll('.event-circle')
-        .filter(d => d.index === eventIndex)
-        .attr('fill', highlight ? 'orange' : (d => d.location ? 'rgba(33, 150, 243, 0.7)' : 'rgba(76, 175, 80, 0.7)'));
-}
-
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('clickable-image')) {
-        event.target.classList.toggle('enlarged');
-    }
-});
-
-// New functions for graph view
-
 function createEventRow(event) {
     event.summaryState = 2; // Default to blurb
 
     const eventRow = document.createElement('div');
     eventRow.className = 'event-row';
+    eventRow.setAttribute('data-event-index', event.index);
+    eventRow.addEventListener('click', () => {
+        setFocusedEvent(event);
+    });
 
     // Main event column
     const eventMainWrapper = document.createElement('div');
@@ -917,3 +962,9 @@ function updateStateIcons(stateIcons, activeIdx) {
         icon.classList.toggle('active', idx === activeIdx);
     });
 }
+
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('clickable-image')) {
+        event.target.classList.toggle('enlarged');
+    }
+});
