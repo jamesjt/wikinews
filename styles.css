@@ -125,7 +125,7 @@ body {
     flex-direction: column;
 }
 
-#map, #graph-view, #documents-view {
+#map, #graph-view, #list-view {
     flex: 1;
     min-height: 0;
     position: relative; /* Ensure proper positioning */
@@ -135,8 +135,47 @@ body {
     z-index: 1; /* Ensure map is clickable */
 }
 
-#graph-view, #documents-view {
+#graph-view, #list-view {
     display: none;
+}
+
+#list-view {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.event-entry {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.event-entry:last-child {
+    border-bottom: none; /* No border after the last event */
+}
+
+.event-header {
+    display: flex;
+    align-items: center;
+}
+
+.event-number {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.event-summary {
+    /* Add styles if needed, e.g., font-size */
+}
+
+.event-details {
+    margin-top: 5px;
+    margin-left: 20px;
+}
+
+.event-detail {
+    margin-bottom: 5px;
 }
 
 /* Sidebar styles */
