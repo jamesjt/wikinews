@@ -482,6 +482,7 @@ body {
 
 .event-row {
     display: flex;
+    align-items: center; /* Vertically centers the columns relative to each other */
     gap: 20px; /* Adds 20px space between columns */
     margin: 20px;
 }
@@ -534,6 +535,11 @@ body {
     font-size: 14px;
     color: #333;
     line-height: 1.5;
+}
+
+.event-content img {
+    max-width: 100%; /* Prevents images in event content from overflowing */
+    height: auto;    /* Maintains aspect ratio */
 }
 
 .links-section, .documents-section, .videos-section, .image-section, .twitter-section, .podcast-section {
