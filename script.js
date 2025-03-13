@@ -39,6 +39,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const summary = row['Summary - Date']?.trim() || 'No Summary';
                     const blurb = row['Blurb']?.trim() || 'No Blurb';
                     const locationStr = row['Location']?.trim() || '';
+                    const locationName = row['Location Name']?.trim() || ''; // Added parsing for Location Name
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
                     const linkNames = row['Link Name']?.split(',').map(name => name.trim()) || [];
@@ -191,7 +192,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         imageUrl,
                         validDocuments,
                         validLinks,
-                        displayDate  // Add displayDate to the event object
+                        displayDate,
+                        locationName // Added to event object
                     };
                 }).filter(event => event.timestamp);
 
@@ -687,6 +689,8 @@ document.addEventListener('click', function(event) {
 
 // New functions for graph view
 function renderFirstEvent(event) {
+    event.summaryState = 2; // Set initial state to blurb (state 2)
+
     const graphView = document.getElementById('graph-view');
     graphView.innerHTML = ''; // Clear previous content
 
@@ -697,12 +701,12 @@ function renderFirstEvent(event) {
     eventHeader.className = 'event-header';
 
     const eventNumber = document.createElement('span');
-    eventNumber.className = 'event-number-circle';
+    eventNumber.className = `event-number-circle${event.location ? ' has-location' : ''}`; // Conditional class for location
     eventNumber.textContent = event.index + 1;
 
     const eventDate = document.createElement('span');
     eventDate.className = 'event-date-text';
-    eventDate.textContent = event.displayDate;
+    eventDate.textContent = event.displayDate + (event.locationName ? ` - ${event.locationName}` : ''); // Append location name if exists
 
     const stateIcons = document.createElement('div');
     stateIcons.className = 'state-icons state-icons-row';
@@ -733,7 +737,7 @@ function renderFirstEvent(event) {
 
     graphView.appendChild(eventMain);
 
-    updateContent(event); // Initial content display
+    updateContent(event); // Display blurb initially
 }
 
 function updateContent(event) {
