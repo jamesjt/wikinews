@@ -471,16 +471,18 @@ body {
     vertical-align: middle;
 }
 
-/* New styles for graph view */
+/* Updated styles for graph view */
 #graph-view {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertically centers the event row */
     padding: 20px;
     overflow: auto;
 }
 
 .event-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    gap: 20px; /* Adds 20px space between columns */
     margin: 20px;
 }
 
@@ -549,8 +551,9 @@ body {
 }
 
 .event-image {
+    max-width: 100%; /* Ensures the image doesn’t exceed its container’s width */
+    height: auto;    /* Maintains aspect ratio */
     cursor: pointer;
-    width: 100%;
 }
 
 /* Added styles for content sections */
@@ -611,9 +614,19 @@ body {
     align-items: center;
 }
 
-/* Ensure images scale properly */
-.event-image {
-    max-width: 100%;
-    height: auto;
-    cursor: pointer;
+/* Media query for narrow screens */
+@media (max-width: 768px) {
+    .left-column, .right-column {
+        display: none; /* Hides the sidebars in narrow windows */
+    }
+    .event-main-wrapper {
+        max-width: 100%;     /* Allows it to take full available width */
+        margin: 0 20px;      /* Adds 20px margins on left and right */
+    }
+    #graph-view {
+        padding: 10px;       /* Reduces padding for better space use */
+    }
+    .event-row {
+        margin: 10px;        /* Adjusts outer margin for narrow screens */
+    }
 }
