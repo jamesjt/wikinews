@@ -552,3 +552,68 @@ body {
     cursor: pointer;
     width: 100%;
 }
+
+/* Added styles for content sections */
+.links-section {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.documents-section {
+    border: 1px solid #008080;
+    border-radius: 5px;
+    background: linear-gradient(145deg, #f0f0f0, #e0f0f0);
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.videos-section {
+    margin-bottom: 20px;
+}
+
+.video-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.video-item img {
+    margin-right: 5px;
+}
+
+.image-section {
+    border: 2px solid #d4af37;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.twitter-section {
+    border: 1px solid #1DA1F2;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.podcast-section {
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+/* Ensure images scale properly */
+.event-image {
+    max-width: 100%;
+    height: auto;
+    cursor: pointer;
+}
