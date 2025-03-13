@@ -610,45 +610,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialize view buttons
-    const mapBtn = document.getElementById('map-btn');
-    const graphBtn = document.getElementById('graph-btn');
-    const documentsBtn = document.getElementById('documents-btn');
-    const mapDiv = document.getElementById('map');
-    const graphDiv = document.getElementById('graph');
-    let graphRendered = false;
+    // View switching logic
+    const mapBtn = document.querySelector('.view-btn[data-view="map"]');
+    const graphBtn = document.querySelector('.view-btn[data-view="graph"]');
+    const documentsBtn = document.querySelector('.view-btn[data-view="documents"]');
 
-    mapBtn.classList.add('active'); // Set Map as default view
+    const mapView = document.getElementById('map');
+    const graphView = document.getElementById('graph-view');
+    const documentsView = document.getElementById('documents-view');
 
-    mapBtn.addEventListener('click', () => {
-        mapDiv.style.display = 'block';
-        graphDiv.style.display = 'none';
-        mapBtn.classList.add('active');
+    function switchView(view) {
+        // Hide all views
+        mapView.style.display = 'none';
+        graphView.style.display = 'none';
+        documentsView.style.display = 'none';
+
+        // Remove active class from all buttons
+        mapBtn.classList.remove('active');
         graphBtn.classList.remove('active');
         documentsBtn.classList.remove('active');
-        map.invalidateSize();
-    });
 
-    graphBtn.addEventListener('click', () => {
-        mapDiv.style.display = 'none';
-        graphDiv.style.display = 'block';
-        mapBtn.classList.remove('active');
-        graphBtn.classList.add('active');
-        documentsBtn.classList.remove('active');
-        if (!graphRendered) {
-            renderGraph();
-            graphRendered = true;
+        // Show selected view and activate corresponding button
+        if (view === 'map') {
+            mapView.style.display = 'block';
+            mapBtn.classList.add('active');
+            map.invalidateSize(); // Recalculate map size
+        } else if (view === 'graph') {
+            graphView.style.display = 'block';
+            graphBtn.classList.add('active');
+        } else if (view === 'documents') {
+            documentsView.style.display = 'block';
+            documentsBtn.classList.add('active');
         }
-    });
+    }
 
-    documentsBtn.addEventListener('click', () => {
-        // Placeholder for Documents view
-        mapDiv.style.display = 'none';
-        graphDiv.style.display = 'none';
-        mapBtn.classList.remove('active');
-        graphBtn.classList.remove('active');
-        documentsBtn.classList.add('active');
-    });
+    // Add event listeners to buttons
+    mapBtn.addEventListener('click', () => switchView('map'));
+    graphBtn.addEventListener('click', () => switchView('graph'));
+    documentsBtn.addEventListener('click', () => switchView('documents'));
 });
 
 function highlightTimelineBubble(eventIndex, highlight) {
@@ -663,15 +662,15 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Graph rendering function
+// Graph rendering function (unchanged)
 function renderGraph() {
     const canvas = document.getElementById('graph-canvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const mainX = 1000; // Center of canvas width
-    const mainSpacing = 400; // Vertical spacing between main nodes
-    const subSpacing = 60; // Vertical spacing between sub-nodes
+    const mainX = 1000;
+    const mainSpacing = 400;
+    const subSpacing = 60;
 
     const typeOffsets = {
         'newscast': 200,
@@ -691,7 +690,6 @@ function renderGraph() {
         'twitter': 'deepskyblue'
     };
 
-    // Prepare main nodes
     const mainNodes = events.map((event, index) => ({
         type: 'main',
         id: `main-${index}`,
@@ -701,7 +699,6 @@ function renderGraph() {
         height: 200
     }));
 
-    // Prepare sub-nodes
     const subNodes = [];
     events.forEach((event, index) => {
         const mainId = `main-${index}`;
@@ -764,7 +761,6 @@ function renderGraph() {
         });
     });
 
-    // Position main nodes
     let currentY = 100;
     mainNodes.forEach(node => {
         node.x = mainX - node.width / 2;
@@ -772,7 +768,6 @@ function renderGraph() {
         currentY += node.height + mainSpacing;
     });
 
-    // Position sub-nodes
     subNodes.forEach(subNode => {
         const mainNode = mainNodes.find(n => n.id === subNode.mainId);
         const type = subNode.type;
@@ -783,11 +778,9 @@ function renderGraph() {
         subNode.y = mainNode.y + index * subSpacing;
     });
 
-    // Draw connections
     ctx.strokeStyle = 'darkgray';
     ctx.lineWidth = 2;
 
-    // Connect main nodes vertically
     for (let i = 0; i < mainNodes.length - 1; i++) {
         const n1 = mainNodes[i];
         const n2 = mainNodes[i + 1];
@@ -797,7 +790,6 @@ function renderGraph() {
         ctx.stroke();
     }
 
-    // Connect main nodes to sub-nodes and between sub-nodes
     mainNodes.forEach(mainNode => {
         const mainId = mainNode.id;
         const typeGroups = {};
@@ -828,7 +820,6 @@ function renderGraph() {
         });
     });
 
-    // Draw main nodes
     mainNodes.forEach(node => {
         ctx.fillStyle = 'lightgray';
         ctx.fillRect(node.x, node.y, node.width, node.height);
@@ -842,7 +833,6 @@ function renderGraph() {
         });
     });
 
-    // Draw sub-nodes
     subNodes.forEach(subNode => {
         const color = typeColors[subNode.type] || 'gray';
         ctx.strokeStyle = color;
@@ -858,10 +848,8 @@ function renderGraph() {
         }
     });
 
-    // Store positions for interactivity
     window.graphNodes = [...mainNodes, ...subNodes];
 
-    // Add click event listener to canvas
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
