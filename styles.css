@@ -489,7 +489,7 @@ body {
     text-transform: uppercase;
     font-size: 12px;
     font-family: 'PT Sans Narrow', sans-serif;
-    color: #979797;
+    color: #000; /* Changed to black */
     font-weight: bold;
 }
 
