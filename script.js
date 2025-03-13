@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
             graphView.style.display = 'block';
             graphBtn.classList.add('active');
             if (events.length > 0) {
-                renderFirstEvent(events[0]);
+                renderAllEvents(events);
             } else {
                 graphView.innerHTML = 'Loading events...';
             }
@@ -709,39 +709,17 @@ document.addEventListener('click', function(event) {
 });
 
 // New functions for graph view
-function renderFirstEvent(event) {
-    event.summaryState = 2; // Set initial state to blurb (state 2)
 
-    const graphView = document.getElementById('graph-view');
-    graphView.innerHTML = ''; // Clear previous content
+function createEventRow(event) {
+    event.summaryState = 2; // Default to blurb
 
-    // Create sticky header
-    const headerRow = document.createElement('div');
-    headerRow.className = 'event-header-row';
-    headerRow.innerHTML = `
-        <div class="header-section events-header">Events</div>
-        <div class="header-section corroboration-header">Corroboration</div>
-        <div class="header-section discussion-header">Discussion</div>
-    `;
-    graphView.appendChild(headerRow);
-
-    // Create flex container
     const eventRow = document.createElement('div');
     eventRow.className = 'event-row';
 
-    // Corroboration column (formerly leftColumn)
-    const corroborationColumn = document.createElement('div');
-    corroborationColumn.className = 'corroboration-column';
-
-    // Main event wrapper
+    // Main event column
     const eventMainWrapper = document.createElement('div');
     eventMainWrapper.className = 'event-main-wrapper';
 
-    // Discussion column (formerly rightColumn)
-    const discussionColumn = document.createElement('div');
-    discussionColumn.className = 'discussion-column';
-
-    // Create eventMain (center column)
     const eventMain = document.createElement('div');
     eventMain.className = 'event-main';
 
@@ -767,7 +745,7 @@ function renderFirstEvent(event) {
         stateIcon.setAttribute('data-state', idx);
         stateIcon.addEventListener('click', () => {
             event.summaryState = idx;
-            updateContent(event);
+            updateContent(event, eventContent);
             updateStateIcons(stateIcons, idx);
         });
         stateIcons.appendChild(stateIcon);
@@ -779,14 +757,18 @@ function renderFirstEvent(event) {
 
     const eventContent = document.createElement('div');
     eventContent.className = 'event-content';
+    updateContent(event, eventContent); // Set initial content
 
     eventMain.appendChild(eventHeader);
     eventMain.appendChild(eventContent);
     eventMainWrapper.appendChild(eventMain);
 
-    // Populate Corroboration Column in order: Videos, Image, Links, Documents
+    // Corroboration column
+    const corroborationColumn = document.createElement('div');
+    corroborationColumn.className = 'corroboration-column';
+
     // Videos
-    if (event.videoEmbeds.length > 0) {
+    if (event.videoEmbeds && event.videoEmbeds.length > 0) {
         const videosSection = document.createElement('div');
         videosSection.className = 'videos-section';
         event.videoEmbeds.forEach(embed => {
@@ -839,7 +821,7 @@ function renderFirstEvent(event) {
     }
 
     // Links
-    if (event.validLinks.length > 0) {
+    if (event.validLinks && event.validLinks.length > 0) {
         const linksSection = document.createElement('div');
         linksSection.className = 'links-section';
         event.validLinks.forEach(linkObj => {
@@ -855,7 +837,7 @@ function renderFirstEvent(event) {
     }
 
     // Documents
-    if (event.validDocuments.length > 0) {
+    if (event.validDocuments && event.validDocuments.length > 0) {
         const documentsSection = document.createElement('div');
         documentsSection.className = 'documents-section';
         event.validDocuments.forEach(doc => {
@@ -870,7 +852,10 @@ function renderFirstEvent(event) {
         corroborationColumn.appendChild(documentsSection);
     }
 
-    // Populate Discussion Column
+    // Discussion column
+    const discussionColumn = document.createElement('div');
+    discussionColumn.className = 'discussion-column';
+
     // Twitter
     if (event.twitter) {
         const twitterSection = document.createElement('div');
@@ -893,17 +878,36 @@ function renderFirstEvent(event) {
         discussionColumn.appendChild(podcastSection);
     }
 
-    // Assemble the row with new order
+    // Assemble the row
     eventRow.appendChild(eventMainWrapper);
     eventRow.appendChild(corroborationColumn);
     eventRow.appendChild(discussionColumn);
-    graphView.appendChild(eventRow);
 
-    updateContent(event); // Display blurb initially
+    return eventRow;
 }
 
-function updateContent(event) {
-    const eventContent = document.querySelector('.event-content');
+function renderAllEvents(events) {
+    const graphView = document.getElementById('graph-view');
+    graphView.innerHTML = ''; // Clear previous content
+
+    // Create sticky header
+    const headerRow = document.createElement('div');
+    headerRow.className = 'event-header-row';
+    headerRow.innerHTML = `
+        <div class="header-section events-header">Events</div>
+        <div class="header-section corroboration-header">Corroboration</div>
+        <div class="header-section discussion-header">Discussion</div>
+    `;
+    graphView.appendChild(headerRow);
+
+    // Create and append each event row
+    events.forEach(event => {
+        const eventRow = createEventRow(event);
+        graphView.appendChild(eventRow);
+    });
+}
+
+function updateContent(event, eventContent) {
     const content = [event.shortSummary, event.summary, event.blurb][event.summaryState];
     eventContent.innerHTML = `<p>${content}</p>`;
 }
