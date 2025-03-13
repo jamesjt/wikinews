@@ -475,7 +475,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 20px;
+    padding: 0 20px 20px;
     overflow: auto;
 }
 
@@ -484,6 +484,12 @@ body {
     align-items: center;
     gap: 20px;
     margin: 20px;
+    border-bottom: 1px solid #ddd; /* Light gray, subtle border */
+    padding-bottom: 20px; /* Space between content and border */
+}
+.event-row:last-child {
+    border-bottom: none; /* Removes the border from the last row */
+    padding-bottom: 0; /* Removes extra padding since there’s no border */
 }
 
 .corroboration-column, .discussion-column {
