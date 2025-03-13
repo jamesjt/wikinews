@@ -39,7 +39,7 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const summary = row['Summary - Date']?.trim() || 'No Summary';
                     const blurb = row['Blurb']?.trim() || 'No Blurb';
                     const locationStr = row['Location']?.trim() || '';
-                    const locationName = row['Location Name']?.trim() || ''; // Added parsing for Location Name
+                    const locationName = row['Location Name']?.trim() || '';
                     const documentNames = row['Document Name']?.split(',').map(name => name.trim()) || [];
                     const documentLinks = row['Document Link']?.split(',').map(link => link.trim()) || [];
                     const linkNames = row['Link Name']?.split(',').map(name => name.trim()) || [];
@@ -47,7 +47,27 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
                     const imageUrl = row['Image']?.trim() || '';
 
-                    // Compute displayDate
+                    // Compute formattedDate for graph view
+                    let formattedDate = dateStr;
+                    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                        const [month, day, year] = dateStr.split('/').map(Number);
+                        const fullMonths = [
+                            'January', 'February', 'March', 'April', 'May', 'June',
+                            'July', 'August', 'September', 'October', 'November', 'December'
+                        ];
+                        const getOrdinal = (day) => {
+                            if (day > 3 && day < 21) return `${day}th`;
+                            switch (day % 10) {
+                                case 1: return `${day}st`;
+                                case 2: return `${day}nd`;
+                                case 3: return `${day}rd`;
+                                default: return `${day}th`;
+                            }
+                        };
+                        formattedDate = `${fullMonths[month - 1]} ${getOrdinal(day)}, ${year}`;
+                    }
+
+                    // Compute displayDate for sidebar
                     let displayDate = dateStr;
                     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
                         const [month, day, year] = dateStr.split('/').map(Number);
@@ -193,7 +213,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         validDocuments,
                         validLinks,
                         displayDate,
-                        locationName // Added to event object
+                        formattedDate, // Added for graph view
+                        locationName
                     };
                 }).filter(event => event.timestamp);
 
@@ -369,7 +390,7 @@ function buildSidebar(events) {
         const decade = year === 'Unknown' ? 'Unknown' : `${Math.floor(parseInt(year) / 10) * 10}s`;
         if (!groupedEvents[decade]) groupedEvents[decade] = {};
         if (!groupedEvents[decade][year]) groupedEvents[decade][year] = [];
-        event.displayDate = displayDate;
+        event.displayDate = displayDate; // Ensure displayDate is set
         groupedEvents[decade][year].push(event);
     });
 
@@ -701,12 +722,12 @@ function renderFirstEvent(event) {
     eventHeader.className = 'event-header';
 
     const eventNumber = document.createElement('span');
-    eventNumber.className = `event-number-circle${event.location ? ' has-location' : ''}`; // Conditional class for location
+    eventNumber.className = `event-number-circle${event.location ? ' has-location' : ''}`;
     eventNumber.textContent = event.index + 1;
 
     const eventDate = document.createElement('span');
     eventDate.className = 'event-date-text';
-    eventDate.textContent = event.displayDate + (event.locationName ? ` - ${event.locationName}` : ''); // Append location name if exists
+    eventDate.textContent = event.formattedDate + (event.locationName ? ` - ${event.locationName}` : '');
 
     const stateIcons = document.createElement('div');
     stateIcons.className = 'state-icons state-icons-row';
