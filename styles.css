@@ -677,3 +677,12 @@ body {
         margin: 10px;
     }
 }
+
+/* Highlight focused event in sidebar and graph */
+.event-item.focused {
+    border: 5px solid #f9e9c3;
+}
+
+.event-row.focused {
+    border: 5px solid #f9e9c3;
+}
