@@ -25,6 +25,7 @@ let events = [];
 let focusedEvent = null;
 let currentView = 'map'; // Default view
 let csvData = null;
+let isClearingFocus = false; // Flag to prevent recursion
 
 fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqROG3apZDAX6-iwyUW-UCONOinGuoIDa7retZv365QwHxWl_dmmUVMOy/pub?gid=183252261&single=true&output=csv')
     .then(response => response.text())
@@ -182,7 +183,9 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                             });
 
                             marker.on('popupclose', () => {
-                                clearFocusedEvent();
+                                if (!isClearingFocus) {
+                                    clearFocusedEvent();
+                                }
                             });
 
                             markers.addLayer(marker);
@@ -592,9 +595,9 @@ function expandAndScrollToEvent(eventItem) {
 }
 
 function setFocusedEvent(event) {
-    if (focusedEvent) {
-        clearFocusedEvent();
-    }
+    if (focusedEvent === event) return; // Avoid re-focusing the same event
+
+    clearFocusedEvent();
     focusedEvent = event;
 
     highlightTimelineBubble(event.index, true);
@@ -614,20 +617,22 @@ function setFocusedEvent(event) {
 }
 
 function clearFocusedEvent() {
-    if (focusedEvent) {
-        highlightTimelineBubble(focusedEvent.index, false);
-        const eventItem = document.querySelector(`.event-item[data-event-index="${focusedEvent.index}"]`);
-        if (eventItem) {
-            eventItem.classList.remove('focused');
-        }
-        if (currentView === 'map' && focusedEvent.marker) {
-            focusedEvent.marker.closePopup();
-        }
-        if (currentView === 'graph') {
-            highlightGraphEvent(focusedEvent.index, false);
-        }
-        focusedEvent = null;
+    if (isClearingFocus || !focusedEvent) return;
+    isClearingFocus = true;
+
+    highlightTimelineBubble(focusedEvent.index, false);
+    const eventItem = document.querySelector(`.event-item[data-event-index="${focusedEvent.index}"]`);
+    if (eventItem) {
+        eventItem.classList.remove('focused');
     }
+    if (currentView === 'map' && focusedEvent.marker) {
+        focusedEvent.marker.closePopup();
+    }
+    if (currentView === 'graph') {
+        highlightGraphEvent(focusedEvent.index, false);
+    }
+    focusedEvent = null;
+    isClearingFocus = false;
 }
 
 function scrollToGraphEvent(index) {
@@ -724,10 +729,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (view === 'map') {
             mapView.style.display = 'block';
             mapBtn.classList.add('active');
-            map.invalidateSize();
-            if (focusedEvent && focusedEvent.marker) {
-                handleLocationClick(focusedEvent);
-            }
+            setTimeout(() => {
+                map.invalidateSize();
+                if (focusedEvent && focusedEvent.marker) {
+                    handleLocationClick(focusedEvent);
+                }
+            }, 100); // Small delay to ensure the map is visible
         } else if (view === 'graph') {
             graphView.style.display = 'block';
             graphBtn.classList.add('active');
