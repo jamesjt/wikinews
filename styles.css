@@ -486,8 +486,7 @@ body {
 .event-date-text {
     flex: 1;
     text-align: center;
-    text-transform: uppercase;
-    font-size: 12px;
+    font-size: 16px;
     font-family: 'PT Sans Narrow', sans-serif;
     color: #000; /* Changed to black */
     font-weight: bold;
