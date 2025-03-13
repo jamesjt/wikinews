@@ -46,6 +46,8 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                     const links = row['Links']?.split(',').map(link => link.trim()) || [];
                     const videoLinks = row['Video']?.split(',').map(link => link.trim()).filter(link => link) || [];
                     const imageUrl = row['Image']?.trim() || '';
+                    const twitter = row['Twitter']?.trim() || '';
+                    const podcast = row['Podcast']?.trim() || '';
 
                     // Compute formattedDate for graph view
                     let formattedDate = dateStr;
@@ -104,11 +106,11 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
 
                     const videoEmbeds = videoLinks.map(link => {
                         if (link.includes('embed/')) {
-                            return `<iframe width="280" height="157" src="${link}" frameborder="0" allowfullscreen></iframe>`;
+                            return `<iframe width="100%" height="100%" src="${link}" frameborder="0" allowfullscreen></iframe>`;
                         } else if (link.includes('youtube.com') || link.includes('youtu.be')) {
                             const videoId = link.split('v=')[1]?.split('&')[0] || link.split('/').pop();
                             if (videoId) {
-                                return `<iframe width="280" height="157" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                                return `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
                             }
                         }
                         return '';
@@ -213,8 +215,10 @@ fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ-JCv36Mjy1zwU8S2RR1OqR
                         validDocuments,
                         validLinks,
                         displayDate,
-                        formattedDate, // Added for graph view
-                        locationName
+                        formattedDate,
+                        locationName,
+                        twitter,
+                        podcast
                     };
                 }).filter(event => event.timestamp);
 
@@ -715,6 +719,23 @@ function renderFirstEvent(event) {
     const graphView = document.getElementById('graph-view');
     graphView.innerHTML = ''; // Clear previous content
 
+    // Create flex container
+    const eventRow = document.createElement('div');
+    eventRow.className = 'event-row';
+
+    // Left column
+    const leftColumn = document.createElement('div');
+    leftColumn.className = 'left-column';
+
+    // Main event wrapper
+    const eventMainWrapper = document.createElement('div');
+    eventMainWrapper.className = 'event-main-wrapper';
+
+    // Right column
+    const rightColumn = document.createElement('div');
+    rightColumn.className = 'right-column';
+
+    // Create eventMain (center column)
     const eventMain = document.createElement('div');
     eventMain.className = 'event-main';
 
@@ -755,8 +776,116 @@ function renderFirstEvent(event) {
 
     eventMain.appendChild(eventHeader);
     eventMain.appendChild(eventContent);
+    eventMainWrapper.appendChild(eventMain);
 
-    graphView.appendChild(eventMain);
+    // Populate Left Column
+    // Links
+    if (event.validLinks.length > 0) {
+        const linksSection = document.createElement('div');
+        linksSection.className = 'links-section';
+        linksSection.innerHTML = '<h3>Links</h3>';
+        event.validLinks.forEach(linkObj => {
+            const linkElement = document.createElement('div');
+            linkElement.className = 'link-item';
+            linkElement.innerHTML = `
+                <img src="icon-link.png" alt="Link" width="16" height="16">
+                <a href="${linkObj.link}" target="_blank">${linkObj.name}</a>
+            `;
+            linksSection.appendChild(linkElement);
+        });
+        leftColumn.appendChild(linksSection);
+    }
+
+    // Documents
+    if (event.validDocuments.length > 0) {
+        const documentsSection = document.createElement('div');
+        documentsSection.className = 'documents-section';
+        documentsSection.innerHTML = '<h3>Documents</h3>';
+        event.validDocuments.forEach(doc => {
+            const docElement = document.createElement('div');
+            docElement.className = 'document-item';
+            docElement.innerHTML = `
+                <img src="icon-document.png" alt="Document" width="16" height="16">
+                <a href="${doc.link}" target="_blank">${doc.name}</a>
+            `;
+            documentsSection.appendChild(docElement);
+        });
+        leftColumn.appendChild(documentsSection);
+    }
+
+    // Videos
+    if (event.videoEmbeds.length > 0) {
+        const videosSection = document.createElement('div');
+        videosSection.className = 'videos-section';
+        videosSection.innerHTML = '<h3>Videos</h3>';
+        event.videoEmbeds.forEach(embed => {
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            videoContainer.innerHTML = embed;
+            videosSection.appendChild(videoContainer);
+        });
+        leftColumn.appendChild(videosSection);
+    }
+
+    // Image
+    if (event.imageUrl) {
+        const imageSection = document.createElement('div');
+        imageSection.className = 'image-section';
+        imageSection.innerHTML = '<h3>Image</h3>';
+        const imgElement = document.createElement('img');
+        imgElement.src = event.imageUrl;
+        imgElement.className = 'event-image';
+        imgElement.style.width = '100%';
+        imgElement.style.cursor = 'pointer';
+        imgElement.addEventListener('click', () => {
+            const modal = document.createElement('div');
+            modal.className = 'image-modal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '1000';
+            const largeImg = document.createElement('img');
+            largeImg.src = event.imageUrl;
+            largeImg.style.maxWidth = '90%';
+            largeImg.style.maxHeight = '90%';
+            modal.appendChild(largeImg);
+            modal.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            document.body.appendChild(modal);
+        });
+        imageSection.appendChild(imgElement);
+        leftColumn.appendChild(imageSection);
+    }
+
+    // Populate Right Column
+    // Twitter
+    if (event.twitter) {
+        const twitterSection = document.createElement('div');
+        twitterSection.className = 'twitter-section';
+        twitterSection.innerHTML = '<h3>Twitter</h3>' + event.twitter;
+        rightColumn.appendChild(twitterSection);
+    }
+
+    // Podcast
+    if (event.podcast) {
+        const podcastSection = document.createElement('div');
+        podcastSection.className = 'podcast-section';
+        podcastSection.innerHTML = '<h3>Podcast</h3>' + event.podcast;
+        rightColumn.appendChild(podcastSection);
+    }
+
+    // Assemble the row
+    eventRow.appendChild(leftColumn);
+    eventRow.appendChild(eventMainWrapper);
+    eventRow.appendChild(rightColumn);
+    graphView.appendChild(eventRow);
 
     updateContent(event); // Display blurb initially
 }
