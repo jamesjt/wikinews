@@ -409,7 +409,18 @@ body {
 }
 
 .video-container {
-    margin: 10px 0;
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    margin-bottom: 10px;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .popup-event-date {
@@ -466,10 +477,25 @@ body {
     overflow: auto;
 }
 
-.event-main {
-    width: 80%;
+.event-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 20px;
+}
+
+.left-column, .right-column {
+    flex: 1;
+    max-width: 300px;
+}
+
+.event-main-wrapper {
+    flex: 2;
     max-width: 800px;
-    margin: 20px auto;
+}
+
+.event-main {
+    width: 100%;
     padding: 20px;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -488,7 +514,7 @@ body {
     text-align: center;
     font-size: 16px;
     font-family: 'PT Sans Narrow', sans-serif;
-    color: #000; /* Changed to black */
+    color: #000;
     font-weight: bold;
 }
 
@@ -506,4 +532,23 @@ body {
     font-size: 14px;
     color: #333;
     line-height: 1.5;
+}
+
+.links-section, .documents-section, .videos-section, .image-section, .twitter-section, .podcast-section {
+    margin-bottom: 20px;
+}
+
+.link-item, .document-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.link-item img, .document-item img {
+    margin-right: 5px;
+}
+
+.event-image {
+    cursor: pointer;
+    width: 100%;
 }
