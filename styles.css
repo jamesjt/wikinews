@@ -128,6 +128,15 @@ body {
 #map, #graph-view, #documents-view {
     flex: 1;
     min-height: 0;
+    position: relative; /* Ensure proper positioning */
+}
+
+#map {
+    z-index: 1; /* Ensure map is clickable */
+}
+
+#graph-view, #documents-view {
+    display: none;
 }
 
 /* Sidebar styles */
