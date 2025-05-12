@@ -1,245 +1,70 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>Tree of Wisdom</title>
-<style>
-body {
-  margin: 0;
-  padding: 0;
-}
-#canvasContainer {
-  overflow: auto;
-  width: 100vw;
-  height: 600px;
-}
-.info-panel {
-  position: absolute;
-  background: white;
-  border: 1px solid black;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-  padding: 10px;
-  z-index: 10;
-  resize: both;
-  overflow: auto;
-  min-width: 200px;
-  min-height: 100px;
-}
-.panel-header {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-.panel-content img, .panel-content video {
-  max-width: 100%;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 451 / Wikinews</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Leaflet.markercluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-<select id="filter">
-  <option value="all">All</option>
-  <option value="reality">Reality</option>
-  <option value="reason">Reason</option>
-  <option value="right">Right</option>
-</select>
-<div id="canvasContainer">
-<canvas id="treeCanvas" width="800" height="600"></canvas>
-</div>
-<div id="infoPanels"></div>
-<script>
-const treeData = {
-  label: 'Wisdom',
-  category: 'root',
-  content: {
-    sentence: 'The foundation of all understanding.',
-    paragraph: 'Wisdom is the ability to think and act using knowledge, experience, understanding, common sense, and insight.',
-    essay: '<p>Wisdom is often considered the pinnacle of human understanding, integrating knowledge from various domains. <img src="https://via.placeholder.com/150" alt="wisdom image"></p>'
-  },
-  children: [
-    {
-      label: 'Reality',
-      category: 'reality',
-      content: {
-        sentence: 'The state of things as they actually exist.',
-        paragraph: 'Reality encompasses the physical world, our perceptions, and the underlying truths of existence.',
-        essay: '<p>Reality is the sum or aggregate of all that is real or existent within a system. <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video></p>'
-      },
-      children: []
-    },
-    {
-      label: 'Reason',
-      category: 'reason',
-      content: {
-        sentence: 'The power of the mind to think, understand, and form judgments logically.',
-        paragraph: 'Reason is the capacity for consciously making sense of things, applying logic, and adapting or justifying practices, institutions, and beliefs based on new or existing information.',
-        essay: '<p>Reason is a fundamental aspect of human cognition, allowing us to process information and make decisions. <img src="https://via.placeholder.com/150" alt="reason image"></p>'
-      },
-      children: []
-    },
-    {
-      label: 'Right',
-      category: 'right',
-      content: {
-        sentence: 'Moral or legal entitlement to have or do something.',
-        paragraph: 'Rights are legal, social, or ethical principles of freedom or entitlement; that is, rights are the fundamental normative rules about what is allowed of people or owed to people.',
-        essay: '<p>The concept of rights is central to discussions of justice, democracy, and the rule of law. <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video></p>'
-      },
-      children: []
-    }
-  ]
-};
-
-const canvas = document.getElementById('treeCanvas');
-const ctx = canvas.getContext('2d');
-let currentScale = 1;
-let currentTranslateX = 0;
-let currentTranslateY = 0;
-let filteredTree = treeData;
-
-assignPositions(filteredTree, 400, 300, 200, 100);
-
-function assignPositions(node, x, y, dx, dy, parent = null) {
-  node.x = x;
-  node.y = y;
-  node.parent = parent;
-  const numChildren = node.children.length;
-  if (numChildren > 0) {
-    const startX = x - (numChildren - 1) * dx / 2;
-    for (let i = 0; i < numChildren; i++) {
-      assignPositions(node.children[i], startX + i * dx, y - dy, dx / 2, dy, node);
-    }
-  }
-}
-
-function drawTree(node) {
-  if (node.parent) {
-    ctx.beginPath();
-    ctx.moveTo(node.parent.x, node.parent.y);
-    ctx.lineTo(node.x, node.y);
-    ctx.stroke();
-  }
-  ctx.beginPath();
-  ctx.arc(node.x, node.y, 10 / currentScale, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillText(node.label, node.x + 15 / currentScale, node.y);
-  for (let child of node.children) {
-    drawTree(child);
-  }
-}
-
-function redraw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.translate(currentTranslateX, currentTranslateY);
-  ctx.scale(currentScale, currentScale);
-  drawTree(filteredTree);
-  ctx.restore();
-}
-
-function getFilteredTree(filter) {
-  if (filter === 'all') {
-    return treeData;
-  } else {
-    const filteredChildren = treeData.children.filter(child => child.category === filter);
-    return { ...treeData, children: filteredChildren };
-  }
-}
-
-document.getElementById('filter').addEventListener('change', (e) => {
-  const filter = e.target.value;
-  filteredTree = getFilteredTree(filter);
-  assignPositions(filteredTree, 400, 300, 200, 100);
-  redraw();
-});
-
-let isPanning = false;
-let startX, startY;
-canvas.addEventListener('mousedown', (e) => {
-  isPanning = true;
-  startX = e.clientX;
-  startY = e.clientY;
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (isPanning) {
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    currentTranslateX += dx;
-    currentTranslateY += dy;
-    startX = e.clientX;
-    startY = e.clientY;
-    redraw();
-  }
-});
-canvas.addEventListener('mouseup', () => {
-  isPanning = false;
-});
-canvas.addEventListener('mouseleave', () => {
-  isPanning = false;
-});
-canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const zoomAmount = e.deltaY * -0.01;
-  currentScale *= (1 + zoomAmount);
-  currentScale = Math.min(Math.max(0.5, currentScale), 4);
-  redraw();
-});
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = (e.clientX - rect.left - currentTranslateX) / currentScale;
-  const mouseY = (e.clientY - rect.top - currentTranslateY) / currentScale;
-  const node = findNodeAtPosition(mouseX, mouseY);
-  if (node) {
-    showInfoPanel(node);
-  }
-});
-
-function findNodeAtPosition(x, y, tree = filteredTree) {
-  if (Math.hypot(tree.x - x, tree.y - y) < 20 / currentScale) {
-    return tree;
-  }
-  for (let child of tree.children) {
-    const found = findNodeAtPosition(x, y, child);
-    if (found) return found;
-  }
-  return null;
-}
-
-function showInfoPanel(node) {
-  const panel = document.createElement('div');
-  panel.className = 'info-panel';
-  const rect = canvas.getBoundingClientRect();
-  const screenX = rect.left + (node.x * currentScale + currentTranslateX);
-  const screenY = rect.top + (node.y * currentScale + currentTranslateY);
-  panel.style.left = `${screenX + 20}px`;
-  panel.style.top = `${screenY + 20}px`;
-  panel.innerHTML = `
-    <div class="panel-header">${node.label}</div>
-    <div class="panel-content">${node.content.essay}</div>
-    <button onclick="this.parentElement.remove()">Close</button>
-  `;
-  document.getElementById('infoPanels').appendChild(panel);
-  makeDraggable(panel);
-}
-
-function makeDraggable(element) {
-  let isDragging = false;
-  let offsetX, offsetY;
-  element.addEventListener('mousedown', (e) => {
-    if (e.target === element) {
-      isDragging = true;
-      offsetX = e.clientX - element.offsetLeft;
-      offsetY = e.clientY - element.offsetTop;
-    }
-  });
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      element.style.left = `${e.clientX - offsetX}px`;
-      element.style.top = `${e.clientY - offsetY}px`;
-    }
-  });
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-}
-
-redraw();
-</script>
+    <!-- Header Section -->
+    <header id="header">
+        <nav class="menu">
+            <a href="#">Project 451 / Wikinews</a>
+        </nav>
+    </header>
+    <!-- Timeline Selector -->
+    <div id="timeline-selector">
+        <div class="timeline-wrapper">
+            <select id="timeline-select">
+                <option value="ukraine" selected>The War in Ukraine</option>
+                <option value="timeline2">Timeline 2</option>
+                <option value="timeline3">Timeline 3</option>
+            </select>
+            <div class="view-buttons">
+                <button class="view-btn active" data-view="map">Map</button>
+                <button class="view-btn" data-view="graph">Graph</button>
+                <button class="view-btn" data-view="list">List</button>
+            </div>
+        </div>
+    </div>
+    <!-- Timeline Overlay -->
+    <div id="timeline">
+        <div class="timeline-bar">
+            <!-- D3 timeline will replace this -->
+        </div>
+    </div>
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div id="event-list"></div>
+        </div>
+        <!-- Resize Handle -->
+        <div class="resize-handle"></div>
+        <!-- Right Content -->
+        <div id="right-content">
+            <div id="map" style="display: block;"></div>
+            <div id="graph-view" style="display: none;">Graph view will go here</div>
+            <div id="list-view" style="display: none;"></div>
+        </div>
+    </div>
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Leaflet.markercluster JavaScript -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <!-- Papa Parse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
 </body>
 </html>
